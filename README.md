@@ -2,17 +2,27 @@
 
 ## Course
 CEN4010 Introduction to Software Engineering
+
 Florida Atlantic University
+
 Dr. Shihong Huang - Professor
+
 Nataliia Neshenko - Teacher's Assistant
+
 Spring 2021
+
 
 ## Members
 Lindsey Butts
+
 Garry Florestal
+
 Thomas Galinis
+
 Lenora Gray
+
 Kevin Toyloy
+
 
 ## Deployment
 Work pushed into this repository will not be immediately reflected in FAU's end.
