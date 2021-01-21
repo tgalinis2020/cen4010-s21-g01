@@ -1,5 +1,5 @@
 # Blacklist everything.
-/**/*.*
+/**/*
 
 # Whitelist project root directory files.
 !README.md
