@@ -1,14 +1,6 @@
-# Blacklist everything.
-/**/*
-*
-
-# Whitelist project root directory files.
-!README.md
-!.gitignore
-
-# Whitelist project directories.
-# Done this way so this repository can be cloned into the LAMP account's home
-# directory. Don't want to track any files that are already there and not part
-# of the project.
-!public_html/**/*.*
-
+.bash*
+.lesshst
+.my.cnf
+.mysql_history
+.viminfo
+.vimrc
