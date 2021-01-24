@@ -1,7 +1,7 @@
 # Team 1 Project Repository
 
 ## Course
-CEN4010 Introduction to Software Engineering
+CEN4010 Principles of Software Engineering
 
 Florida Atlantic University
 
