@@ -1,0 +1,9 @@
+{
+    "scripts": {
+        "init": "bash ./init.sh"
+    },
+    "dependencies": {
+        "@fortawesome/fontawesome-free": "^5.15.2",
+        "bootstrap": "^4.6.0"
+    }
+}
