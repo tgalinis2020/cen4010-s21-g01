@@ -4,5 +4,6 @@
 .mysql_history
 .viminfo
 .vimrc
+.npm/
 node_modules/
 public_html/vendor/
