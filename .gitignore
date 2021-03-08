@@ -9,3 +9,6 @@ node_modules/
 public_html/vendor/
 ~$*
 bin/
+.local/
+.cache/
+.config/
