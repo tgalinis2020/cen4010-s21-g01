@@ -1,6 +1,6 @@
 {
     "scripts": {
-        "init": "bash ./init.sh"
+        "init": "bash ./scripts/init-project.sh"
     },
     "dependencies": {
         "@fortawesome/fontawesome-free": "^5.15.2",
