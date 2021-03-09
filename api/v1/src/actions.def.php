@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 use Psr\Container\ContainerInterface;
 use ThePetPark\Actions;
@@ -13,8 +15,8 @@ return [
         return new Actions\FetchPostsAction();
     },
 
-    Actions\NewPostAction::class => function (ContainerInterface $c) {
+    Actions\CreatePostAction::class => function (ContainerInterface $c) {
         // TODO: wire dependencies
-        return new Actions\NewPostAction();
+        return new Actions\CreatePostAction();
     },
 ];
