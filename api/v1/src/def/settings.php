@@ -8,6 +8,9 @@ use Slim\Http\Request;
 use Slim\Http\Response;
 use Slim\Handlers\Strategies;
 
+use function DI\create;
+use function DI\get;
+
 return [
     'settings.httpVersion' => '1.1',
     'settings.responseChunkSize' => 4096,
@@ -18,29 +21,29 @@ return [
     'settings.routerCacheFile' => false,
 
     'settings' => [
-        'httpVersion' => DI\get('settings.httpVersion'),
-        'responseChunkSize' => DI\get('settings.responseChunkSize'),
-        'outputBuffering' => DI\get('settings.outputBuffering'),
-        'determineRouteBeforeAppMiddleware' => DI\get('settings.determineRouteBeforeAppMiddleware'),
-        'displayErrorDetails' => DI\get('settings.displayErrorDetails'),
-        'addContentLengthHeader' => DI\get('settings.addContentLengthHeader'),
-        'routerCacheFile' => DI\get('settings.routerCacheFile'),
+        'httpVersion' => get('settings.httpVersion'),
+        'responseChunkSize' => get('settings.responseChunkSize'),
+        'outputBuffering' => get('settings.outputBuffering'),
+        'determineRouteBeforeAppMiddleware' => get('settings.determineRouteBeforeAppMiddleware'),
+        'displayErrorDetails' => get('settings.displayErrorDetails'),
+        'addContentLengthHeader' => get('settings.addContentLengthHeader'),
+        'routerCacheFile' => get('settings.routerCacheFile'),
     ],
 
     // Default Slim services
-    'router' => DI\object(Slim\Router::class)
-        ->method('setContainer', DI\get(Container::class))
-        ->method('setCacheFile', DI\get('settings.routerCacheFile')),
+    'router' => create(Slim\Router::class)
+        ->method('setContainer', get(Container::class))
+        ->method('setCacheFile', get('settings.routerCacheFile')),
 
-    'errorHandler' => DI\object(Slim\Handlers\Error::class)
-        ->constructor(DI\get('settings.displayErrorDetails')),
+    'errorHandler' => create(Slim\Handlers\Error::class)
+        ->constructor(get('settings.displayErrorDetails')),
 
-    'phpErrorHandler' => DI\object(Slim\Handlers\PhpError::class)
-        ->constructor(DI\get('settings.displayErrorDetails')),
+    'phpErrorHandler' => create(Slim\Handlers\PhpError::class)
+        ->constructor(get('settings.displayErrorDetails')),
 
-    'notFoundHandler' => DI\object(Slim\Handlers\NotFound::class),
+    'notFoundHandler' => create(Slim\Handlers\NotFound::class),
 
-    'notAllowedHandler' => DI\object(Slim\Handlers\NotAllowed::class),
+    'notAllowedHandler' => create(Slim\Handlers\NotAllowed::class),
 
     'environment' => function (ContainerInterface $c) {
         return new Slim\Http\Environment($_SERVER);
@@ -57,7 +60,7 @@ return [
     },
 
     /*
-    'foundHandler' => DI\object(ControllerInvoker::class)
+    'foundHandler' => DI\create(ControllerInvoker::class)
         ->constructor(DI\get('foundHandler.invoker')),
     'foundHandler.invoker' => function (ContainerInterface $c) {
         $resolvers = [
@@ -71,7 +74,7 @@ return [
         return new Invoker(new ResolverChain($resolvers), $c);
     },
 
-    'callableResolver' => \DI\object(CallableResolver::class),
+    'callableResolver' => \DI\create(CallableResolver::class),
      */
 
     'foundHandler' => function (ContainerInterface $c) {
@@ -83,6 +86,6 @@ return [
     },
 
     // Aliases
-    ContainerInterface::class => DI\get(Container::class),
-    Slim\Router::class => DI\get('router'),
+    ContainerInterface::class => get(Container::class),
+    Slim\Router::class => get('router'),
 ];
