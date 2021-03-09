@@ -17,15 +17,15 @@ return function (Slim\App $app) {
     $app->map(['GET'], '/session', Handlers\EchoSessionHandler::class)
         ->setName('session');
 
+    $app->map(['GET'],  '/logout', Handlers\LogoutHandler::class)
+        ->setName('logout');
+
     $app->group('/login', function () {
         $this->map(['GET'],  '', Handlers\ShowLoginFormHandler::class)
             ->setName('login');
 
         $this->map(['POST'], '', Handlers\LoginHandler::class);
     });
-
-    $this->map(['GET'],  '/logout', Handlers\LogoutHandler::class)
-        ->setName('logout');
 
     $app->group('/register', function () {
         $this->map(['GET'],  '', Handlers\ShowRegistrationFormHandler::class)
