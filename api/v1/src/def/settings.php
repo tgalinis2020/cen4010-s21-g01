@@ -86,6 +86,5 @@ return [
     },
 
     // Aliases
-    ContainerInterface::class => get(Container::class),
     Slim\Router::class => get('router'),
 ];
