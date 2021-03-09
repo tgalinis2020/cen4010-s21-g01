@@ -16,7 +16,7 @@ return [
     'settings.responseChunkSize' => 4096,
     'settings.outputBuffering' => 'append',
     'settings.determineRouteBeforeAppMiddleware' => false,
-    'settings.displayErrorDetails' => false,
+    'settings.displayErrorDetails' => true,
     'settings.addContentLengthHeader' => true,
     'settings.routerCacheFile' => false,
 
