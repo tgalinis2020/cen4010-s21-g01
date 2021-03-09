@@ -9,9 +9,10 @@ use Psr\Http\Message\ResponseInterface as Response;
 
 final class HelloWorldHandler
 {
-    public function __invoke(Request $req, Response $res): Response
+    public function __invoke(Request $req, Response $res, array $args): Response
     {
-        $name = $req->getAttribute('name', 'world');
+        //$name = $req->getAttribute('name', 'world');
+        $name = $args['name'] ?? 'world';
         $body = $res->getBody();
 
         $body->write(sprintf('<h1>Hello, %s!</h1>', $name));
