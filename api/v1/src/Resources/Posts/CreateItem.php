@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Handlers\Http;
+namespace ThePetPark\Resources\Posts;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
-final class CreatePostHandler
+final class CreateItem
 {
     public function __construct()
     {
@@ -19,3 +19,4 @@ final class CreatePostHandler
         return $res->withStatus(201);
     }
 }
+

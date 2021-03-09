@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Handlers\Http;
+namespace ThePetPark\Resources;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
-final class HelloWorldHandler
+final class HelloWorld
 {
     public function __invoke(Request $req, Response $res): Response
     {

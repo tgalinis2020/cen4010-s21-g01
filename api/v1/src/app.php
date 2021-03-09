@@ -9,7 +9,7 @@ return (function () {
 
     // Bootstrap the container.
     $builder->addDefinitions(__DIR__ . '/def/settings.php');
-    $builder->addDefinitions(__DIR__ . '/def/handlers.php');
+    $builder->addDefinitions(__DIR__ . '/def/resources.php');
     $builder->addDefinitions(__DIR__ . '/def/middleware.php');
     $builder->addDefinitions(__DIR__ . '/def/services.php');
 

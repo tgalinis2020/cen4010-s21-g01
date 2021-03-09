@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Handlers\Http;
+namespace ThePetPark\Resources\Comments;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
-final class FetchPostsHandler
+final class FetchItem
 {
     public function __construct()
     {
@@ -17,6 +17,7 @@ final class FetchPostsHandler
     public function __invoke(Request $req, Response $res): Response
     {
         // TODO: get data from DB and optionally parse query params
-        return $res->withJson(['data' => []]);
+        return $res->withJson(['data' => null]);
     }
 }
+
