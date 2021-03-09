@@ -4,7 +4,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $builder = new \DI\ContainerBuilder();
 
-$builder->addDefinitions(__DIR__ . '/../vendor/php-di/slim-bridge/config.php');
+$builder->addDefinitions(__DIR__ . '/../vendor/php-di/slim-bridge/src/config.php');
 $builder->addDefinitions(__DIR__ . '/actions.def.php');
 $builder->addDefinitions(__DIR__ . '/services.def.php');
 
