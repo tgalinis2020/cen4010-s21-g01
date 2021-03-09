@@ -6,7 +6,7 @@ use Psr\Container\ContainerInterface;
 use ThePetPark\Handlers\Http;
 
 return [
-    Http\HelloWorldHandler:class => function (ContainerInterface $c) {
+    Http\HelloWorldHandler::class => function (ContainerInterface $c) {
         return new Http\HelloWorldHandler();
     },
 
