@@ -14,8 +14,9 @@ final class HelloWorldHandler
         $name = $req->getAttribute('name', 'world');
         $body = $res->getBody();
 
-        $body->write(sprintf('<h1>Hello, %s!</h1>', $name);
+        $body->write(sprintf('<h1>Hello, %s!</h1>', $name));
 
         return $res;
     }
 }
+
