@@ -32,7 +32,7 @@ return [
 
     // Default Slim services
     'router' => create(Slim\Router::class)
-        ->method('setContainer', get(Container::class))
+        ->method('setContainer', get(DI\Container::class))
         ->method('setCacheFile', get('settings.routerCacheFile')),
 
     'errorHandler' => create(Slim\Handlers\Error::class)
@@ -86,5 +86,6 @@ return [
     },
 
     // Aliases
+    ContainerInterface::class => get(DI\Container::class),
     Slim\Router::class => get('router'),
 ];
