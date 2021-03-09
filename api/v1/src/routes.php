@@ -39,6 +39,6 @@ return function (Slim\App $app) {
          */
     });
 
-    $app->map(['GET'], '/hello[/{name}]', Http\HelloWorldHandler::class);
+    $app->map(['GET'], '/hello[/{name}]', Resources\HelloWorld::class);
 
 };
