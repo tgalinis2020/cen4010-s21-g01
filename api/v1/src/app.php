@@ -10,6 +10,11 @@ $builder->addDefinitions(__DIR__ . '/../vendor/php-di/slim-bridge/src/config.php
 $builder->addDefinitions(__DIR__ . '/actions.def.php');
 $builder->addDefinitions(__DIR__ . '/services.def.php');
 
+// Show error messages
+$builder->addDefinitions([
+    'settings.displayErrorDetails' => true,
+]);
+
 // Uncomment if definition cache is available.
 // The app doesn't have write permissions on FAU's LAMP server outside
 // of public_html so the cache cannot be created on-the-fly.
