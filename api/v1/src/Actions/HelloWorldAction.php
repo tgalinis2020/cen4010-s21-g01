@@ -15,10 +15,10 @@ class HelloWorldAction
 
     public function __invoke(Request $request, Response $response): Response
     {
-        $args = $request->getArguments();
+        $name = $request->getAttribute('name') ?? 'world';
         $body = $response->getBody();
 
-        $body->write(sprintf('<h1>Hello, %s!</h1>', $args['name'] ?? 'world'));
+        $body->write(sprintf('<h1>Hello, %s!</h1>', $name));
 
         return $response;
     }
