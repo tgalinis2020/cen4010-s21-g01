@@ -1,14 +1,16 @@
-<?php declare(strict_types=1);
+<?php
 
-use ThePetPark\Actions;
+declare(strict_types=1);
+
+use ThePetPark\Handlers\Http;
 
 /**
- * Bind API endpoints to actions (a.k.a. controllers)
+ * Map API endpoints to handlers (a.k.a. controllers)
  *
- * The provided actions must be defined in the app's dependency container.
+ * The provided handlers must be defined in the app's dependency container.
  */
 return function (\Slim\App $app) {
-    $app->map(['GET'], '/hello[/{name}]', Actions\HelloWorldAction::class);
-    $app->map(['GET'], '/posts', Actions\FetchPostsAction::class);  
-    $app->map(['POST'], '/posts', Actions\NewPostAction::class);
+    $app->map(['GET'], '/hello[/{name}]', Http\HelloWorldHandler::class);
+    $app->map(['GET'], '/posts', Http\FetchPostsHandler::class);  
+    $app->map(['POST'], '/posts', Http\CreatePostHandler::class);
 };

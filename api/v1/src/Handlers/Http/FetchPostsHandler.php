@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Actions;
+namespace ThePetPark\Handlers\Http;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
-class FetchPostsAction
+final class FetchPostsHandler
 {
     public function __construct()
     {
         // initialize dependencies here
     }
 
-    public function __invoke(Request $request, Response $response): Response
+    public function __invoke(Request $req, Response $res): Response
     {
         // TODO: get data from DB and optionally parse query params
-        return $response->withJson(['data' => []]);
+        return $res->withJson(['data' => []]);
     }
 }

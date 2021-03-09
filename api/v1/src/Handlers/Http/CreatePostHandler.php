@@ -2,21 +2,20 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Actions;
+namespace ThePetPark\Handlers\Http;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
-class CreatePostAction
+final class CreatePostHandler
 {
     public function __construct()
     {
-        // initialize dependencies here
     }
 
-    public function __invoke(Request $request, Response $response): Response
+    public function handle(Request $req, Response $res): Response
     {
         // TODO: read post info from request and save to DB
-        return $response->withStatus(201);
+        return $res->withStatus(201);
     }
 }

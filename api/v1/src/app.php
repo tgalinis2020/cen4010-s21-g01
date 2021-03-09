@@ -6,12 +6,11 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $builder = new \DI\ContainerBuilder();
 
-$builder->addDefinitions(__DIR__ . '/../vendor/php-di/slim-bridge/src/config.php');
-$builder->addDefinitions(__DIR__ . '/actions.def.php');
-$builder->addDefinitions(__DIR__ . '/services.def.php');
-
-// Override default settings
-$builder->addDefinitions(__DIR__ . '/settings.def.php');
+// Bootstrap the container.
+$builder->addDefinitions(__DIR__ . '/def/settings.php');
+$builder->addDefinitions(__DIR__ . '/def/handlers.php');
+$builder->addDefinitions(__DIR__ . '/def/middleware.php');
+$builder->addDefinitions(__DIR__ . '/def/services.php');
 
 // Uncomment if definition cache is available.
 // The app doesn't have write permissions on FAU's LAMP server outside
