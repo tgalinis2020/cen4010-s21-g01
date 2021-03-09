@@ -13,12 +13,11 @@ class HelloWorldAction
     {
     }
 
-    public function __invoke(Request $request, Response $response): Response
+    public function __invoke(Request $request, Response $response, string $name): Response
     {
-        $name = $request->getAttribute('name') ?? 'world';
         $body = $response->getBody();
 
-        $body->write(sprintf('<h1>Hello, %s!</h1>', $name));
+        $body->write(sprintf('<h1>Hello, %s!</h1>', $name ?? 'world'));
 
         return $response;
     }
