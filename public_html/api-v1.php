@@ -1,1 +1,1 @@
-<?php (require __DIR__ . '/../api/v1/src/app.php')->run();
+<?php (require __DIR__ . '/../server/api/v1/src/app.php')->run();
