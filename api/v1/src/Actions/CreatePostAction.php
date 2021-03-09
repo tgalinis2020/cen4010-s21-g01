@@ -14,9 +14,9 @@ class CreatePostAction
         // initialize dependencies here
     }
 
-    public function __invoke(Request $req, Response $res, array $args): Response
+    public function __invoke(Request $request, Response $response, array $args): Response
     {
         // TODO: read post info from request and save to DB
-        return $res->withStatus(201);
+        return $response->withStatus(201);
     }
 }

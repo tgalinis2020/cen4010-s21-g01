@@ -14,9 +14,9 @@ class FetchPostsAction
         // initialize dependencies here
     }
 
-    public function __invoke(Request $req, Response $res, array $args): Response
+    public function __invoke(Request $request, Response $response, array $args): Response
     {
         // TODO: get data from DB and optionally parse query params
-        return $res->withJson(['data' => []]);
+        return $response->withJson(['data' => []]);
     }
 }
