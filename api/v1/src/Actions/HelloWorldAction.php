@@ -13,7 +13,7 @@ class HelloWorldAction
     {
     }
 
-    public function __invoke(Request $request, Response $response, string $name): Response
+    public function __invoke(Request $request, Response $response, $name = null): Response
     {
         $body = $response->getBody();
 
