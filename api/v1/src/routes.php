@@ -12,12 +12,12 @@ use ThePetPark\Resources;
 return function (Slim\App $app) {
 
     $app->group('/posts', function () {
-        $this->map(['GET'],  '', Resources\Post\Fetch::class);  
-        $this->map(['POST'], '', Resources\Post\CreateItem::class);
+        $this->map(['GET'],  '', Resources\Posts\Fetch::class);  
+        $this->map(['POST'], '', Resources\Posts\CreateItem::class);
 
         $this->group('/{id}', function () {
-            $this->map(['GET'],   '', Resources\Post\FetchItem::class);
-            $this->map(['PATCH'], '', Resources\Post\UpdateItem::class);
+            $this->map(['GET'],   '', Resources\Posts\FetchItem::class);
+            $this->map(['PATCH'], '', Resources\Posts\UpdateItem::class);
 
             /*
             $this->group('/{relationship}', function () {
