@@ -58,7 +58,7 @@ return [
         return $response->withProtocolVersion($c->get('settings')['httpVersion']);
     },
 
-    'foundHandler' => create(Strategies\RequestResponseArgs::class),
+    'foundHandler' => create(Strategies\RequestResponse::class),
 
     'callableResolver' => create(Slim\CallableResolver::class)
         ->constructor(get(ContainerInterface::class)),
