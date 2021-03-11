@@ -115,7 +115,7 @@ Returns:
 
 * `200` if session token was found and unset.
 
-* `404` if the user isn't logged in; no session token was found.
+* `401` if the user isn't logged in
 
 
 ### POST /auth/register

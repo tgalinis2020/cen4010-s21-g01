@@ -15,7 +15,7 @@ final class Logout
     public function __invoke(Request $req, Response $res): Response
     {
         if (!isset($_COOKIE['session_token'])) {
-            return $res->withStatus(404); // No token found, return a 404.
+            return $res->withStatus(401); // No token found, return a 401.
         }
 
         // A cookie with no expiry will be immediately unset.
