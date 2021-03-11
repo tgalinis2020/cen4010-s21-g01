@@ -108,6 +108,16 @@ CREATE TABLE posts (
     CONSTRAINT posts_likeables_fk FOREIGN KEY (likeable_id) REFERENCES likeables (id)
 );
 
+CREATE TABLE post_comments (
+    user_id INTEGER UNSIGNED NOT NULL,
+    post_id INTEGER UNSIGNED NOT NULL,
+    text_content TEXT,
+
+    CONSTRAINT post_comments_pk PRIMARY KEY (user_id, post_id),
+    CONSTRAINT post_comments_posts_fk FOREIGN KEY (post_id) REFERENCES posts (id),
+    CONSTRAINT post_comments_users_fk FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
 -- Tags can be used to search for posts.
 CREATE TABLE tags (
     id INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
