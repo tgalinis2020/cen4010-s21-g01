@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use ThePetPark\Resources;
+use ThePetPark\Http\Resources;
 
 /**
  * Map API endpoints to resource controllers.
