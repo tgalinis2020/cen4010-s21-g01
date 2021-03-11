@@ -147,6 +147,24 @@ Returns:
 * `409` if username and/or e-mail are already registered.
 
 
+### GET /auth/echo
+
+Since HttpOnly cookies cannot be read by JavaScript, this endpoint lets the
+client application read the authenticated user's data.
+
+Query Parameters: `empty`
+
+Body: `empty`
+
+Returns:
+
+* `200` if the session cookie is set. Response body contains the following
+  fields in the `data` namespace: `username`, `email`, `firstName`, `lastName`,
+  and `avatar`.
+
+* `401` if session cookie is not set.
+
+
 ## Resource Endpoints
 
 TODO
