@@ -76,7 +76,7 @@ Authenticates a user based on their username/e-mail and password combination.
 If the provided details are correct, an HttpOnly cookie is set within the site's
 domain containing a JSON Web Token with claims about the user.
 
-All resource endpoints require that this cookie is set to perform actions
+Most resource endpoints require that this cookie is set to perform actions
 that can mutate the data model.
 
 Query String Parameters: `empty`
@@ -100,7 +100,25 @@ Returns:
   password's hash did not match the entry in the database.
 
 
-### POST /auth/logout
+### GET /auth/session
+
+Since HttpOnly cookies cannot be read by JavaScript, this endpoint lets the
+client application read the authenticated user's data.
+
+Query Parameters: `empty`
+
+Body: `empty`
+
+Returns:
+
+* `200` if the session cookie is set. Response body contains the following
+  fields in the `data` namespace: `username`, `email`, `firstName`, `lastName`,
+  and `avatar`.
+
+* `401` if session cookie is not set.
+
+
+### DELETE /auth/session
 
 If the session token from logging in is set, this endpoint simply unsets the
 cookie.
@@ -113,10 +131,12 @@ Returns:
 
 * `200` if session token was found and unset.
 
-* `401` if the user isn't logged in
+* `401` if the user isn't logged in.
 
 
-### POST /auth/register
+## Resource Endpoints
+
+### POST /users
 
 Creates a new user account with the provided information in the request body.
 Username and e-mail must be unique. Since only authenticated users can post
@@ -145,26 +165,3 @@ Returns:
 * `400` if any body parameters are missing.
 
 * `409` if username and/or e-mail are already registered.
-
-
-### GET /auth/echo
-
-Since HttpOnly cookies cannot be read by JavaScript, this endpoint lets the
-client application read the authenticated user's data.
-
-Query Parameters: `empty`
-
-Body: `empty`
-
-Returns:
-
-* `200` if the session cookie is set. Response body contains the following
-  fields in the `data` namespace: `username`, `email`, `firstName`, `lastName`,
-  and `avatar`.
-
-* `401` if session cookie is not set.
-
-
-## Resource Endpoints
-
-TODO

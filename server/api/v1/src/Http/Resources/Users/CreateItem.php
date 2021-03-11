@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Http\Auth;
+namespace ThePetPark\Http\Resources\Users;
 
-use Slim\Http\Request;
-use Slim\Http\Response;
-use Exception;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
 use ThePetPark\Repositories\UserRepository;
+use Exception;
 
 use function json_decode;
 use function password_hash;
@@ -21,7 +21,7 @@ use function count;
  *  - 400 on malformed request body
  *  - 409 if provided email is already registered
  */
-final class Register
+final class CreateItem
 {
     /** @var \ThePetPark\Repositories\UserRepository */
     private $userRepo;

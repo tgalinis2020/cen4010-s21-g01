@@ -12,8 +12,10 @@ use ThePetPark\Http\Auth;
 return function (Slim\App $auth) {
     
     $auth->map(['POST'], '/login', Auth\Login::class);
-    $auth->map(['GET'], '/logout', Auth\Logout::class);
-    $auth->map(['POST'], '/register', Auth\Register::class);
-    $auth->map(['GET'], '/echo', Auth\EchoSession::class);
+
+    $auth->group('/session', function (Slim\App $session) {
+        $session->map(['GET'], '', Auth\EchoSession::class);
+        $session->map(['DELETE'], '', Auth\Logout::class);
+    });
 
 };

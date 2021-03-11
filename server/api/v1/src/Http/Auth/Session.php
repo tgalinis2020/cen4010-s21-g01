@@ -17,26 +17,17 @@ use function json_encode;
  *   - 401 if session token is not set
  *   - 200 if session token is set
  */
-final class EchoSession
+final class Session
 {
     public function __invoke(Request $req, Response $res): Response
     {
-        $data = $req->getAttribute('@session');
+        $session = $req->getAttribute('@session');
 
-        if ($data === null) {
+        if ($session === null) {
             return $res->withStatus(401);
         }
 
-        $user = [
-            'username'  => $data['username'],
-            'firstName' => $data['firstName'],
-            'lastName'  => $data['lastName'],
-            'email'     => $data['email'],
-            'avatarUrl' => $data['avatarUrl'],
-            'createdAt' => $data['createdAt'],
-        ];
-
-        $res->getBody()->write(json_encode(['data' => $user]));
+        $res->getBody()->write(json_encode(['data' => $session]));
 
         return $res->withStatus(200);
     }
