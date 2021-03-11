@@ -92,7 +92,7 @@ CREATE TABLE subscriptions (
 -- it may be worth abstracting the likes from posts in case other things can
 -- be liked in the future.
 CREATE TABLE likeables (
-    id INTEGER UNSIGNED NOT NULL AUTO_INCREMENT START WITH 0,
+    id INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
     like_count INTEGER UNSIGNED NOT NULL DEFAULT 0,
 
     CONSTRAINT likeable_pk PRIMARY KEY (id)
@@ -110,7 +110,7 @@ CREATE TABLE posts (
 
 -- Tags can be used to search for posts.
 CREATE TABLE tags (
-    id INTEGER UNSIGNED NOT NULL AUTO_INCREMENT START WITH 0,
+    id INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
     tag_text VARCHAR(64) NOT NULL,
 
     CONSTRAINT tags_pk PRIMARY KEY (id),
