@@ -13,7 +13,7 @@ CREATE TABLE users (
 
     -- This value corresponds to an IDP code that the application supports.
     -- The application itself is an IDP (code = 0).
-    idp_id INTEGER UNSIGNED NOT NULL DEFAULT 0,
+    idp_code INTEGER UNSIGNED NOT NULL DEFAULT 0,
     
     CONSTRAINT users_pk PRIMARY KEY (id),
     CONSTRAINT users_username_uk UNIQUE (username),
