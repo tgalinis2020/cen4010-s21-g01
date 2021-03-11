@@ -22,9 +22,7 @@ If querying a collection, data will be an array rather than an object.
 
 ### GET /search
 
-Searches the database for users, pets, and posts
-
-Precondition: none
+Searches the database for users, pets, and posts.
 
 Query String Parameters:
 
