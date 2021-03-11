@@ -21,7 +21,10 @@ return [
                 // The secret is a series of random bytes that should make it
                 // nearly impossible for malicious actors to forge their own
                 // tokens on this app's behalf.
-                'secret_key' => (require __DIR__ . '/../../../../../secret.php'),
+                'secret_key' => (function () {
+                    require __DIR__ . '/../../../../../secret.php';
+                    return ob_get_clean();
+                })(),
                 'alg' => 'HS226',
                 'allowed_algs' => ['HS256', 'HS512'],
             ],
