@@ -3,7 +3,7 @@
 When making a request to an endpoint that receives input from the request
 body, all of the input data is wrapped inside of the `data` namespace.
 
-```json
+```javascript
 {
     "data": {
         /* input goes here */
