@@ -24,7 +24,7 @@ return [
         $settings = $c->get('firebase')['php-jwt'];
 
         $secret = $settings['secret_key'];
-        $alg = $settings['alg'];
+        $alg = $settings['algorithms'][$settings['selected_algorithm']];
 
         return function ($payload) use ($secret, $alg) {
             return JWT::encode($payload, $secret, $alg);
@@ -35,7 +35,7 @@ return [
         $settings = $c->get('settings')['firebase']['php-jwt'];
 
         $secret = $settings['secret_key'];
-        $allowed = $settings['allowed_algs'];
+        $allowed = $settings['algorithms'];
 
         return function ($token) use ($secret, $allowed) {
             JWT::decode($token, $secret, $allowed);

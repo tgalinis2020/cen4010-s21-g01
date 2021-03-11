@@ -22,8 +22,8 @@ return [
                 // nearly impossible for malicious actors to forge their own
                 // tokens and pretent to be another user.
                 'secret_key' => file_get_contents(__DIR__ . '/../../../../../secret.txt'),
-                'alg' => 'HS226',
-                'allowed_algs' => ['HS256', 'HS512'],
+                'algorithms' => ['HS256', 'HS512'],
+                'selected_algorithm' => 0,
             ],
         ],
 
