@@ -46,7 +46,7 @@ final class EchoSession
             'firstName' => $data['first_name'],
             'lastName'  => $data['last_name'],
             'email'     => $data['email'],
-            'avatar'    => $data['avatat_url'],
+            'avatar'    => $data['avatar_url'],
         ];
 
         return $res->withJson(['data' => $user], 200);
