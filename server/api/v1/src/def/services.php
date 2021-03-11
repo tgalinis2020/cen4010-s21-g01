@@ -32,7 +32,7 @@ return [
     }),
 
     'jwt_decoder' => factory(function (ContainerInterface $c) {
-        $settings = $c->get('firebase')['php-jwt'];
+        $settings = $c->get('settings')['firebase']['php-jwt'];
 
         $secret = $settings['secret_key'];
         $allowed = $settings['allowed_algs'];
