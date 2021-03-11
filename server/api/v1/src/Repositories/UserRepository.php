@@ -20,11 +20,11 @@ final class UserRepository
         $this->conn = $conn;
     }
 
-    public function getUserWithPassword(): QueryBuilder
+    public function getUsersWithPassword(): QueryBuilder
     {
         return $this->conn->createQueryBuilder()
             ->select('u.id', 'u.first_name AS firstName',
-                     'u.last_name AS lastName', 'u.avatar_url AS avatarUrl',
+                     'u.last_name AS lastName', 'u.avatar_url AS avatar',
                      'u.created_at AS createdAt', 'p.passwd AS password')
             ->from('users', 'u')
             ->join('u', 'user_passwords', 'p', 'p.id = u.id');
@@ -34,7 +34,7 @@ final class UserRepository
     {
         return $this->conn->createQueryBuilder()
             ->select('id', 'first_name as firstName', 'last_name as lastName',
-                     'username', 'avatar_url as avatarUrl', 'email',
+                     'username', 'avatar_url as avatar', 'email',
                      'created_at AS createdAt')
             ->from('users', 'u');
     }

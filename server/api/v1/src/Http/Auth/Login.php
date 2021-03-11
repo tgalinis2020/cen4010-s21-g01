@@ -14,10 +14,6 @@ use function setcookie;
 /**
  * If the provided username exists and provided password's hash matches
  * the one in the database, set a httponly cookie with the user's session JWT.
- * 
- * TODO: might be a good idea to handle making the JWT in a separate component
- * considering the same cookie name is being used in multiple parts of the
- * application.
  */
 final class Login
 {
@@ -37,16 +33,16 @@ final class Login
     {
         $data = json_decode($req->getBody(), true);
 
-        $account = $this->userRepo->getUsers()
-            ->where('username = :username')
-            ->orWhere('email = :username')
-            ->setParameter(0, $data['username'])
+        $acct = $this->userRepo->getUsersWithPassword()
+            ->where('username = :usr')
+            ->orWhere('email = :usr')
+            ->setParameter(':usr', $data['username'])
             ->execute()
             ->fetch();
 
         // If the user account was not found or the passwords did not match,
         // return a 404 Not Found status code to the client.
-        if (password_verify($data['password'], $account['password']) === false) {
+        if (password_verify($data['password'], $acct['password']) === false) {
             return $res->withStatus(404);
         }
 
@@ -60,13 +56,13 @@ final class Login
             'iat' => $currentTime,
             'exp' => $expiry,
             'iss' => $domain,
-            'sub' => $domain,
+            'aud' => $domain,
         ];
 
         // JWTs are not encrypted! Don't leak the password.
-        unset($account['password']);
+        unset($acct['password']);
 
-        $payload += $account;
+        $payload += $acct;
 
         $token = ($this->encoder)($payload);
 

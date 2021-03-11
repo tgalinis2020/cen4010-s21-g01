@@ -6,12 +6,11 @@ namespace ThePetPark\Http\Auth;
 
 use Slim\Http\Request;
 use Slim\Http\Response;
-use Doctrine\DBAL\Connection;
 use Exception;
 use ThePetPark\Repositories\UserRepository;
 
 use function json_decode;
-use function date;
+use function password_hash;
 use function count;
 
 /**
@@ -45,11 +44,13 @@ final class Register
             return $res->withStatus(400);
         }
 
+        $password = password_hash($data['password'], PASSWORD_BCRYPT);
+
         try {
 
             // This throws an exception if the user already exists in the DB.
             $this->userRepo->createUser(
-                $data['email'], $data['password'], $data['username'],
+                $data['email'], $password, $data['username'],
                 $data['firstName'], $data['lastName']
             );
 
