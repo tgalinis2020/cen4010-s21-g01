@@ -14,7 +14,7 @@ return (function () {
     $app = new Slim\App($builder->build());
 
     (require __DIR__ . '/middleware.php')($app);
-    (require __DIR__ . '/routes.php')($app);
+    (require __DIR__ . '/routes/root.php')($app);
 
     return $app;
 })();

@@ -33,8 +33,11 @@ return [
     }),
 
     'response' => factory(function (ContainerInterface $c) {
-        $headers = new Slim\Http\Headers(['Content-Type' => 'text/html; charset=UTF-8']);
+        $headers = new Slim\Http\Headers([
+            'Content-Type' => 'application/json; charset=UTF-8',
+        ]);
         $response = new Slim\Http\Response(200, $headers);
+
         return $response->withProtocolVersion($c->get('settings')['httpVersion']);
     }),
 

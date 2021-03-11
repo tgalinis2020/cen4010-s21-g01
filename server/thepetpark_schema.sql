@@ -8,7 +8,7 @@ CREATE TABLE users (
     username VARCHAR(255) NOT NULL,
     first_name VARCHAR(255) NOT NULL,
     last_name VARCHAR(255) NOT NULL,
-    avatar_url VARCHAR(255) NOT NULL,
+    avatar_url VARCHAR(255),
     created_at DATETIME NOT NULL,
 
     -- This value corresponds to an IDP code that the application supports.
@@ -58,10 +58,11 @@ CREATE TABLE pet_types (
 CREATE TABLE pets (
     id INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
     pet_name VARCHAR(255) NOT NULL,
+    pet_description TEXT,
     type_id  INTEGER UNSIGNED NOT NULL,
     breed_id INTEGER UNSIGNED,
     user_id INTEGER UNSIGNED NOT NULL,
-    avatar_url VARCHAR(255) NOT NULL,
+    avatar_url VARCHAR(255),
 
     CONSTRAINT pets_pk PRIMARY KEY (id),
     CONSTRAINT pets_type_fk FOREIGN KEY (type_id) REFERENCES pet_types (id),
@@ -111,7 +112,7 @@ CREATE TABLE posts (
 CREATE TABLE post_comments (
     user_id INTEGER UNSIGNED NOT NULL,
     post_id INTEGER UNSIGNED NOT NULL,
-    text_content TEXT,
+    text_content TEXT NOT NULL,
 
     CONSTRAINT post_comments_pk PRIMARY KEY (user_id, post_id),
     CONSTRAINT post_comments_posts_fk FOREIGN KEY (post_id) REFERENCES posts (id),

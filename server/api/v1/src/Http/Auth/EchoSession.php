@@ -4,52 +4,41 @@ declare(strict_types=1);
 
 namespace ThePetPark\Http\Auth;
 
-use Slim\Http\Request;
-use Slim\Http\Response;
-use Firebase\JWT\JWT;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
+
+use function json_encode;
 
 /**
  * Since HttpOnly cookies cannot be read by JavaScript, this endpoint will
  * give the client application the authenticated user's details.
  * 
  * Return Codes:
- *   - 404 if session token is not set
+ *   - 401 if session token is not set
  *   - 200 if session token is set
  */
 final class EchoSession
 {
-    /** @var string */
-    private $key;
-
-    /** @var array */
-    private $allowedAlgs;
-
-    public function __construct(string $key, array $allowedAlgs)
-    {
-        $this->key = $key;
-        $this->allowedAlgs = $allowedAlgs;
-    }
-
     public function __invoke(Request $req, Response $res): Response
     {
-        $token = $req->getAttribute('@session');
+        $data = $req->getAttribute('@session');
 
-        if ($token === null) {
-            return $res->withStatus(404);
+        if ($data === null) {
+            return $res->withStatus(401);
         }
 
-        $data = (array) JWT::decode($token, $this->key, $this->allowedAlgs);
-
-        // API fields from the front-end are displayed using camelCase.
         $user = [
             'username'  => $data['username'],
-            'firstName' => $data['first_name'],
-            'lastName'  => $data['last_name'],
+            'firstName' => $data['firstName'],
+            'lastName'  => $data['lastName'],
             'email'     => $data['email'],
-            'avatar'    => $data['avatar_url'],
+            'avatarUrl' => $data['avatarUrl'],
+            'createdAt' => $data['createdAt'],
         ];
 
-        return $res->withJson(['data' => $user], 200);
+        $res->getBody()->write(json_encode(['data' => $user]));
+
+        return $res->withStatus(200);
     }
 }
 

@@ -12,6 +12,8 @@ return function (Slim\App $app) {
 
     // Mount the authentication functions to the auth namespace.
     $app->group('/auth', require __DIR__ . '/routes/auth.php');
+
+    $app->map(['POST'], '/upload', ThePetPark\Http\UploadFile::class);
     
     $app->map(['GET'], '/search', ThePetPark\Http\Search::class);
     

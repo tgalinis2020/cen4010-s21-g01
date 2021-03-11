@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace ThePetPark\Http;
 
-use Slim\Http\Request;
-use Slim\Http\Response;
-use Doctrine\DBAL\Connection;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
+use ThePetPark\Repositories\UserRepository;
+use ThePetPark\Repositories\PetRepository;
+use ThePetPark\Repositories\PostRepository;
 
 use function parse_str;
+use function json_encode;
 
 /**
  * This endpoint yields users (humans), pets and posts that match the
@@ -16,15 +19,31 @@ use function parse_str;
  * 
  * The search critera must be provided in the request's query string
  * using the "q" key.
+ * 
+ * Response Codes:
+ *   - 200 on successful lookup
+ *   - 400 if "q" query parameter is missing
+ *   - 404 if no results found
  */
 final class Search
 {
-    /** @var \Doctrine\DBAL\Connection */
-    private $conn;
+    /** @var \ThePetPark\Repositories\UserRepository */
+    private $userRepo;
 
-    public function __construct(Connection $conn)
-    {
-        $this->conn = $conn;
+    /** @var \ThePetPark\Repositories\PetRepository */
+    private $petRepo;
+
+    /** @var \ThePetPark\Repositories\PostRepository */
+    private $postRepo;
+
+    public function __construct(
+        UserRepository $userRepo,
+        PetRepository $petRepo,
+        PostRepository $postRepo
+    ) {
+        $this->userRepo = $userRepo;
+        $this->petRepo = $petRepo;
+        $this->postRepo = $postRepo;
     }
 
     public function __invoke(Request $req, Response $res): Response
@@ -49,35 +68,27 @@ final class Search
         ];
 
         // Get users that match criteria
-        $users = $this->conn->createQueryBuilder()
-            ->select('id', 'email', 'first_name as firstName',
-                     'last_name as lastName', 'username')
-            ->from('users')
-            //->where(/* Magic */)
-            ->execute()
-            ->fetchAll();
+        $builder = $this->userRepo->getUsers();
+        
+        // TODO: apply applicable search critera
+
+        $users = $builder->execute()->fetchAll();
 
 
         // Get pets that match criteria
-        $pets = $this->conn->createQueryBuilder()
-            ->select('a.id', 'a.pet_name as name', 'b.pet_type as type',
-                     'c.pet_breed as breed')
-            ->from('pets', 'a')
-            ->join('a', 'pet_types',  'b', 'a.pet_type_id = b.id')
-            ->join('a', 'pet_breeds', 'c', 'a.pet_breed_id = c.id')
-            //->where(/* Magic */)
-            ->execute()
-            ->fetchAll();
+        $builder = $this->petRepo->getPets();
+
+        // TODO: apply applicable search criteria
+
+        $pets = $builder->execute()->fetchAll();
 
 
         // Get posts that match criteria
-        $posts = $this->conn->createQueryBuilder()
-            ->select('a.id', 'a.image_url', 'a.text_conent', 'b.likes')
-            ->from('posts', 'a')
-            ->join('a', 'likeables', 'b', 'p.likeable_id = l.id')
-            //->where(/* Magic */)
-            ->execute()
-            ->fetchAll();
+        $$builder = $this->postRepo->getPosts();
+
+        // TODO: apply applicable search criteria
+
+        $posts = $builder->execute()->fetchAll();
 
         $results = [
             'users' => $users,
@@ -85,7 +96,13 @@ final class Search
             'posts' => $posts,
         ];
 
-        return $res->withJson(['data' => $results], 200);
+        $body = $res->getBody();
+
+        $body->write(json_encode(['data' => $results]));
+
+        $count = count($users) + count($pets) + count($posts);
+
+        return $res->withStatus($count > 0 ? 200 : 404);
     }
 }
 

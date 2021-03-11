@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace ThePetPark\Http\Auth;
 
-use Slim\Http\Request;
-use Slim\Http\Response;
-use Doctrine\DBAL\Connection;
-use Firebase\JWT\JWT;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
+use ThePetPark\Repositories\UserRepository;
 
 use function time;
 use function setcookie;
@@ -22,44 +21,33 @@ use function setcookie;
  */
 final class Login
 {
-    /** @var \Doctrine\DBAL\Connection */
-    private $conn;
+    /** @var \ThePetPark\Repositories\UserRepository */
+    private $userRepo;
 
-    /** @var string */
-    private $key;
+    /** @var callable */
+    private $encoder;
 
-    /** @var string */
-    private $alg;
-
-    /**
-     * @param string $key The secret key used for generating JWTs
-     * @param \Doctrine\DBAL\Connection $conn The connection to the database
-     */
-    public function __construct(string $alg, string $key, Connection $conn)
+    public function __construct(UserRepository $userRepo, callable $jwtEncoder)
     {
-        $this->alg = $alg;
-        $this->key = $key;
-        $this->conn = $conn;
+        $this->userRepo = $userRepo;
+        $this->encoder = $jwtEncoder;
     }
 
     public function __invoke(Request $req, Response $res): Response
     {
-        $data = $req->getAttribute('data');
+        $data = json_decode($req->getBody(), true);
 
-        $account = $this->conn->createQueryBuilder()
-            ->select('a.id', 'a.username', 'a.email', 'b.passwd',
-                     'a.first_name', 'a.last_name', 'a.avatar_url')
-            ->from('users', 'a')
-            ->join('a', 'user_passwords', 'b', 'a.id = b.id')
-            ->where('a.email = ?')
-            ->setParameter(0, $data['email'])
+        $account = $this->userRepo->getUsers()
+            ->where('username = :username')
+            ->orWhere('email = :username')
+            ->setParameter(0, $data['username'])
             ->execute()
             ->fetch();
 
         // If the user account was not found or the passwords did not match,
         // return a 404 Not Found status code to the client.
-        if (!password_verify($data['password'], $account['passwd'])) {
-            return $res->withStatus(404, 'Not Found');
+        if (password_verify($data['password'], $account['password']) === false) {
+            return $res->withStatus(404);
         }
 
         $currentTime = time();
@@ -69,23 +57,23 @@ final class Login
         $expiry = $currentTime + 60*60*24*7; // 7 days (in seconds)
 
         $payload = [
-            'iat'           => $currentTime,
-            'exp'           => $expiry,
-            'iss'           => $domain,
-            'sub'           => $domain,
-            'id'            => $account['id'],
-            'username'      => $account['username'],
-            'first_name'    => $account['first_name'],
-            'last_name'     => $account['last_name'],
-            'avatar_url'    => $account['avatar_url'],
+            'iat' => $currentTime,
+            'exp' => $expiry,
+            'iss' => $domain,
+            'sub' => $domain,
         ];
 
-        $token = JWT::encode($payload, $this->key, $this->alg);
+        // JWTs are not encrypted! Don't leak the password.
+        unset($account['password']);
+
+        $payload += $account;
+
+        $token = ($this->encoder)($payload);
 
         setcookie('session_token', $token, $expiry, $root, $host, true, true);
 
-        // Cookie was set, let the client know using the 201 Created status code.
-        return $res->withStatus(201, 'Created');
+        // Cookie was set, let the client know using the 201 status code.
+        return $res->withStatus(201);
     }
 }
 

@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use Psr\Container\ContainerInterface;
-use Doctrine\DBAL\Connection;
 use ThePetPark\Http;
+use ThePetPark\Repositories\PetRepository;
+use ThePetPark\Repositories\PostRepository;
+use ThePetPark\Repositories\UserRepository;
 
 use function DI\factory;
 
@@ -18,25 +20,25 @@ return [
     }),
 
     Http\Search::class => factory(function (ContainerInterface $c) {
-        return new Http\Search($c->get(Connection::class));
-    }),
-
-    Http\Auth\EchoSession::class => factory(function (ContainerInterface $c) {
-        $settings = $c->get('settings')['firebase']['php-jwt'];
-
-        return new Http\Auth\EchoSession(
-            $settings['secret_key'],
-            $settings['allowed_algs']
+        return new Http\Search(
+            $c->get(UserRepository::class),
+            $c->get(PetRepository::class),
+            $c->get(PostRepository::class)
         );
     }),
 
-    Http\Auth\Login::class => factory(function (ContainerInterface $c) {
-        $settings = $c->get('settings')['firebase']['php-jwt'];
+    Http\UploadFile::class => factory(function (ContainerInterface $c) {
+        return new Http\UploadFile();
+    }),
 
+    Http\Auth\EchoSession::class => factory(function (ContainerInterface $c) {
+        return new Http\Auth\EchoSession();
+    }),
+
+    Http\Auth\Login::class => factory(function (ContainerInterface $c) {
         return new Http\Auth\Login(
-            $settings['alg'],
-            $settings['secret_key'],
-            $c->get(Connection::class)
+            $c->get(UserRepository::class),
+            $c->get('jwt_encoder')
         );
     }),
 
@@ -45,7 +47,7 @@ return [
     }),
 
     Http\Auth\Register::class => factory(function (ContainerInterface $c) {
-        return new Http\Auth\Register($c->get(Conntection::class));
+        return new Http\Auth\Register($c->get(UserRepository::class));
     }),
 
 ];

@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace ThePetPark\Middleware;
 
-use Slim\Http\Request;
-use Slim\Http\Response;
-use Firebase\JWT\JWT;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
 use Exception;
 
 /**
@@ -15,16 +14,12 @@ use Exception;
  */
 final class SessionMiddleware
 {
-    /** @var string */
-    private $key;
+    /** @var callable */
+    private $decoder;
 
-    /** @var array */
-    private $allowedAlgs;
-
-    public function __construct(string $key, array $allowedAlgs)
+    public function __construct(callable $jwtDecoder)
     {
-        $this->key = $key;
-        $this->allowedAlgs = $allowedAlgs;
+        $this->decoder = $jwtDecoder;
     }
 
     public function __invoke(Request $req, Response $res, callable $next)
@@ -37,13 +32,15 @@ final class SessionMiddleware
 
         try {
 
-            $data = (array) JWT::decode($token, $this->key, $this->allowedAlgs);
+            $data = (array) ($this->decoder)($token);
 
             return $next($req->withAttribute('@session', $data), $res);
 
         } catch (Exception $e) {
 
-            // TODO: handle expired token
+            // Token expired, unset it.
+            setcookie('session_token');
+
             return $next($req, $res);
 
         }

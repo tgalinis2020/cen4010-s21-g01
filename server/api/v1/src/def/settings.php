@@ -20,11 +20,8 @@ return [
             'php-jwt' => [
                 // The secret is a series of random bytes that should make it
                 // nearly impossible for malicious actors to forge their own
-                // tokens on this app's behalf.
-                'secret_key' => (function () {
-                    require __DIR__ . '/../../../../../secret.php';
-                    return ob_get_clean();
-                })(),
+                // tokens and pretent to be another user.
+                'secret_key' => file_get_contents(__DIR__ . '/../../../../../secret.txt'),
                 'alg' => 'HS226',
                 'allowed_algs' => ['HS256', 'HS512'],
             ],
@@ -32,27 +29,16 @@ return [
 
         'doctrine' => [
             'connection' => (function () {
-                list($user, $passwd) = (require __DIR__ . '/../../../../../credentials.php');
-
-                // Kind of a silly way to leave DB credentials out of
-                // version control, but it's necessary since it is not
-                // possible to set environment variables and/or read
-                // files outside of ~/public_html in FAU's LAMP server.
-                //
-                // In the project's root directory, a file called "credentials.php"
-                // must exist. The contents of the file should look something
-                // like this:
-                //
-                // <?php return ['mysql-account-name', 'super-secret-password'];
+                $config = parse_ini_file(__DIR__ . '/../../../../../.my.cnf');
 
                 return [
                     'driver' => 'pdo_mysql',
                     'host' => '127.0.0.1',
                     'port' => 3306,
-                    'dbname' => 'thepetpark',
+                    'dbname' => $config['database'],
                     'charset' => 'utf-8',
-                    'user' => $user,
-                    'password' => $passwd,
+                    'user' => $config['user'],
+                    'password' => $config['pass'],
                 ];
             })()
         ],
