@@ -1,15 +1,15 @@
 {
     "require": {
-        "php": ">=5.6",
+        "php": ">=7.0",
         "slim/slim": "^3.1",
         "php-di/php-di": "^6.0.0",
-        "doctrine/dbal": "^2.5"
+        "doctrine/dbal": "^2.5",
+        "firebase/php-jwt": "^5.2.1"
     },
 
     "autoload": {
         "psr-4": {
-            "ThePetPark\\": "./src/",
-            "ThePetPark\\Common\\": "../../common/"
+            "ThePetPark\\": "./src/"
         }
     }
 }

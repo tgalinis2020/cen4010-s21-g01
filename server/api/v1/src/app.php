@@ -2,22 +2,14 @@
 
 declare(strict_types=1);
 
+date_default_timezone_set('UTC');
+
 require __DIR__ . '/../vendor/autoload.php';
 
 return (function () {
     $builder = new DI\ContainerBuilder();
 
-    // Bootstrap the container.
-    $builder->addDefinitions(__DIR__ . '/../../../common/def/settings.php');
-    $builder->addDefinitions(__DIR__ . '/def/resources.php');
-    $builder->addDefinitions(__DIR__ . '/def/middleware.php');
-    $builder->addDefinitions(__DIR__ . '/def/services.php');
-
-    // Uncomment if definition cache is available.
-    // The app doesn't have write permissions on FAU's LAMP server outside
-    // of ~/public_html so the cache cannot be created on-the-fly.
-    // It must be generated in another machine and pushed into the Git repo.
-    //$builder->enableCompilation(__DIR__ . '/../var/cache');
+    (require __DIR__ . '/definitions.php')($builder);
 
     $app = new Slim\App($builder->build());
 

@@ -2,43 +2,19 @@
 
 declare(strict_types=1);
 
-use ThePetPark\Resources;
-
 /**
- * Map API endpoints to resource controllers.
- *
- * The provided resources must be defined in the app's dependency container.
+ * Root endpoint-to-controller mappings.
  */
 return function (Slim\App $app) {
 
-    $app->group('/posts', function () {
-        $this->map(['GET'],  '', Resources\Posts\Fetch::class);  
-        $this->map(['POST'], '', Resources\Posts\CreateItem::class);
+    // Mount the API's resources to the root of the application.
+    $app->group('', require __DIR__ . '/routes/resources.php');
 
-        $this->group('/{id}', function () {
-            $this->map(['GET'],   '', Resources\Posts\FetchItem::class);
-            $this->map(['PATCH'], '', Resources\Posts\UpdateItem::class);
-
-            /*
-            $this->group('/{relationship}', function () {
-                $this->map(['GET'],    '', Resources\Post\Relationship\Fetch::class);
-                $this->map(['POST'],   '', Resources\Post\Relationship\Create::class);
-                $this->map(['PATCH'],  '', Resources\Post\Relationship\Update::class);
-                $this->map(['DELETE'], '', Resources\Post\Relationship\Remove::class);
-            });
-            */
-        });
-
-        /*
-        $this->group('/relationships/{relationship}', function () {
-            $this->map(['GET'],    '', Resources\Post\Relationship\Fetch::class);
-            $this->map(['POST'],   '', Resources\Post\Relationship\Create::class);
-            $this->map(['PATCH'],  '', Resources\Post\Relationship\Update::class);
-            $this->map(['DELETE'], '', Resources\Post\Relationship\Remove::class);
-        });
-         */
-    });
-
-    $app->map(['GET'], '/hello[/{name}]', Resources\HelloWorld::class);
+    // Mount the authentication functions to the auth namespace.
+    $app->group('/auth', require __DIR__ . '/routes/auth.php');
+    
+    $app->map(['GET'], '/search', ThePetPark\Http\Search::class);
+    
+    $app->map(['GET'], '/hello[/{name}]', ThePetPark\Http\HelloWorld::class);
 
 };

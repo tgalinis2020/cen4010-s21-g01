@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 use Psr\Container\ContainerInterface;
-use ThePetPark\Resources\HelloWorld;
-use ThePetPark\Resources\Posts;
-use ThePetPark\Resources\Comments;
-use function DI\create;
-use function DI\get;
+use ThePetPark\Http\Resources\Posts;
+use ThePetPark\Http\Resources\Comments;
+use Doctrine\DBAL\Connection;
+
+use function DI\factory;
 
 /**
- * Each resource supports the following operations:
+ * Most resources support the following operations:
  *  - fetch (collection of items)
  *  - fetch item
  *  - create item
@@ -18,25 +18,46 @@ use function DI\get;
  */
 return [
 
-    HelloWorld::class => create(HelloWord::class),
+    // BEGIN(Posts)
+
+    Posts\Fetch::class => factory(function (ContainerInterface $c) {
+        return new Posts\Fetch($c->get(Connection::class));
+    }),
+    
+    Posts\FetchItem::class => factory(function (ContainerInterface $c) {
+        new Posts\FetchItem($c->get(Connection::class));
+    }),
+
+    Posts\CreateItem::class => factory(function (ContainerInterface $c) {
+        return new Posts\CreateItem($c->get(Connection::class));
+    }),
+
+    Posts\UpdateItem::class => factory(function (ContainerInterface $c) {
+        return new Posts\UpdateItem($c->get(Connection::class));
+    }),
+
+    // END(Posts)
 
 
-    Posts\Fetch::class => create(Posts\Fetch::class),
+    // BEGIN (Comments)
 
-    Posts\FetchItem::class => create(Posts\FetchItem::class),
+    Comments\Fetch::class => factory(function (ContainerInterface $c) {
+        return new Comments\Fetch($c->get(Connection::class));
+    }),
 
-    Posts\CreateItem::class => create(Posts\CreateItem::class),
+    Comments\FetchItem::class => factory(function (ContainerInterface $c) {
+        return new Comments\FetchItem($c->get(Connection::class));
+    }),
 
-    Posts\UpdateItem::class => create(Posts\UpdateItem::class),
+    Comments\CreateItem::class => factory(function (ContainerInterface $c) {
+        return new Comments\CreateItem($c->get(Connection::class));
+    }),
 
+    Comments\UpdateItem::class => factory(function (ContainerInterface $c) {
+        return new Comments\UpdateItem($c->get(Connection::class));
+    }),
 
-    Comments\Fetch::class => create(Comments\Fetch::class),
-
-    Comments\FetchItem::class => create(Comments\FetchItem::class),
-
-    Comments\CreateItem::class => create(Comments\CreateItem::class),
-
-    Comments\UpdateItem::class => create(Comments\UpdateItem::class),
+    // END (Comments)
 
 ];
 

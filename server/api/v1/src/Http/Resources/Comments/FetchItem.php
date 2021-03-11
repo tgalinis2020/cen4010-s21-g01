@@ -2,16 +2,20 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Resources\Posts;
+namespace ThePetPark\Http\Resources\Comments;
 
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Message\ResponseInterface as Response;
+use Slim\Http\Request;
+use Slim\Http\Response;
+use Doctrine\DBAL\Connection;
 
 final class FetchItem
 {
-    public function __construct()
+    /** @var \Doctrine\DBAL\Connection */
+    private $conn;
+
+    public function __construct(Connection $conn)
     {
-        // initialize dependencies here
+        $this->conn = $conn;
     }
 
     public function __invoke(Request $req, Response $res): Response
