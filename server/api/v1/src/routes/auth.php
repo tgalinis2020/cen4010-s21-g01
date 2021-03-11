@@ -14,7 +14,7 @@ return function (Slim\App $auth) {
     $auth->map(['POST'], '/login', Auth\Login::class);
 
     $auth->group('/session', function (Slim\App $session) {
-        $session->map(['GET'], '', Auth\EchoSession::class);
+        $session->map(['GET'], '', Auth\Session::class);
         $session->map(['DELETE'], '', Auth\Logout::class);
     });
 
