@@ -8,10 +8,10 @@ declare(strict_types=1);
 return function (Slim\App $app) {
 
     // Mount the API's resources to the root of the application.
-    $app->group('', require __DIR__ . '/routes/resources.php');
+    $app->group('', require __DIR__ . '/resources.php');
 
     // Mount the authentication functions to the auth namespace.
-    $app->group('/auth', require __DIR__ . '/routes/auth.php');
+    $app->group('/auth', require __DIR__ . '/auth.php');
 
     $app->map(['POST'], '/upload', ThePetPark\Http\UploadFile::class);
     
