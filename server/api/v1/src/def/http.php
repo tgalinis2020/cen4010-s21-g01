@@ -46,6 +46,6 @@ return [
 
     Http\Auth\Register::class => factory(function (ContainerInterface $c) {
         return new Http\Auth\Register($c->get(Conntection::class));
-    }
+    }),
 
 ];
