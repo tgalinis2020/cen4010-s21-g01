@@ -29,7 +29,7 @@ return [
 
         'doctrine' => [
             'connection' => (function () {
-                list($user, $passwd) = (require __DIR__ . '/../../../../../connection.php');
+                list($user, $passwd) = (require __DIR__ . '/../../../../../credentials.php');
 
                 // Kind of a silly way to leave DB credentials out of
                 // version control, but it's necessary since it is not
