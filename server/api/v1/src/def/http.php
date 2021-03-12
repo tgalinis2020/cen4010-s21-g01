@@ -31,8 +31,8 @@ return [
         return new Http\UploadFile();
     }),
 
-    Http\Auth\EchoSession::class => factory(function (ContainerInterface $c) {
-        return new Http\Auth\EchoSession();
+    Http\Auth\WhoAmI::class => factory(function (ContainerInterface $c) {
+        return new Http\Auth\WhoAmI();
     }),
 
     Http\Auth\Login::class => factory(function (ContainerInterface $c) {
@@ -44,10 +44,6 @@ return [
 
     Http\Auth\Logout::class => factory(function (ContainerInterface $c) {
         return new Http\Auth\Logout();
-    }),
-
-    Http\Auth\Register::class => factory(function (ContainerInterface $c) {
-        return new Http\Auth\Register($c->get(UserRepository::class));
     }),
 
 ];

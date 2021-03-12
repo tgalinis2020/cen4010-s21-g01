@@ -5,7 +5,9 @@ declare(strict_types=1);
 use Psr\Container\ContainerInterface;
 use ThePetPark\Http\Resources\Posts;
 use ThePetPark\Http\Resources\Comments;
+use ThePetPark\Http\Resources\Users;
 use Doctrine\DBAL\Connection;
+use ThePetPark\Repositories\UserRepository;
 
 use function DI\factory;
 
@@ -58,6 +60,23 @@ return [
     }),
 
     // END (Comments)
+
+
+    // BEGIN (Users)
+
+
+
+    // END (Users)
+
+    Users\CreateItem::class => factory(function (ContainerInterface $c) {
+        return new Users\CreateItem($c->get(UserRepository::class));
+    }),
+
+    // BEGIN (Pets)
+
+
+
+    // END (Pets)
 
 ];
 

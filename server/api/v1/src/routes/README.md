@@ -1,7 +1,8 @@
 # API endpoints with supported HTTP methods
 
-When making a request to an endpoint that receives input from the request
-body, all of the input data is wrapped inside of the `data` namespace.
+With the exception of the `/upload` endpoint, all input data must be
+serialized in JSON and be wrapped inside of the `data` namespace when making a
+request to an endpoint that receives input from the request body.
 
 ```javascript
 {
@@ -36,7 +37,9 @@ Query String Parameters:
   Spike whose owner is Bob. If no symbols are prepended to the search term,
   it is assumed that it is either a tag or a pet's name.
 
-Body: `empty`
+Request Parameters: `empty`
+
+Body Parameters: `empty`
 
 Returns:
 
@@ -54,7 +57,9 @@ the provided image asset must be uploaded beforehand.
 
 Query String Parameters: `empty`
 
-Body:
+Request Parameters: `empty`
+
+Body Parameters:
 
 * `file: PNG|JPG|GIF` The image to upload
 
@@ -68,9 +73,32 @@ Returns:
 
 
 
-## Authentication Endpoints
+## The Session Endpoint
 
-### POST /auth/login
+This endpoint handles all authentication-related tasks.
+
+
+### GET /session
+
+Since HttpOnly cookies cannot be read by JavaScript, this endpoint lets the
+client application read the authenticated user's data.
+
+Query Parameters: `empty`
+
+Request Parameters: `empty` 
+
+Body Parameters: `empty`
+
+Returns:
+
+* `200` if the session cookie is set. Response body contains the following
+  fields in the `data` namespace: `username`, `email`, `firstName`, `lastName`,
+  and `avatar`.
+
+* `401` if session cookie is not set.
+
+
+### POST /session
 
 Authenticates a user based on their username/e-mail and password combination.
 If the provided details are correct, an HttpOnly cookie is set within the site's
@@ -81,7 +109,9 @@ that can mutate the data model.
 
 Query String Parameters: `empty`
 
-Body:
+Request Parameters: `empty`
+
+Body Parameters:
 
 * `username: String` Although the parameter is called "username", one could also
   use their e-mail to log in.
@@ -100,32 +130,16 @@ Returns:
   password's hash did not match the entry in the database.
 
 
-### GET /auth/session
-
-Since HttpOnly cookies cannot be read by JavaScript, this endpoint lets the
-client application read the authenticated user's data.
-
-Query Parameters: `empty`
-
-Body: `empty`
-
-Returns:
-
-* `200` if the session cookie is set. Response body contains the following
-  fields in the `data` namespace: `username`, `email`, `firstName`, `lastName`,
-  and `avatar`.
-
-* `401` if session cookie is not set.
-
-
-### DELETE /auth/session
+### DELETE /session
 
 If the session token from logging in is set, this endpoint simply unsets the
 cookie.
 
-Query Parameters: `empty`
+Query String Parameters: `empty`
 
-Body: `empty`
+Request Parameters: `empty`
+
+Body Parameters: `empty`
 
 Returns:
 
@@ -136,6 +150,33 @@ Returns:
 
 ## Resource Endpoints
 
+This section is still a work in progress.
+
+## Users
+
+### GET /users
+
+Get a collection of registered users.
+
+Query Parameters:
+
+* `after: ?integer` The collection will include all users whose ID is larger than
+  the specified user ID. Use to paginate results.
+
+* `limit: ?integer` The maximum number of users to fetch. Default is 50.
+
+Request Parameters: `empty`
+
+Body Parameters: `empty`
+
+Returns:
+
+* `200` if fetched number of users is nonzero. Response body contains an array
+  of users.
+
+* `404` if fetched number of users is zero.
+
+
 ### POST /users
 
 Creates a new user account with the provided information in the request body.
@@ -144,7 +185,9 @@ images, the avatar cannot be provided on account registration.
 
 Query Parameters: `empty`
 
-Body:
+Request Parameters: `empty`
+
+Body Parameters:
 
 * `username: String` The user's username. It is displayed in posts and comments.
   Must be unique.
@@ -165,3 +208,52 @@ Returns:
 * `400` if any body parameters are missing.
 
 * `409` if username and/or e-mail are already registered.
+
+
+### GET /users/:id
+
+Gets the specified user's data (excluding the password hash).
+
+
+### GET /users/:id/pets
+
+Similar to `/pets` with the exception that all of the returned pets are from the
+specified user.
+
+
+### GET /users/:user_id/subscriptions
+
+Similar to `/pets` with the exception that all of the returned pets were
+subscribed to by the user.
+
+
+### POST /users/:user_id/subscriptions/:pet_id
+
+Adds a pet to the user's subscriptions.
+
+
+### DELETE /users/:id/subscriptions/:pet_id
+
+Removes a pet from the user's subscriptions.
+
+
+### GET /users/:id/posts
+
+Similar to `/posts` with the exception that all of the returned posts are from
+the specified user.
+
+
+### GET /users/:user_id/favorites
+
+Similar to `/posts` with the exception that all of the returned posts are the
+user's favorites.
+
+
+### POST /users/:user_id/favorites/:post_id
+
+Adds a post to the user's favorites.
+
+
+### DELETE /users/:user_id/favorites/:post_id
+
+Removes a post from the user's favorites.

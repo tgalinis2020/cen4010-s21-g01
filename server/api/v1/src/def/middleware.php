@@ -11,9 +11,7 @@ use function DI\factory;
 return [
     
     SessionMiddleware::class => factory(function (ContainerInterface $c) {
-        return new SessionMiddleware(
-            $c->get('jwt_decoder')
-        );
+        return new SessionMiddleware($c->get('jwt_decoder'));
     }),
 
 ];

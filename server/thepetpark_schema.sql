@@ -136,3 +136,12 @@ CREATE TABLE post_tags (
     CONSTRAINT post_tags_post_fk FOREIGN KEY (post_id) REFERENCES posts (id),
     CONSTRAINT post_tags_tag_fk FOREIGN KEY (tag_id) REFERENCES tags (id)
 );
+
+CREATE TABLE post_pets (
+    post_id INTEGER UNSIGNED NOT NULL,
+    pet_id INTEGER UNSIGNED NOT NULL,
+
+    CONSTRAINT post_pets_pk PRIMARY KEY (post_id, pet_id),
+    CONSTRAINT post_pets_post_fk FOREIGN KEY (post_id) REFERENCES posts (id),
+    CONSTRAINT post_pets_pet_fk FOREIGN KEY (pet_id) REFERENCES pets (id)
+);
