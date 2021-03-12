@@ -233,6 +233,12 @@ Similar to `/pets` with the exception that all of the returned pets are from the
 specified user.
 
 
+### POST /users/:user_id/pets
+
+Creates a new pet and maps it to the user. User's ID in the request parameter
+must match with their ID in the session token.
+
+
 ### GET /users/:user_id/subscriptions
 
 Similar to `/pets` with the exception that all of the returned pets were
@@ -253,6 +259,11 @@ Removes a pet from the user's subscriptions.
 
 Similar to `/posts` with the exception that all of the returned posts are from
 the specified user.
+
+
+### POST /users/:id/posts
+
+Creates a new post with the provided user as the author.
 
 
 ### GET /users/:user_id/favorites
@@ -280,6 +291,10 @@ TODO
 
 TODO
 
+### GET /posts/:post_id/comments
+
+TODO
+
 
 ### POST /posts/:post_id/comments
 
@@ -287,10 +302,5 @@ TODO
 
 
 ### GET /pets
-
-TODO
-
-
-### POST /pets
 
 TODO

@@ -12,5 +12,4 @@ bin/
 .local/
 .cache/
 .config/
-credentials.php
-secret.php
+secret.txt
