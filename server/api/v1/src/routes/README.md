@@ -25,7 +25,7 @@ If querying a collection, data will be an array rather than an object.
 
 Searches the database for users, pets, and posts.
 
-Query String Parameters:
+Query Parameters:
 
 * `q: String` The search terms. Posts can be queried by prepending the string
   with a hashtag (#). "#fish" would search for posts tagged with the
@@ -55,7 +55,7 @@ This endpoint doesn't accept JSON data as input; it handles multipart forms.
 When a user uploads a post or changes a profile picture,
 the provided image asset must be uploaded beforehand.
 
-Query String Parameters: `empty`
+Query Parameters: `empty`
 
 Request Parameters: `empty`
 
@@ -107,16 +107,16 @@ domain containing a JSON Web Token with claims about the user.
 Most resource endpoints require that this cookie is set to perform actions
 that can mutate the data model.
 
-Query String Parameters: `empty`
+Query Parameters: `empty`
 
 Request Parameters: `empty`
 
 Body Parameters:
 
-* `username: String` Although the parameter is called "username", one could also
+* `username: string` Although the parameter is called "username", one could also
   use their e-mail to log in.
 
-* `password: String` User's password. Used to compare with the hash stored in
+* `password: string` User's password. Used to compare with the hash stored in
   the database.
 
 Returns:
@@ -135,7 +135,7 @@ Returns:
 If the session token from logging in is set, this endpoint simply unsets the
 cookie.
 
-Query String Parameters: `empty`
+Query Parameters: `empty`
 
 Request Parameters: `empty`
 
@@ -151,8 +151,6 @@ Returns:
 ## Resource Endpoints
 
 This section is still a work in progress.
-
-## Users
 
 ### GET /users
 
@@ -171,10 +169,10 @@ Body Parameters: `empty`
 
 Returns:
 
-* `200` if fetched number of users is nonzero. Response body contains an array
+* `200` if number of fetched users is nonzero. Response body contains an array
   of users.
 
-* `404` if fetched number of users is zero.
+* `404` if number of fetched users is zero.
 
 
 ### POST /users
@@ -189,17 +187,17 @@ Request Parameters: `empty`
 
 Body Parameters:
 
-* `username: String` The user's username. It is displayed in posts and comments.
+* `username: string` The user's username. It is displayed in posts and comments.
   Must be unique.
 
-* `email: String` The user's e-mail address. Must be unique.
+* `email: string` The user's e-mail address. Must be unique.
 
-* `password: String` The user's password. Note: it is not stored in the database
+* `password: string` The user's password. Note: it is not stored in the database
   verbatim!
 
-* `firstName: String` The user's first name.
+* `firstName: string` The user's first name.
 
-* `lastName: String` The user's last name.
+* `lastName: string` The user's last name.
 
 Returns:
 
@@ -210,12 +208,26 @@ Returns:
 * `409` if username and/or e-mail are already registered.
 
 
-### GET /users/:id
+### GET /users/:user_id
 
 Gets the specified user's data (excluding the password hash).
 
+Query Parameters: `empty`
 
-### GET /users/:id/pets
+Request Parameters:
+
+* `user_id: string` The user's ID.
+
+Body Parameters: `empty`
+
+Returns:
+
+* `200` if user exists. Response body contains user's details.
+
+* `404` if there is no user with specified ID.
+
+
+### GET /users/:user_id/pets
 
 Similar to `/pets` with the exception that all of the returned pets are from the
 specified user.
@@ -232,7 +244,7 @@ subscribed to by the user.
 Adds a pet to the user's subscriptions.
 
 
-### DELETE /users/:id/subscriptions/:pet_id
+### DELETE /users/:user_id/subscriptions/:pet_id
 
 Removes a pet from the user's subscriptions.
 
@@ -257,3 +269,28 @@ Adds a post to the user's favorites.
 ### DELETE /users/:user_id/favorites/:post_id
 
 Removes a post from the user's favorites.
+
+
+### GET /posts
+
+TODO
+
+
+### POST /posts
+
+TODO
+
+
+### POST /posts/:post_id/comments
+
+TODO
+
+
+### GET /pets
+
+TODO
+
+
+### POST /pets
+
+TODO
