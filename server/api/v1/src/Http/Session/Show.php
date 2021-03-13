@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Http\Auth;
+namespace ThePetPark\Http\Session;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -14,14 +14,14 @@ use function json_encode;
  * give the client application the authenticated user's details.
  * 
  * Return Codes:
- *   - 401 if session token is not set
  *   - 200 if session token is set
+ *   - 401 if session token is not set
  */
-final class WhoAmI
+final class Show
 {
     public function __invoke(Request $req, Response $res): Response
     {
-        $session = $req->getAttribute('@session');
+        $session = $req->getAttribute('session');
 
         if ($session === null) {
             return $res->withStatus(401);

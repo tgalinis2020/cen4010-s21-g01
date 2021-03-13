@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Http\Resources\Comments;
+namespace ThePetPark\Http\Resources\Users;
 
-use Slim\Http\Request;
-use Slim\Http\Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
 use Doctrine\DBAL\Connection;
+
+use function json_encode;
 
 final class Fetch
 {
@@ -20,8 +22,9 @@ final class Fetch
 
     public function __invoke(Request $req, Response $res): Response
     {
-        // TODO: get data from DB and optionally parse query params
-        return $res->withJson(['data' => []]);
+        $res->getBody()->write(json_encode(['data' => []]));
+
+        return $res->withStatus(200);
     }
 }
 

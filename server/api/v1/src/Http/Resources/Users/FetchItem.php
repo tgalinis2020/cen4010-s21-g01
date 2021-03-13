@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Http\Resources\Posts;
+namespace ThePetPark\Http\Resources\Users;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -23,7 +23,7 @@ final class FetchItem
     public function __invoke(Request $req, Response $res): Response
     {
         $res->getBody()->write(json_encode(['data' => null]));
-
+        
         return $res->withStatus(200);
     }
 }

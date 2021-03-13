@@ -6,6 +6,7 @@ namespace ThePetPark\Http;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Doctrine\DBAL\Connection;
 use ThePetPark\Repositories\UserRepository;
 use ThePetPark\Repositories\PetRepository;
 use ThePetPark\Repositories\PostRepository;
@@ -14,6 +15,11 @@ use function parse_str;
 use function json_encode;
 
 /**
+ * @deprecated
+ * 
+ * Make requests to /posts, /users, and /pets instead.
+ * Parse special tokens on client-side applications.
+ * 
  * This endpoint yields users (humans), pets and posts that match the
  * search critera.
  * 

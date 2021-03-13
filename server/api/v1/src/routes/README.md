@@ -284,12 +284,15 @@ Removes a post from the user's favorites.
 
 ### GET /posts
 
-TODO
+Fetches a collection of posts from the database. By default, the posts
+are sorted by ID in descending order.
 
 
 ### POST /posts
 
-TODO
+Creates a new post. Only authenticated users can create a post: their session
+token is used to derive the post author.
+
 
 ### GET /posts/:post_id/comments
 
@@ -298,7 +301,8 @@ TODO
 
 ### POST /posts/:post_id/comments
 
-TODO
+Creates a new comment associated with the post. Only authenticated users
+can create comments: their session token is used to derive the comment author.
 
 
 ### GET /pets

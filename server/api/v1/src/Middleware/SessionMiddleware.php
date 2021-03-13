@@ -6,25 +6,26 @@ namespace ThePetPark\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use ThePetPark\Services\JWT\Decoder;
 use Exception;
 
 /**
- * Adds user session details to the request as an attribute using the "@session"
- * key if a session cookie is set.
+ * Adds the "session" request attribute containing the user's session claims
+ * if a session cookie is set.
  */
 final class SessionMiddleware
 {
-    /** @var callable */
+    /** @var \ThePetPark\Services\JWT\Decoder */
     private $decoder;
 
-    public function __construct(callable $jwtDecoder)
+    public function __construct(Decoder $jwtDecoder)
     {
         $this->decoder = $jwtDecoder;
     }
 
     public function __invoke(Request $req, Response $res, callable $next)
     {
-        $token = $_COOKIE['session_token'] ?? null;
+        $token = $_COOKIE['session'] ?? null;
 
         if ($token == null) {
             return $next($req, $res);
@@ -32,14 +33,14 @@ final class SessionMiddleware
 
         try {
 
-            $data = (array) ($this->decoder)($token);
+            $data = $this->decoder->decode($token);
 
-            return $next($req->withAttribute('@session', $data), $res);
+            return $next($req->withAttribute('session', $data), $res);
 
         } catch (Exception $e) {
 
             // Token expired, unset it.
-            setcookie('session_token');
+            setcookie('session');
 
             return $next($req, $res);
 

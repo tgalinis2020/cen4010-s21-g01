@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 use Psr\Container\ContainerInterface;
 use Doctrine\DBAL;
-use Firebase\JWT\JWT;
-
+use ThePetPark\Services;
 use function DI\factory;
 
 /**
@@ -20,26 +19,22 @@ return [
         );
     }),
 
-    'jwt_encoder' => factory(function (ContainerInterface $c) {
+    Services\JWT\Encoder::class => factory(function (ContainerInterface $c) {
         $settings = $c->get('firebase')['php-jwt'];
 
-        $secret = $settings['secret_key'];
-        $alg = $settings['algorithms'][$settings['selected_algorithm']];
-
-        return function ($payload) use ($secret, $alg) {
-            return JWT::encode($payload, $secret, $alg);
-        };
+        return new Services\JWT\Encoder(
+            $settings['secret_key'],
+            $settings['algorithms'][$settings['selected_algorithm']]
+        );
     }),
 
-    'jwt_decoder' => factory(function (ContainerInterface $c) {
+    Services\JWT\Decoder::class => factory(function (ContainerInterface $c) {
         $settings = $c->get('settings')['firebase']['php-jwt'];
 
-        $secret = $settings['secret_key'];
-        $allowed = $settings['algorithms'];
-
-        return function ($token) use ($secret, $allowed) {
-            JWT::decode($token, $secret, $allowed);
-        };
+        return new Services\JWT\Decoder(
+            $settings['secret_key'],
+            $settings['algorithms']
+        );
     }),
 
 ];

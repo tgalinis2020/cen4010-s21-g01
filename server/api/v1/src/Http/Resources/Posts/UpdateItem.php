@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace ThePetPark\Http\Resources\Posts;
 
-use Slim\Http\Request;
-use Slim\Http\Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
 use Doctrine\DBAL\Connection;
 
 final class UpdateItem
@@ -20,7 +20,6 @@ final class UpdateItem
 
     public function handle(Request $req, Response $res): Response
     {
-        // TODO: read post info from request and save to DB
         return $res->withStatus(201);
     }
 }

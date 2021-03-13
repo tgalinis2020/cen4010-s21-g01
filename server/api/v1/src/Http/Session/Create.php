@@ -6,7 +6,8 @@ namespace ThePetPark\Http\Auth;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
-use ThePetPark\Repositories\UserRepository;
+use Doctrine\DBAL\Connection;
+use ThePetPark\Services\JWT\Encoder;
 
 use function time;
 use function setcookie;
@@ -15,17 +16,17 @@ use function setcookie;
  * If the provided username exists and provided password's hash matches
  * the one in the database, set a httponly cookie with the user's session JWT.
  */
-final class Login
+final class Create
 {
-    /** @var \ThePetPark\Repositories\UserRepository */
-    private $userRepo;
+    /** @var \Doctrine\DBAL\Connection */
+    private $conn;
 
-    /** @var callable */
+    /** @var \ThePetPark\Services\JWT\Encoder */
     private $encoder;
 
-    public function __construct(UserRepository $userRepo, callable $jwtEncoder)
+    public function __construct(Connection $conn, Encoder $jwtEncoder)
     {
-        $this->userRepo = $userRepo;
+        $this->conn = $conn;
         $this->encoder = $jwtEncoder;
     }
 
@@ -33,9 +34,20 @@ final class Login
     {
         $data = json_decode($req->getBody(), true);
 
-        $acct = $this->userRepo->getUsersWithPassword()
-            ->where('username = :usr')
-            ->orWhere('email = :usr')
+        $acct = $this->conn->createQueryBuilder()
+            ->select([
+                'u.id',
+                'u.idp_code     AS idpCode',
+                'u.first_name   AS firstName',
+                'u.last_name    AS lastName',
+                'u.avatar_url   AS avatar',
+                'u.created_at   AS createdAt',
+                'p.passwd       AS password',
+            ])
+            ->from('users', 'u')
+            ->join('u', 'user_passwords', 'p', 'p.id = u.id')
+            ->where('u.username = :usr')
+            ->orWhere('u.email = :usr')
             ->setParameter(':usr', $data['username'])
             ->execute()
             ->fetch();
@@ -64,9 +76,9 @@ final class Login
 
         $payload += $acct;
 
-        $token = ($this->encoder)($payload);
+        $token = $this->encoder->encode($payload);
 
-        setcookie('session_token', $token, $expiry, $root, $host, true, true);
+        setcookie('session', $token, $expiry, $root, $host, true, true);
 
         // Cookie was set, let the client know using the 201 status code.
         return $res->withStatus(201);

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Http\Resources\Comments;
+namespace ThePetPark\Http\Resources\Users;
 
-use Slim\Http\Request;
-use Slim\Http\Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
 use Doctrine\DBAL\Connection;
 
-final class CreateItem
+final class UpdateItem
 {
     /** @var \Doctrine\DBAL\Connection */
     private $conn;
@@ -20,7 +20,6 @@ final class CreateItem
 
     public function handle(Request $req, Response $res): Response
     {
-        // TODO: read post info from request and save to DB
         return $res->withStatus(201);
     }
 }

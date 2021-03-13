@@ -6,12 +6,14 @@ namespace ThePetPark\Http\Resources\Users;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
-use ThePetPark\Repositories\UserRepository;
+use Doctrine\DBAL\Connection;
+use ThePetPark\Services\JWT\Encoder;
 use Exception;
 
 use function json_decode;
 use function password_hash;
 use function count;
+use function date;
 
 /**
  * Creates a new user account if it doesn't already exist.
@@ -23,12 +25,12 @@ use function count;
  */
 final class CreateItem
 {
-    /** @var \ThePetPark\Repositories\UserRepository */
-    private $userRepo;
+    /** @var \Doctrine\DBAL\Connection */
+    private $conn;
 
-    public function __construct(UserRepository $userRepo)
+    public function __construct(Connection $conn)
     {
-        $this->userRepo = $userRepo;
+        $this->conn = $conn;
     }
 
     public function __invoke(Request $req, Response $res): Response
@@ -44,21 +46,63 @@ final class CreateItem
             return $res->withStatus(400);
         }
 
-        $password = password_hash($data['password'], PASSWORD_BCRYPT);
+        /*
+        $count = (int) $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from('users')
+            ->where('email = ?')
+            ->orWhere('username = ?')
+            ->setParameter(0, $data['email'])
+            ->setParameter(1, $data['username'])
+            ->execute()
+            ->fetchColumn(0);
+
+        // If an account was found with provided credentials, stop here.
+        if ($count > 0) {
+            return $res->withStatus(409);
+        }
+        */
+
+        $acct = $data['data'];
 
         try {
 
-            // This throws an exception if the user already exists in the DB.
-            $this->userRepo->createUser(
-                $data['email'], $password, $data['username'],
-                $data['firstName'], $data['lastName']
-            );
-
+            $this->conn->createQueryBuilder()
+                ->insert('users')
+                ->setValue('email', '?')
+                ->setValue('username', '?')
+                ->setValue('first_name', '?')
+                ->setValue('last_name', '?')
+                ->setValue('created_at', '?')
+                ->setParameter(0, $acct['email'])
+                ->setParameter(1, $acct['username'])
+                ->setParameter(2, $acct['firstName'])
+                ->setParameter(3, $acct['lastName'])
+                ->setParameter(4, date('c'))
+                ->execute();
+            
         } catch (Exception $e) {
+
+            // E-mail and username have a unique key constraint.
+            // Query will fail if provided e-mail and/or username are
+            // already associated with an account. Client apps should
+            // GET /users to check if an account exists before trying
+            // to create a new one.
 
             return $res->withStatus(409);
 
         }
+
+        $acct['id'] = $this->conn->lastInsertId();
+        $password = password_hash($acct['password'], PASSWORD_BCRYPT);
+
+        $this->conn->createQueryBuilder()
+            ->insert('user_passwords')
+            ->setValue('id', '?')
+            ->setValue('passwd', '?')
+            ->setParameter(0, $acct['id'])
+            ->setParameter(1, $password)
+            ->execute();
 
         return $res->withStatus(201);
     }

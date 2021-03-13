@@ -7,6 +7,8 @@ use ThePetPark\Http;
 use ThePetPark\Repositories\PetRepository;
 use ThePetPark\Repositories\PostRepository;
 use ThePetPark\Repositories\UserRepository;
+use ThePetPark\Services;
+use Doctrine\DBAL\Connection;
 
 use function DI\factory;
 
@@ -19,6 +21,9 @@ return [
         return new Http\HelloWorld();
     }),
 
+    /*
+    // Deprecated. Make requests to /posts, /users, and /pets instead.
+    // Parse special tokens on client-side applications.
     Http\Search::class => factory(function (ContainerInterface $c) {
         return new Http\Search(
             $c->get(UserRepository::class),
@@ -26,24 +31,25 @@ return [
             $c->get(PostRepository::class)
         );
     }),
+    */
 
     Http\UploadFile::class => factory(function (ContainerInterface $c) {
         return new Http\UploadFile();
     }),
 
-    Http\Auth\WhoAmI::class => factory(function (ContainerInterface $c) {
-        return new Http\Auth\WhoAmI();
+    Http\Session\Reflect::class => factory(function (ContainerInterface $c) {
+        return new Http\Session\Reflect();
     }),
 
-    Http\Auth\Login::class => factory(function (ContainerInterface $c) {
-        return new Http\Auth\Login(
-            $c->get(UserRepository::class),
-            $c->get('jwt_encoder')
+    Http\Session\Create::class => factory(function (ContainerInterface $c) {
+        return new Http\Session\Create(
+            $c->get(Connection::class),
+            $c->get(Services\JWT\Encoder::class)
         );
     }),
 
-    Http\Auth\Logout::class => factory(function (ContainerInterface $c) {
-        return new Http\Auth\Logout();
+    Http\Session\Destroy::class => factory(function (ContainerInterface $c) {
+        return new Http\Session\Destroy();
     }),
 
 ];
