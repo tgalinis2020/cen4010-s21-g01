@@ -20,7 +20,7 @@ return [
     }),
 
     Services\JWT\Encoder::class => factory(function (ContainerInterface $c) {
-        $settings = $c->get('firebase')['php-jwt'];
+        $settings = $c->get('settings')['firebase']['php-jwt'];
 
         return new Services\JWT\Encoder(
             $settings['secret_key'],

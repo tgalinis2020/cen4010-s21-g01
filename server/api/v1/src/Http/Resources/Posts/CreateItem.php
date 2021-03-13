@@ -31,7 +31,7 @@ final class CreateItem
 
         $data = json_decode($req->getBody(), true);
 
-        $required = ['text_content', 'image_url'];
+        $required = ['text_content', 'image_url', 'tags', 'pets'];
         $keys = array_keys($data['data'] ?? []);
         $diff = array_diff($keys, $required);
 

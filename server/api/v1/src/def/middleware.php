@@ -12,7 +12,7 @@ return [
     
     SessionMiddleware::class => factory(function (ContainerInterface $c) {
         return new SessionMiddleware(
-            $c->get(Services\JWT\Encoder::class)
+            $c->get(Services\JWT\Decoder::class)
         );
     }),
 

@@ -37,8 +37,8 @@ return [
         return new Http\UploadFile();
     }),
 
-    Http\Session\Reflect::class => factory(function (ContainerInterface $c) {
-        return new Http\Session\Reflect();
+    Http\Session\Show::class => factory(function (ContainerInterface $c) {
+        return new Http\Session\Show();
     }),
 
     Http\Session\Create::class => factory(function (ContainerInterface $c) {

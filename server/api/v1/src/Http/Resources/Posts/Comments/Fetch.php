@@ -34,7 +34,7 @@ final class Fetch
 
         $filters = $q->expr()->andX();
 
-        $filters->add($q->expr()->eq('post_id', ':post_id'));
+        $filters->add($q->expr()->eq('pc.post_id', ':post_id'));
 
         $q->select([
                 'pc.id',

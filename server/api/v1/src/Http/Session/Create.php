@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Http\Auth;
+namespace ThePetPark\Http\Session;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
