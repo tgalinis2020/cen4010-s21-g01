@@ -15,7 +15,7 @@ use function json_encode;
  * 
  * Return Codes:
  *   - 200 if session token is set
- *   - 401 if session token is not set
+ *   - 404 if session token is not set
  */
 final class Show
 {
@@ -24,7 +24,7 @@ final class Show
         $session = $req->getAttribute('session');
 
         if ($session === null) {
-            return $res->withStatus(401);
+            return $res->withStatus(404);
         }
 
         $res->getBody()->write(json_encode(['data' => $session]));
