@@ -17,7 +17,7 @@ class Decoder
     /** @var array */
     private $allowedAlgs;
 
-    public function __construct(string $secret, string $allowedAlgs)
+    public function __construct(string $secret, array $allowedAlgs)
     {
         $this->secret = $secret;
         $this->allowedAlgs = $allowedAlgs;
