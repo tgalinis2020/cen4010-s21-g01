@@ -18,8 +18,8 @@ return (function () {
 
     $app = new Slim\App($builder->build());
 
-    $app->add(SessionMiddleware::class);
-    
+    $app->add(ThePetPark\Middleware\SessionMiddleware::class);
+
     (require __DIR__ . '/routes/root.php')($app);
 
     return $app;
