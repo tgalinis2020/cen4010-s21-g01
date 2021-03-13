@@ -7,7 +7,7 @@ namespace ThePetPark\Http\Resources\Users;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Doctrine\DBAL\Connection;
-use ThePetPark\Services\JWT\Encoder;
+use ThePetPark\Idp;
 use Exception;
 
 use function json_decode;
@@ -36,9 +36,9 @@ final class CreateItem
     public function __invoke(Request $req, Response $res): Response
     {
         $data = json_decode($req->getBody(), true);
-
+        $acct = $data['data'] ?? [];
         $required = ['email', 'username', 'firstName', 'lastName', 'password'];
-        $keys = array_keys($data['data'] ?? []);
+        $keys = array_keys($acct);
         $diff = array_diff($keys, $required);
 
         // Can't continue if there isn't enough data to create an account.
@@ -63,8 +63,6 @@ final class CreateItem
         }
         */
 
-        $acct = $data['data'];
-
         try {
 
             $this->conn->createQueryBuilder()
@@ -74,11 +72,13 @@ final class CreateItem
                 ->setValue('first_name', '?')
                 ->setValue('last_name', '?')
                 ->setValue('created_at', '?')
+                ->setValue('idp_code', '?')
                 ->setParameter(0, $acct['email'])
                 ->setParameter(1, $acct['username'])
                 ->setParameter(2, $acct['firstName'])
                 ->setParameter(3, $acct['lastName'])
                 ->setParameter(4, date('c'))
+                ->setParameter(5, Idp::THEPETPARK)
                 ->execute();
             
         } catch (Exception $e) {
