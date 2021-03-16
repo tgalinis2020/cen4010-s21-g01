@@ -1,0 +1,129 @@
+# default actions will map to unimplemented schema actions
+actions:
+  resource:
+    GET: ThePetPark\Library\Graph\Handlers\JSONAPI\Resolver
+  #relationship:
+  #  GET: ThePetPark\Library\Graph\Handlers\JSONAPI\Relationship\Resolver
+
+schemas:
+  posts:
+    id: id # if table's primary key column isn't 'id', speciffy field here
+    
+    actions:
+      resource:
+        POST: ThePetPark\Http\Actions\Posts\Create
+        PATCH: ThePetPark\Http\Actions\Posts\Update
+        DELETE: ThePetPark\Http\Actions\Posts\Delete
+    
+    attributes:
+      text: text_content
+      image: image_url
+      likes: like_count
+      createdAt: created_at
+
+    relationships:
+      author:
+        belongsTo: users
+        using: user_id
+
+      tags:
+        hasMany: tags
+        using:
+          - relation: post_tags
+            from: post_id
+            to: tag_id
+
+      pets:
+        hasMany: pets
+        using:
+          - relation: post_pets
+            from: post_id
+            to: pet_id
+    
+  comments:
+    attributes:
+      text: text_content
+      createdAt: created_at
+
+    relationships:
+      author:
+        belongsTo: users
+        using: user_id
+      
+      posts:
+        belongsTo: posts
+        using:
+          - relation: post_comments
+            from: comment_id
+            to: post_id
+
+  users:
+    attributes:
+      email: $ # use a dollar sign to denote that attr name === field name
+      username: $ 
+      firstName: first_name
+      lastName: last_name
+      avatar: avatar_url
+      idpCode: idp_code
+      createdAt: created_at
+    
+    relationships:
+      pets:
+        hasMany: pets
+        using: user_id
+        
+      posts:
+        hasMany: posts
+        using: user_id
+
+      comments:
+        hasMany: comments
+        using: user_id
+
+      favorites:
+        hasMany: posts
+        using:
+          - relation: user_favorite_posts
+            from: user_id
+            to: post_id
+      
+      subscriptions:
+        hasMany: pets
+        using:
+          - relation: subscriptions
+            from: user_id
+            to: pet_id
+
+  tags:
+    attributes:
+      text: text_content
+
+    relationships:
+      posts:
+        belongsToMany: posts
+        using:
+          - relation: post_tags
+            from: tag_id
+            to: post_id
+
+  pet-breeds:
+    src: pet_breeds # need to specify source table since resource name is different
+
+    attributes:
+      breed: pet_breed
+
+    relationships:
+      pets:
+        hasMany: pets
+        using: breed_id
+
+  pet-types:
+    src: pet_types
+
+    attributes:
+      type: pet_type
+
+    relationships:
+      pets:
+        hasMany: pets
+        using: type_id

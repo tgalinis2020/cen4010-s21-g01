@@ -2,48 +2,27 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Models;
+namespace ThePetPark\Http\Actions\Users;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\ParameterType;
-
-use ThePetPark\Library\Graph\Schema;
+use ThePetPark\Library\Graph\ActionInterface;
+use ThePetPark\Library\Graph\Graph;
 use ThePetPark\Idp;
 
 use Exception;
+
+use function json_decode;
 use function array_diff;
 use function array_keys;
-use function count;
-use function password_hash;
+use function date;
 
-final class Posts extends Schema
+class Create implements ActionInterface
 {
-    protected function definitions()
+    public function execute(Graph $graph, Request $req, Response $res): Response
     {
-        $this->setType('posts');
-
-        $this->addAttribute('textContent', 'text_content');
-        $this->addAttribute('likes', 'like_count');
-        $this->addAttribute('image', 'image_url');
-        $this->addAttribute('createdAt', 'created_at');
-
-        $this->belongsToOne('author', 'users', 'user_id');
-        $this->belongsToOne('likes', 'likeables', 'likeable_id');
-        $this->hasMany('comments', 'comments', 'post_id');
-        
-        $this->hasMany('tags', 'tags', [
-            ['post_tags', 'post_id', 'tag_id']
-        ]);
-
-        $this->hasMany('pets', 'pets', [
-            ['post_pets', 'post_id', 'pet_id'],
-        ]);
-    }
-
-    public function create(Connection $conn, Request $body, Response $res): Response
-    {
+        $body = json_decode($req->getBody(), true);
+        $conn = $graph->getConnection();
         $acct = $body['data'];
         $required = ['email', 'username', 'firstName', 'lastName', 'password'];
         $keys = array_keys($acct);
@@ -76,7 +55,7 @@ final class Posts extends Schema
             
             $qb->insert('user_passwords')
                 ->values([
-                    'id' => $qb->createNamedParameter($acct['id'], ParameterType::INTEGER),
+                    'id'     => $qb->createNamedParameter($acct['id']),
                     'passwd' => $qb->createNamedParameter($password),
                 ])
                 ->execute();

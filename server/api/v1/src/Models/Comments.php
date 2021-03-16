@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace ThePetPark\Models;
 
-use Doctrine\DBAL\Connection;
-use ThePetPark\Library\Graph\Schema;
+use ThePetPark\Library\Graph;
 
-final class Comments extends Schema
+final class Comments extends Graph\Schema
 {
     protected function definitions()
     {

@@ -45,6 +45,10 @@ return (function () {
                     'password' => $conf['pass'],
                 ]
             ],
+
+            'graph' => [
+                'cache' => __DIR__ . '/../../../var/cache/thepetpark.cache.php',
+            ],
         ],
     ];
 })();

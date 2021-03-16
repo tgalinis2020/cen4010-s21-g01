@@ -41,9 +41,13 @@ return [
     }),
 
     Graph\Adapters\SlimAdapter::class => factory(function (ContainerInterface $c) {
-        $graph = new Graph\Graph($c->get(DBAL\Connection::class));
+        $graph = new Graph\Graph(
+            $c->get(DBAL\Connection::class),
+            $c->get('settings')['graph']
+        );
 
-        $graph->addDefinitions(__DIR__ . '/../def/models.php');
+        //$graph->setContainer($c);
+        //$graph->addDefinitions(__DIR__ . '/../def/models.php');
 
         return new Graph\Adapters\SlimAdapter($graph);
     }),

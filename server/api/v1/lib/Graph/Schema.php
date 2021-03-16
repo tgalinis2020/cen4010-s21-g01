@@ -8,7 +8,8 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
-use Doctrine\DBAL\Query\Expression\CompositeExpression;
+
+use ThePetPark\Library\Graph\Relationship as R;
 
 use Exception;
 
@@ -31,16 +32,12 @@ use function json_encode;
  * 
  * TODO: implement methods for getting relationships (ex. /articles/1/relationships/author)
  */
-abstract class Schema
+class Schema
 {
-    // Relationship resolution bitfield values
-    const ONE      = 1;
-    const MANY     = 2;
-    const OWNS     = 4;
-    const OWNED    = 8;
-
     /**
      * Back-end alias to resource ID. Defaults to "id".
+     * 
+     * @var string
      */
     protected $_id = 'id';
 
@@ -51,15 +48,24 @@ abstract class Schema
      * [resource_type: string, backend_alias: ?string]
      * 
      * If alias is not provided, it is assumed that alias == resource_type.
+     * 
+     * @var array
      */
     protected $_type = [];
-    
+
+    /**
+     * Consumers can select what attributes to show via sparse fields.
+     * Default value of zero denotes that all fields should be selected.
+     * 
+     * @var int
+     */
+    protected $_select = 0;
 
     /**
      * Resource attributes.
      * 
      * Attribute signature:
-     * attr_name: string => backend_alias: ?string
+     * attr_name: string => [selectable: int, attr_name: string, backend_alias: string]
      * 
      * If alias is not provided, it is assumed that alias == attr_name.
      */
@@ -75,42 +81,68 @@ abstract class Schema
      */
     protected $_relationships = [];
 
+    /**
+     * A two-dimensional array containing a HTTP verb to Graph action handler.
+     * First dimension applies to resources; the second is for relationships.
+     * By default these will map to the Graph's NotImplemented handler.
+     */
+    /*protected $_handlers = [[
+        'GET'     => Graph::ACTION_NOT_IMPL,
+        'POST'    => Graph::ACTION_NOT_IMPL,
+        'PUT'     => Graph::ACTION_NOT_IMPL,
+        'PATCH'   => Graph::ACTION_NOT_IMPL,
+        'DELETE'  => Graph::ACTION_NOT_IMPL,
+    ], [
+        'GET'     => Graph::ACTION_NOT_IMPL,
+        'POST'    => Graph::ACTION_NOT_IMPL,
+        'PUT'     => Graph::ACTION_NOT_IMPL,
+        'PATCH'   => Graph::ACTION_NOT_IMPL,
+        'DELETE'  => Graph::ACTION_NOT_IMPL,
+    ]];*/
+    protected $_actions = [];
 
-    // By default, data model manipulation methods will return a
-    // 501 Not Implemented if not overridden.
-    public function create(Connection $conn, Request $req, Response $res): Response
+    /**
+     * Cached schemas have the following shape:
+     * 
+     * [
+     *     [resource-type, implementation-name, primary-key-field],
+     *     [
+     *         [0, attribute-name, implementation-name], ...
+     *     ],
+     *     [
+     *         [relationship-mask, relationship-name, link-or-chain], ...
+     *     ],
+     *     [
+     *         [http-verb => resource-action, ...],
+     *         [http-verb => relationship-action, ...]
+     *     ]
+     * ]
+     */
+    public static function fromArray(array $definitions): self
     {
-        return $res->withStatus(501);
+        list($resource, $attributes, $relationships, $actions) = $definitions;
+        list($type, $src, $id) = $resource;
+
+        $self = new self();
+
+        $self->_select = 0;
+        $self->_id = $id;
+        $self->_type = [$type, $src];
+        $self->_attributes = $attributes;
+        $self->_relationships = $relationships;
+        $self->_actions = $actions;
+
+        return $self; 
     }
 
-    public function replace(Connection $conn, Request $req, Response $res): Response
+    public function setActionKey(int $context, string $httpVerb, int $key)
     {
-        return $res->withStatus(501);
+        $this->_actions[$context][$httpVerb] = $key;
     }
 
-    public function update(Connection $conn, Request $body, Response $res): Response
+    public function getActionKey(int $context, string $httpVerb): int
     {
-        return $res->withStatus(501);
-    }
-
-    public function delete(Connection $conn, Request $body, Response $res): Response
-    {
-        return $res->withStatus(501);
-    }
-
-    public function createRelationship(Connection $conn, Request $req, Response $res): Response
-    {
-        return $res->withStatus(501);
-    }
-
-    public function updateRelationship(Connection $conn, Request $body, Response $res): Response
-    {
-        return $res->withStatus(501);
-    }
-
-    public function deleteRelationship(Connection $conn, Request $body, Response $res): Response
-    {
-        return $res->withStatus(501);
+        return $this->_actions[$context][$httpVerb];
     }
 
     public function bootstrap()
@@ -124,11 +156,10 @@ abstract class Schema
 
     /**
      * Consumers must implement this function and use schema methods to
-     * bootstrap the resource model.
-     * 
-     * Models without a set type will result in undefined behavior.
+     * bootstrap the resource model. At the very least a type must be defined.
+     * Alternatively, configuration details can be provided via a cache file.
      */
-    abstract protected function definitions();
+    protected function definitions() {}
 
     /**
      * Mapper functions pick out attributes from a raw SQL query.
@@ -138,14 +169,23 @@ abstract class Schema
      */
     //abstract public function mapper(array $fields, string $prefix): array;
     
-    protected function addAttribute(string $attr, string $alias = '')
+    /**
+     * Adds an attribute to the resource schema. Attributes are represented
+     * as an array consisting of three elements: the selectable flag,
+     * attribute name, and implementation name. Since a schema's _select flag
+     * is initialized to zero, all fields will be selected by default.
+     */
+    protected function addAttribute(string $attr, string $impl = '')
     {
-        $this->_attributes[$attr] = [$attr, strlen($alias) > 0 ? $alias : $attr];
+        $this->_attributes[$attr] = [0, $attr, strlen($impl) > 0 ? $impl : $attr];
     }
 
-    protected function setIdField(string $id)
+    /**
+     * Sets the implementation name for this resource schema's ID field.
+     */
+    protected function setId(string $impl)
     {
-        $this->_id = $id;
+        $this->_id = $impl;
     }
 
     protected function setType(string $type, string $alias = '')
@@ -155,17 +195,17 @@ abstract class Schema
 
     protected function hasOne(string $relationship, string $relatedType, $link)
     {
-        $this->_relationships[$relationship] = [Schema::OWNS | Schema::ONE, $relatedType, $link];
+        $this->_relationships[$relationship] = [R::OWNS|R::ONE, $relatedType, $link];
     }
 
     protected function hasMany(string $relationship, string $relatedType, $link)
     {
-        $this->_relationships[$relationship] = [Schema::OWNS | Schema::MANY, $relatedType, $link];
+        $this->_relationships[$relationship] = [R::OWNS|R::MANY, $relatedType, $link];
     }
 
     protected function belongsToOne(string $relationship, string $relatedType, $link)
     {
-        $this->_relationships[$relationship] = [Schema::OWNED | Schema::ONE, $relatedType, $link];
+        $this->_relationships[$relationship] = [R::OWNED|R::ONE, $relatedType, $link];
     }
 
     /**
@@ -174,7 +214,7 @@ abstract class Schema
      */
     protected function belongsToMany(string $relationship, string $relatedType, array $link)
     {
-        $this->_relationships[$relationship] = [Schema::OWNED | Schema::MANY, $relatedType, $link];
+        $this->_relationships[$relationship] = [R::OWNED|R::MANY, $relatedType, $link];
     }
 
     public function getId(): string
@@ -187,14 +227,28 @@ abstract class Schema
         return $this->_type[0];
     }
 
-    public function getTypeImpl(): string
+    public function getImplType(): string
     {
         return $this->_type[1];
     }
 
+    protected function _getAttribute(string $attribute, int $i): string
+    {
+        if (isset($this->_attributes[$attribute])) {
+            return $this->_attributes[$attribute][$i];
+        }
+
+        return null;
+    }
+
     public function getAttribute(string $attribute)
     {
-        return $this->_attributes[$attribute] ?? null;
+        return $this->_getAttribute($attribute, 1);
+    }
+
+    public function getImplAttribute(string $attribute)
+    {
+        return $this->_getAttribute($attribute, 2);
     }
 
     public function getRelationship(string $relationship)
@@ -208,18 +262,42 @@ abstract class Schema
     }
 
     /**
-     * Adds selections to the query based on this schema's attributes.
-     * Use provided enumeration "self" to uniquely identify the selected resource.
+     * Applies sparse fields to the query.
+     * 
+     * @return bool Whether or not all fields were applied successfully.
      */
-    public function includeFields(QueryBuilder $qb, string $self)
+    public function setSelectableAttribtes(array $fields): bool
+    {
+        $success = true;
+
+        $this->_select = 1;
+
+        foreach ($fields as $field) {
+            if (isset($this->_attributes[$field])) {
+                $this->_attributes[$field][0] = 1;
+            } else {
+                $success = false;
+            }
+        }
+
+        return $success;
+    }
+
+    /**
+     * Adds selections to the query based on this schema's attributes.
+     * Use provided enumeration $ref to uniquely identify the selected resource.
+     */
+    public function includeFields(QueryBuilder $qb, string $ref)
     {
         // Select the resource's ID.
-        $qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $self, $this->_id, 'id'));
+        $qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $ref, $this->_id, 'id'));
         
         // Add the attributes to the select statement, aliasing the fields
         // as {resource enum}_{resource attribute}
-        foreach ($this->_attributes as list($attr, $field)) {
-            $qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $self, $field, $attr));
+        foreach ($this->_attributes as list($select, $attr, $field)) {
+            if ($select === $this->_select) {
+                $qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $ref, $field, $attr));
+            }
         }
     }
 
@@ -230,19 +308,19 @@ abstract class Schema
      */
     public function initialize(QueryBuilder $qb, string $self)
     {
-        $qb->select()->from($this->_type[1], $self);
+        $qb->from($this->_type[1], $self);
     }
 
     /**
      * Adds related schema to the query.
      * 
      * This resource's enumerated value (self) must have already been added
-     * beforehand either by Schema::resolve or Schema::resolveRelationship.
+     * beforehand either by Schema::initialize or Schema::resolve.
      */
     public function resolve(
         Graph $graph, QueryBuilder $qb, string $relationship,
         string $self, string $related
-    ): array {
+    ): Relationship {
         list($mask, $relatedType, $link) = $this->_relationships[$relationship];
 
         $relatedResource = $graph->get($relatedType);
@@ -257,7 +335,7 @@ abstract class Schema
             $joinOnField = $this->_id;
             
             foreach ($link as list($pivot, $from, $to)) {
-                $pivotEnum = $self . '_p' . $i; // pivots need their own relation enums
+                $pivotEnum = $self . '_' . $i; // pivots need their own relation enums
                 
                 $qb->innerJoin($joinOn, $pivot, $pivotEnum, $qb->expr()->eq(
                     $joinOn . '.' . $joinOnField,
@@ -273,14 +351,14 @@ abstract class Schema
             //       ID but in another relationship? Unlikely for this project
             //       but might want to consider other relationship fields in
             //       the future.
-            $qb->innerJoin($joinOn, $relatedResource->getTypeImpl(), $related, $qb->expr()->eq(
+            $qb->innerJoin($joinOn, $relatedResource->getImplType(), $related, $qb->expr()->eq(
                 $joinOn . '.' . $joinOnField,
                 $related . '.'. $relatedResource->getId()
             ));
 
         } else {
 
-            $joinExpr = ($mask & (Schema::MANY | Schema::OWNS))
+            $joinExpr = ($mask & (R::MANY|R::OWNS))
 
                 // foreign key is in related resource (resource owns another if
                 // there exists a foreign key in the related resource)
@@ -289,32 +367,10 @@ abstract class Schema
                 // foreign key is in this resource (resource is owned by related)
                 : $qb->expr()->eq($self . '.' . $link, $related . '.' . $relatedResource->getId());
 
-            $qb->innerJoin($self, $relatedResource->getTypeImpl(), $related, $joinExpr);
+            $qb->innerJoin($self, $relatedResource->getImplType(), $related, $joinExpr);
 
         }
 
-        return [$relatedResource, $mask];
-    }
-
-    public function filter(
-        Graph $graph, QueryBuilder $qb, CompositeExpression $conditions,
-        string $self
-    ) {
-        // TODO: If applicable, this should follow a join resolution.
-        //       Make sure this is always the case.
-
-        // TODO: apply conditions to query using enuerated value "self"
-
-        // TODO: could probably do this from Graph::resolve
-    }
-
-    /**
-     * At this point, queries have been executed.
-     * Parse the input data for any included resources.
-     * Must return an array with 2 elements: the main & included resources.
-     */
-    public function finalize()
-    {
-        // stub
+        return new Relationship($relatedResource, $mask);
     }
 }
