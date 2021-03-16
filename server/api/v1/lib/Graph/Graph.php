@@ -32,13 +32,13 @@ class Graph
     ];
 
     /** @var Schema[] */
-    private $schemas;
+    private $schemas = [];
 
     /** @var \Doctrine\DBAL\Connection */
     private $conn;
 
     /** @var int */
-    private $refcount;
+    private $refcount = 0;
 
     public function __construct(Connection $conn)
     {
