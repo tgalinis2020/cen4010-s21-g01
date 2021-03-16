@@ -113,7 +113,7 @@ abstract class Schema
         return $res->withStatus(501);
     }
 
-    public function __construct()
+    public function bootstrap()
     {
         $this->definitions();
 
@@ -150,7 +150,7 @@ abstract class Schema
 
     protected function setType(string $type, string $alias = '')
     {
-        $this->type = [$type, strlen($alias) > 0 ? $alias : $type];
+        $this->_type = [$type, strlen($alias) > 0 ? $alias : $type];
     }
 
     protected function hasOne(string $relationship, string $relatedType, $link)

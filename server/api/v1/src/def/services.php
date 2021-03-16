@@ -6,8 +6,7 @@ use Psr\Container\ContainerInterface;
 use Doctrine\DBAL;
 use ThePetPark\Services;
 use ThePetPark\Models;
-use ThePetPark\Library\Graph\Graph;
-use ThePetPark\Library\Graph\Adapters\SlimAdapter;
+use ThePetPark\Library\Graph;
 
 use function DI\factory;
 
@@ -41,18 +40,12 @@ return [
         );
     }),
 
-    SlimAdapter::class => factory(function (ContainerInterface $c) {
-        $graph = new Graph($c->get(DBAL\Connection::class));
+    Graph\Adapters\SlimAdapter::class => factory(function (ContainerInterface $c) {
+        $graph = new Graph\Graph($c->get(DBAL\Connection::class));
 
-        $graph->add(new Models\Users());
-        $graph->add(new Models\Pets());
-        $graph->add(new Models\Pets\Breeds());
-        $graph->add(new Models\Pets\Types());
-        $graph->add(new Models\Posts());
-        $graph->add(new Models\Comments());
-        $graph->add(new Models\Tags());
+        $graph->addDefinitions(__DIR__ . '/../def/models.php');
 
-        return $graph;
+        return new Graph\Adapters\SlimAdapter($graph);
     }),
 
 ];

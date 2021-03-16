@@ -23,7 +23,11 @@ return (function () {
     $app->add(ThePetPark\Middleware\SessionMiddleware::class);
 
     // Mount the authentication functions to the session namespace.
-    $app->group('/session', (require __DIR__ . '/session.php'));
+    $app->group('/session', function (Slim\App $session) {
+        $session->map(['GET'],    '', Session\Show::class);
+        $session->map(['POST'],   '', Session\Create::class);
+        $session->map(['DELETE'], '', Session\Destroy::class);
+    });
 
     $app->map(['POST'], '/upload', ThePetPark\Http\UploadFile::class);
     

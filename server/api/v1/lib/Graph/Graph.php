@@ -42,6 +42,13 @@ class Graph
         $this->conn = $conn;
     }
 
+    public function addDefinitions(string $filename)
+    {
+        foreach ((require $filename) as $cls) {
+            $this->add(new $cls);
+        }
+    }
+
     public function get(string $resource)
     {
         return $this->schemas[$resource] ?? null;
@@ -49,6 +56,7 @@ class Graph
 
     public function add(Schema $schema)
     {
+        $schema->bootstrap();
         $this->schemas[$schema->getType()] = $schema;
     }
 
