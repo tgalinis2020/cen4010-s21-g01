@@ -37,6 +37,9 @@ class Graph
     /** @var \Doctrine\DBAL\Connection */
     private $conn;
 
+    /** @var int */
+    private $refcount;
+
     public function __construct(Connection $conn)
     {
         $this->conn = $conn;
