@@ -8,6 +8,9 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Doctrine\DBAL\Connection;
 
+use function explode;
+use function is_numeric;
+
 /**
  * Resource schema container.
  * 
@@ -114,10 +117,10 @@ class Graph
 
         // The following are parallel arrays indexed by a reference value
         // from $ref
-        $map = []; // ref-to-resource
-        $raw = []; // ref-to-raw data
-        $dat = []; // ref-to-transformed data
-        $rel = []; // ref-to-relationships
+        $map = [$ref[''] => $resource]; // ref-to-resource
+        $raw = [];                      // ref-to-raw data
+        $dat = [];                      // ref-to-transformed data
+        $rel = [];                      // ref-to-relationships
 
         $resource->initialize($qb, $ref['']);
 
@@ -163,16 +166,26 @@ class Graph
 
         if (isset($params['page']) && ($amount === Schema::MANY)) {
 
-            $size = (int) ($params['page']['size'] ?? $size);
+            $page = $params['page'];
 
-            if (isset($params['cursor'])) {
+            if (isset($page['size']) && is_numeric($page['size'])) {
+                $size = (int) ($params['page']['size'] ?? $size);
+            }
+
+            if (isset($page['cursor'])) {
                 $conditions->add($qb->expr()->gt(
                     $ref[''] . '.' . $resource->getId(),
-                    $qb->createNamedParameter($params['cursor'])
+                    $qb->createNamedParameter($page['cursor'])
                 ));
             }
 
         }
+
+        $qb->setMaxResults($size);
+
+        // TODO: parse filters, defer filters that do not affect main query.
+
+        $mainSql = $qb->getSQL();
 
         /*
         $raw[$this->getRef()] = $qb->where($conditions)
@@ -196,20 +209,55 @@ class Graph
 
             // Reset fields and conditions but keep source table(s).
             // This will be a new query based on retrieved data.
-            $qb->select();
+            $qb->resetQueryPart('select');
+            $qb->setMaxResults(null);
             $conditions = $qb->expr()->andX();
 
+            foreach (explode(',', $params['include']) as $included) {
+                $cursor = $resource;
+                $parentRef = $ref[''];
+                $tokens = explode('.', $included);
+                $token = $tokens[0];
+                $delim = '';
+                
+                foreach ($tokens as $r) {
+                    $token .= $delim . $r;
+
+                    if (!isset($ref[$token])) {
+                        
+                        if ($cursor->hasRelationship($r) === false) {
+
+                            // If provided token isn't a valid relationship,
+                            // stop here.
+                            return $res->withStatus(400);
+                        
+                        }
+
+                        $ref[$token] = $this->newRef();
+                        list($related, $mask) = $cursor->resolve($this, $qb, $r,
+                                $parentRef, $ref[$token]);
+                        $parentRef = $ref[$token];
+                        $cursor = $related;
+                        $cursor->includeFields($qb, $ref[$token]);
+                        $map[$ref[$token]] = $cursor;
+                    }
+
+                    $delim = '.';
+                }
+            }
+
+            // No need to constrain the second query any further if there's
+            // only one result.
             if ($rowCount > 1) {
-                // No need to constrain the second query any further since
-                // there's only one result.
-                $start = $resolved[0]['id'];
-                $end = $resolved[$rowCount - 1]['id'];
+
+                $idField = $ref[''] . '.' . $map[$ref['']]->getId();
 
                 // Only include data relevant to the previously fetched data.
                 $conditions->add($qb->expr()->andX(
-                    $qb->expr()->gte($this->getRef() . 'id', $start),
-                    $qb->expr()->lte($this->getRef() . 'id', $end)
+                    $qb->expr()->gte($idField, $resolved[0]['id']),
+                    $qb->expr()->lte($idField, $resolved[$rowCount - 1]['id'])
                 ));
+
             }
 
             // TODO: parse includes
@@ -219,12 +267,16 @@ class Graph
 
         // TODO: apply sorting
 
+        $qb->where($conditions);
+
         // (optional) TODO: apply sparse fields
 
         // TODO: serialize raw data and relationships to a JSONAPI document
 
         // See if the expected query is generated.
-        $res->getBody()->write($qb->getSQL());
+        $res->getBody()->write(sprintf(
+            'Query 1: %1$s%3$sQuery 2: %2$s', $mainSql, $qb->getSQL(), "\n\n"
+        ));
 
         return $res
             ->withHeader('Content-Type', 'text/plain')

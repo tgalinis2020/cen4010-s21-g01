@@ -36,13 +36,13 @@ return (function () {
 
             'doctrine' => [
                 'connection' => [
-                    'driver' => 'pdo_mysql',
-                    'host' => $conf['host'],
-                    'port' => $conf['port'],
-                    'dbname' => $conf['database'],
-                    'charset' => 'utf-8',
-                    'user' => $conf['user'],
-                    'password'  => $conf['pass'],
+                    'driver'   => 'pdo_mysql',
+                    'host'     => $conf['host'],
+                    'port'     => $conf['port'],
+                    'dbname'   => $conf['database'],
+                    'charset'  => 'utf8',
+                    'user'     => $conf['user'],
+                    'password' => $conf['pass'],
                 ]
             ],
         ],
