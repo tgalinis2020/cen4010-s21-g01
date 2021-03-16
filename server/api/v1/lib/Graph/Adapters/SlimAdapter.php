@@ -39,7 +39,7 @@ class SlimAdapter
         $root          =         '/{' . Graph::RESOURCE_TYPE. '}';
         $item          = $root . '[/{' . Graph::RESOURCE_ID . ':' . $this->regex . '}';
         $resource      = $item . '[/{' . Graph::RELATIONSHIP_TYPE . '}]]';
-        $relationship  = $item . '[/relationship' . '/{' . Graph::RELATIONSHIP_TYPE . '}]]';
+        $relationship  = $item . '[/relationship/{' . Graph::RELATIONSHIP_TYPE . '}]]';
 
         $api->map($httpVerbs, $resource,     [$this, 'resource']);
         $api->map($httpVerbs, $relationship, [$this, 'relationship']);
