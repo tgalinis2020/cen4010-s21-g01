@@ -214,12 +214,12 @@ abstract class Schema
     public function includeFields(QueryBuilder $qb, string $self)
     {
         // Select the resource's ID.
-        $qb->addSelect(sprintf('t%1$s.%2$s t%1$s_%3$s', $self, $this->_id, 'id'));
+        $qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $self, $this->_id, 'id'));
         
         // Add the attributes to the select statement, aliasing the fields
         // as {resource enum}_{resource attribute}
         foreach ($this->_attributes as list($attr, $field)) {
-            $qb->addSelect(sprintf('t%1$s.%2$s t%1$s_%3$s', $self, $field, $attr));
+            $qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $self, $field, $attr));
         }
     }
 

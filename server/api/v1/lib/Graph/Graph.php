@@ -155,6 +155,10 @@ class Graph
                 $resource->includeFields($qb, $ref['']);
             }
         
+        } else {
+
+            $resource->includeFields($qb, $ref['']);
+
         }
 
         if (isset($params['page']) && ($amount === Schema::MANY)) {
