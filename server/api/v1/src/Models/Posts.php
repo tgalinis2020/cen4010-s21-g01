@@ -2,42 +2,48 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Http\Resources\Users;
+namespace ThePetPark\Models;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+
+use ThePetPark\Library\Graph\Schema;
 use ThePetPark\Idp;
+
 use Exception;
-
-use function json_decode;
-use function password_hash;
+use function array_diff;
+use function array_keys;
 use function count;
-use function date;
+use function password_hash;
 
-/**
- * Creates a new user account if it doesn't already exist.
- * 
- * Returns:
- *  - 201 on account creation
- *  - 400 on malformed request body
- *  - 409 if provided email is already registered
- */
-final class CreateItem
+final class Posts extends Schema
 {
-    /** @var \Doctrine\DBAL\Connection */
-    private $conn;
-
-    public function __construct(Connection $conn)
+    protected function definitions()
     {
-        $this->conn = $conn;
+        $this->setType('posts');
+
+        $this->addAttribute('textContent', 'text_content');
+        $this->addAttribute('image', 'image_url');
+        $this->addAttribute('createdAt', 'created_at');
+
+        $this->belongsToOne('user', 'users', 'user_id');
+        $this->belongsToOne('likes', 'likeables', 'likeable_id');
+        $this->hasMany('comments', 'comments', 'post_id');
+        
+        $this->hasMany('tags', 'tags', [
+            ['post_tags', 'post_id', 'tag_id']
+        ]);
+
+        $this->hasMany('pets', 'pets', [
+            ['post_pets', 'post_id', 'pet_id'],
+        ]);
     }
 
-    public function __invoke(Request $req, Response $res): Response
+    public function create(Connection $conn, Request $body, Response $res): Response
     {
-        $data = json_decode($req->getBody(), true);
-        $acct = $data['data'] ?? [];
+        $acct = $body['data'];
         $required = ['email', 'username', 'firstName', 'lastName', 'password'];
         $keys = array_keys($acct);
         $diff = array_diff($keys, $required);
@@ -49,7 +55,7 @@ final class CreateItem
 
         try {
 
-            $qb = $this->conn->createQueryBuilder();
+            $qb = $conn->createQueryBuilder();
 
             $qb->insert('users')
                 ->values([
@@ -85,8 +91,6 @@ final class CreateItem
             return $res->withStatus(409);
 
         }
-
-     
 
         return $res->withStatus(201);
     }

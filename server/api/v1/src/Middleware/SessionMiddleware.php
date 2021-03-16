@@ -15,6 +15,8 @@ use Exception;
  */
 final class SessionMiddleware
 {
+    const TOKEN = 'session';
+
     /** @var \ThePetPark\Services\JWT\Decoder */
     private $decoder;
 
@@ -25,7 +27,7 @@ final class SessionMiddleware
 
     public function __invoke(Request $req, Response $res, callable $next)
     {
-        $token = $_COOKIE['session'] ?? null;
+        $token = $_COOKIE[self::TOKEN] ?? null;
 
         if ($token == null) {
             return $next($req, $res);
@@ -35,12 +37,12 @@ final class SessionMiddleware
 
             $data = $this->decoder->decode($token);
 
-            return $next($req->withAttribute('session', $data), $res);
+            return $next($req->withAttribute(self::TOKEN, $data), $res);
 
         } catch (Exception $e) {
 
             // Token expired, unset it.
-            setcookie('session');
+            setcookie(self::TOKEN);
 
             return $next($req, $res);
 

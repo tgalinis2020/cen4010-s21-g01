@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use ThePetPark\Library\Graph\Adapters\SlimAdapter;
+
 /**
  * Root endpoint-to-controller mappings.
  */
@@ -19,5 +21,29 @@ return function (Slim\App $app) {
     
     // Dummy endpoint to make sure Slim works. Can be removed later.
     $app->map(['GET'], '/hello[/{name}]', ThePetPark\Http\HelloWorld::class);
+
+    /*
+    $app->group('/{resource_type}', function (Slim\App $resources) {
+
+        $resources->get('',   Resources\Fetch::class);
+        $resources->post('',  Resources\CreateItem::class);
+        $resources->patch('', Resources\UpdateItem::class);
+        
+        $resources->group('/{resource_id:[0-9]+}', function (Slim\App $resource) {
+            $resource->get('', Resources\FetchItem::class);
+            
+            $resource->group('/relationship/{related_id:[0-9]+}', function (Slim\App $relationship) {
+                $relationship->get('', Resources\FetchRelationship::class);
+                $relationship->post('', Resources\CreateRelationship::class);
+            });
+
+            $resource->get('/{related_id:[0-9]+}', Resources\FetchRelated::class);
+        });
+    });
+    
+    $app->group('/{resource_type}', function (Slim\App $resources) {
+
+        $resources->get('[/{resource_id}]', '');
+    });*/
 
 };

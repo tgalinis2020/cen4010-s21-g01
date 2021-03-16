@@ -9,7 +9,8 @@
 
     "autoload": {
         "psr-4": {
-            "ThePetPark\\": "./src/"
+            "ThePetPark\\": "./src/",
+            "ThePetPark\\Library\\": "./lib/"
         }
     }
 }
