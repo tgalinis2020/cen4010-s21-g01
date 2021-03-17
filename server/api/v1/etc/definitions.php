@@ -50,10 +50,6 @@ return [
         );
     }),
 
-    Http\HelloWorld::class => factory(function (ContainerInterface $c) {
-        return new Http\HelloWorld();
-    }),
-
     Http\UploadFile::class => factory(function (ContainerInterface $c) {
         return new Http\UploadFile();
     }),
