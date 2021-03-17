@@ -5,7 +5,7 @@ declare(strict_types=1);
 require __DIR__ . '/../../vendor/autoload.php';
 
 use ThePetPark\Library\Graph\Graph;
-use ThePetPArk\Library\Graph\Handlers;
+use ThePetPark\Library\Graph\Handlers;
 use ThePetPark\Library\Graph\Relationship as R;
 
 if ($argc < 3) {
