@@ -20,7 +20,7 @@ class Relationship
 
     public function __construct(Schema $related, int $mask)
     {
-        $this->schema = $related;
+        $this->related = $related;
         $this->type = $mask;
     }
 
