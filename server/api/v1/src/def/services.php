@@ -5,8 +5,7 @@ declare(strict_types=1);
 use Psr\Container\ContainerInterface;
 use Doctrine\DBAL;
 use ThePetPark\Services;
-use ThePetPark\Models;
-use ThePetPark\Library\Graph;
+use ThePetPark\Library\Graph\Graph;
 
 use function DI\factory;
 
@@ -40,16 +39,17 @@ return [
         );
     }),
 
-    Graph\Adapters\SlimAdapter::class => factory(function (ContainerInterface $c) {
-        $graph = new Graph\Graph(
+    Graph::class => factory(function (ContainerInterface $c) {
+        $graph = new Graph(
             $c->get(DBAL\Connection::class),
             $c->get('settings')['graph']
         );
 
+        // This app's actions don't have dependencies outside of Doctrine
+        // so a container is not necessary.
         //$graph->setContainer($c);
-        //$graph->addDefinitions(__DIR__ . '/../def/models.php');
 
-        return new Graph\Adapters\SlimAdapter($graph);
+        return $graph;
     }),
 
 ];
