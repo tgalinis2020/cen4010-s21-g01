@@ -47,7 +47,7 @@ return (function () {
             ],
 
             'graph' => [
-                'cache' => __DIR__ . '/../../../var/cache/thepetpark.cache',
+                'cache' => __DIR__ . '/../..//var/cache/thepetpark.cache',
             ],
         ],
     ];
