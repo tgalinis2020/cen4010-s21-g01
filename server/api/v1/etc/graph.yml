@@ -119,7 +119,7 @@ schemas:
       avatar: avatar_url
     
     relationships:
-      users:
+      owner:
         belongsTo: users
         using: user_id
 
