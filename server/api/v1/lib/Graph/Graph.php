@@ -139,13 +139,6 @@ class Graph
         return $this->conn;
     }
 
-    public function addDefinitions(string $filename)
-    {
-        foreach ((require $filename) as $cls) {
-            $this->add(new $cls);
-        }
-    }
-
     public function get(string $resource)
     {
         return $this->schemas[$resource] ?? null;
@@ -153,30 +146,7 @@ class Graph
 
     public function add(Schema $schema)
     {
-        $schema->bootstrap();
         $this->schemas[$schema->getType()] = $schema;
-    }
-
-    /**
-     * Adds handler to collection of handlers. Returns its key.
-     */
-    public function addAction(ActionInterface $action): int
-    {
-        $this->actions[$this->nactions] = $action;
-        return $this->nactions++;
-    }
-
-    /**
-     * Sets every schema's handler indexed by verb to the handler pointed by
-     * the provided key.
-     * 
-     * Precondition: all schemas must be registered in the graph!
-     */
-    public function setDefaultHandler(int $context, string $httpVerb, int $key)
-    {
-        foreach ($this->schemas as $schema) {
-            $schema->setActionKey($context, $httpVerb, $key);
-        }
     }
 
     /**

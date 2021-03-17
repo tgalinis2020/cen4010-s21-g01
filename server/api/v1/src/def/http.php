@@ -9,26 +9,11 @@ use Doctrine\DBAL\Connection;
 
 use function DI\factory;
 
-/**
- * Controllers unrelated to API resources are bootstrapped here.
- */
 return [
 
     Http\HelloWorld::class => factory(function (ContainerInterface $c) {
         return new Http\HelloWorld();
     }),
-
-    /*
-    // Deprecated. Make requests to /posts, /users, and /pets instead.
-    // Parse special tokens on client-side applications.
-    Http\Search::class => factory(function (ContainerInterface $c) {
-        return new Http\Search(
-            $c->get(UserRepository::class),
-            $c->get(PetRepository::class),
-            $c->get(PostRepository::class)
-        );
-    }),
-    */
 
     Http\UploadFile::class => factory(function (ContainerInterface $c) {
         return new Http\UploadFile();
