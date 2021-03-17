@@ -142,7 +142,13 @@ class Graph
             throw new Exception(sprintf('Unknown strategy: %s', $problem));
         }
 
-        return $this->settings['strategies'][$problem];
+        if (class_exists($this->settings['strategies'][$problem])) {
+            throw new Exception(sprintf(
+                'Cannot create strategy: %s', $this->settings['strategies'][$problem]
+            ));
+        }
+
+        return new $this->settings['strategies'][$problem];
     }
 
     public function getMaxPageSize(): int
