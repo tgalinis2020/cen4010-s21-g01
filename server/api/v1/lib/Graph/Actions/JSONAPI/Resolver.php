@@ -50,10 +50,33 @@ class Resolver implements ActionInterface
         $conn = $graph->getConnection();
         $qb = $conn->createQueryBuilder();
         $conditions = $qb->expr()->andX();
+
+        // Initialize sparse fieldsets. They are attributes to select, indexed
+        // by resource type.
+        $sparseFields = [];
+
+        foreach (($params['fields'] ?? []) as $resourceType => $fieldList) {
+            if (($resource = $graph->get($resourceType)) !== null) {
+                // Silently ignore invalid types
+                $sparseFields[$resourceType] = [];
+
+                foreach (explode(',', $fieldList) as $attr) {
+                    if ($resource->hasAttribute($attr)) {
+                        $sparseFields[$resourceType][] = $attr;
+                    } else {
+                        // TODO: silently ignore or send a 400?
+                        // TODO: might be worth deferring error handling
+                        // to a user-defined handler. Maybe the resolver
+                        // could provide a reason and the handler can perform
+                        // an action based on the given reason.
+                    }
+                }
+            }
+        }
+
         $resource = $graph->get($type);
         $size = $graph->getDefaultPageSize();
-        $amount = R::MANY; // Assume fetching a collection.        
-        
+        $amount = R::MANY; // Assume fetching a collection.
         
         // Relationship-to-enumeration map. Root element has no
         // relationship, therefore its key is an empty string.
@@ -70,8 +93,7 @@ class Resolver implements ActionInterface
 
         $resource->initialize($qb, $ref['']);
 
-        // TODO: check for sparse fields and use Schema::setSelectableAttributes
-        // before using Schema::includeFields
+        // TODO: apply filters before selecting data
 
         if ($resourceID !== null) {
 
@@ -92,9 +114,11 @@ class Resolver implements ActionInterface
                     $ref[$relationship]
                 );
 
-                $res[$this->getRef()] = $related->getSchema();
-    
-                $related->getSchema()->includeFields($qb, $ref[$relationship]);
+                $relatedSchema = $related->getSchema();
+
+                $relatedSchema->includeFields($qb, $ref[$relationship], $sparseFields);
+
+                $res[$this->getRef()] = $relatedSchema;
 
                 if ($related->getType() & R::ONE) {
                     $amount = R::ONE;
@@ -104,12 +128,12 @@ class Resolver implements ActionInterface
 
                 $amount = R::ONE;
 
-                $resource->includeFields($qb, $ref['']);
+                $resource->includeFields($qb, $ref[''], $sparseFields);
             }
         
         } else {
 
-            $resource->includeFields($qb, $ref['']);
+            $resource->includeFields($qb, $ref[''], $sparseFields);
 
         }
 
@@ -162,7 +186,7 @@ class Resolver implements ActionInterface
             // Create a new query based on retrieved data.
             $qb->resetQueryPart('select');
             $qb->setMaxResults(null);
-            $conditions = $qb->expr()->andX();
+            //$conditions = $qb->expr()->andX();
 
             foreach (explode(',', $params['include']) as $included) {
                 $cursor = $resource;
@@ -179,7 +203,8 @@ class Resolver implements ActionInterface
                         if ($cursor->hasRelationship($r) === false) {
 
                             // If provided token isn't a valid relationship,
-                            // stop here.
+                            // stop here. TODO: might be worth deferring error
+                            // handling to another controller.
                             return $res->withStatus(400);
                         
                         }
@@ -189,7 +214,7 @@ class Resolver implements ActionInterface
                                 $parentRef, $ref[$token]);
                         $parentRef = $ref[$token];
                         $cursor = $related->getSchema();
-                        $cursor->includeFields($qb, $ref[$token]);
+                        $cursor->includeFields($qb, $ref[$token], $sparseFields);
                         $map[$ref[$token]] = $cursor;
                     }
 

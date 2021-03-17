@@ -8,6 +8,7 @@ use Doctrine\DBAL\Query\QueryBuilder;
 
 use ThePetPark\Library\Graph\Relationship as R;
 
+use function sprintf;
 
 /**
  * An abstract representation of the back-end data model.
@@ -92,6 +93,9 @@ class Schema
      *         [http-verb => relationship-action, ...]
      *     ]
      * ]
+     * 
+     * Cached Graphs are currently the only supported method of creating
+     * schema instances.
      */
     public static function fromArray(array $definitions): self
     {
@@ -134,6 +138,11 @@ class Schema
         return null;
     }
 
+    public function hasAttribute(string $attribute): bool
+    {
+        return isset($this->attributes[$attribute]);
+    }
+
     public function getAttribute(string $attribute)
     {
         return $this->attr($attribute, 1);
@@ -165,35 +174,25 @@ class Schema
     }
 
     /**
-     * Applies sparse fields to the query.
-     * 
-     * @return bool True if all of the listed attributes were selected.
-     */
-    public function setSelectableAttributes(array $fields): bool
-    {
-        $success = true;
-
-        $this->select++;
-
-        foreach ($fields as $field) {
-            if (isset($this->attributes[$field])) {
-                $this->attributes[$field][0]++;
-            } else {
-                $success = false;
-            }
-        }
-
-        return $success;
-    }
-
-    /**
      * Adds selections to the query based on this schema's attributes.
      * Use provided enumeration $ref to uniquely identify the selected resource.
+     * Sparse fields must be a resourceType -> list of attributes map.
      */
-    public function includeFields(QueryBuilder $qb, string $ref)
+    public function includeFields(QueryBuilder $qb, string $ref, array $fields = [])
     {
         // Select the resource's ID.
         $qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $ref, $this->id, 'id'));
+
+        // Don't apply sparse fieldset if it was already applied.
+        if ($this->select === 0 && isset($fields[$this->getType()])) {
+            $this->select++;
+    
+            // Apply sparse fieldset. Fields must contain valid attributes.
+            foreach ($fields as $attr) {
+                $this->attributes[$attr][0]++;
+            }
+        }
+
         
         // Add the attributes to the select statement, aliasing the fields
         // as {resource enum}_{resource attribute}
