@@ -27,7 +27,7 @@ class Granular implements StrategyInterface
         array $params
     ): bool {
         
-        foreach ($params['filter'] as $field => $filters) {
+        foreach (($params['filter'] ?? []) as $field => $filters) {
             $ref = $reftable->getBaseRef();
             $resource = $graph->get($reftable->getResourceType($ref));
 
