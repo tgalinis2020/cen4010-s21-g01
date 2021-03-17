@@ -6,6 +6,8 @@ namespace ThePetPark\Services\JWT;
 
 use Firebase\JWT\JWT;
 
+use function file_get_contents;
+
 /**
  * A wrapper class for the JWT::decode static method.
  */
@@ -19,7 +21,7 @@ class Decoder
 
     public function __construct(string $secret, array $allowedAlgs)
     {
-        $this->secret = $secret;
+        $this->secret = file_get_contents($secret);
         $this->allowedAlgs = $allowedAlgs;
     }
 
