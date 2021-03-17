@@ -6,6 +6,7 @@ namespace ThePetPark\Http\Actions\Comments;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use ThePetPark\Middleware\Session;
 use ThePetPark\Library\Graph\ActionInterface;
 use ThePetPark\Library\Graph\Graph;
 
@@ -18,21 +19,30 @@ class Create implements ActionInterface
     public function execute(Graph $graph, Request $req, Response $res): Response
     {
         $conn = $graph->getConnection();
-        $body = json_decode($req->getBody(), true);
-        $post = $body['data'];
-        $required = ['textContent', 'image'];
-        $keys = array_keys($post);
-        $diff = array_diff($keys, $required);
+        $session = $req->getAttribute(Session::TOKEN);
 
-        // TODO: look at author relationship to get author ID
-
-        // Can't continue if there isn't enough data to create an account.
-        /*
-        if (count($diff) > 0) {
-            return $res->withStatus(400);
+        if ($session === null) {
+            return $res->withStatus(401);
         }
-        */
 
-        return $res->withStatus(501);
+        $data = json_decode($req->getBody(), true);
+
+        $comment = $data['data'];
+
+        $conn->createQueryBuilder()
+            ->insert('post_comments')
+            ->setValue('text_content', '?')
+            ->setValue('user_id', '?')
+            ->setParameter(0, $comment['text'])
+            ->setParameter(1, $session['id'])
+            ->execute();
+        
+        $commentID = $conn->lastInsertId();
+
+        // Although it is unlikely a client would need the newly created comment
+        // ID, it is returned for the sake of consistency.
+        $res->getBody()->write(json_encode(['data' => ['id' => $commentID]]));
+
+        return $res->withStatus(201);
     }
 }

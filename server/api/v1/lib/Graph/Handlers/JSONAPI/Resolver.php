@@ -40,6 +40,7 @@ class Resolver implements ActionInterface
         ServerRequestInterface $request,
         ResponseInterface $response
     ): ResponseInterface {
+
         parse_str($request->getUri()->getQuery(), $params);
 
         $type = $request->getAttribute(Graph::PARAM_RESOURCE);
@@ -68,6 +69,9 @@ class Resolver implements ActionInterface
         $rel = [];                      // ref-to-relationships
 
         $resource->initialize($qb, $ref['']);
+
+        // TODO: check for sparse fields and use Schema::setSelectableAttributes
+        // before using Schema::includeFields
 
         if ($resourceID !== null) {
 
@@ -149,6 +153,8 @@ class Resolver implements ActionInterface
         ]];
         $resolved = $dat[$this->getRef()];
         $rowCount = count($resolved);
+
+        // (optional) TODO: apply sparse fields before selecting
 
         if ($rowCount > 0 && isset($params['include'])) {
 
@@ -275,8 +281,6 @@ class Resolver implements ActionInterface
 
         $qb->where($conditions);
 
-        // (optional) TODO: apply sparse fields
-
         // TODO: serialize raw data and relationships to a JSONAPI document
 
         // See if the expected query is generated.
@@ -287,5 +291,6 @@ class Resolver implements ActionInterface
         return $res
             ->withHeader('Content-Type', 'text/plain')
             ->withStatus(200);
+
     }
 }

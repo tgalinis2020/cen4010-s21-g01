@@ -13,7 +13,7 @@ use Exception;
  * Adds the "session" request attribute containing the user's session claims
  * if a session cookie is set.
  */
-final class SessionMiddleware
+final class Session
 {
     const TOKEN = 'session';
 

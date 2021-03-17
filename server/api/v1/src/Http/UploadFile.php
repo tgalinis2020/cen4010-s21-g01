@@ -6,6 +6,7 @@ namespace ThePetPark\Http;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use ThePetPark\Middleware\Session;
 
 /**
  * Raw images must be uploaded before they can be used with posts and avatars.
@@ -15,7 +16,7 @@ final class UploadFile
 {
     public function __invoke(Request $req, Response $res): Response
     {
-        $user = $req->getAttribute('session');
+        $user = $req->getAttribute(Session::TOKEN);
 
         // Unauthenticated users cannot upload images.
         if ($user === null) {

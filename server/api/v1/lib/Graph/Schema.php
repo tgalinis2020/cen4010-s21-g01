@@ -4,18 +4,10 @@ declare(stricttypes=1);
 
 namespace ThePetPark\Library\Graph;
 
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Message\ResponseInterface as Response;
-use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 
 use ThePetPark\Library\Graph\Relationship as R;
 
-use Exception;
-
-use function parse_str;
-use function json_decode;
-use function json_encode;
 
 /**
  * An abstract representation of the back-end data model.
@@ -29,8 +21,6 @@ use function json_encode;
  * 
  * TODO: consider creating methods to ease parsing the request body for a
  * JSONAPI document object!
- * 
- * TODO: implement methods for getting relationships (ex. /articles/1/relationships/author)
  */
 class Schema
 {
@@ -45,9 +35,7 @@ class Schema
      * Type of resource.
      * 
      * Signatures:
-     * [resourcetype: string, backend_alias: ?string]
-     * 
-     * If alias is not provided, it is assumed that alias == resourcetype.
+     * [resourcetype: string, backend_alias: string]
      * 
      * @var array
      */
@@ -92,7 +80,7 @@ class Schema
      * Cached schemas have the following shape:
      * 
      * [
-     *     [resource-type, implementation-name, primary-key-field],
+     *     [resource-type, implementation-name, impl-id-field],
      *     [
      *         [0, attribute-name, implementation-name], ...
      *     ],
@@ -185,11 +173,11 @@ class Schema
     {
         $success = true;
 
-        $this->select = 1;
+        $this->select++;
 
         foreach ($fields as $field) {
             if (isset($this->attributes[$field])) {
-                $this->attributes[$field][0] = 1;
+                $this->attributes[$field][0]++;
             } else {
                 $success = false;
             }
@@ -210,7 +198,7 @@ class Schema
         // Add the attributes to the select statement, aliasing the fields
         // as {resource enum}_{resource attribute}
         foreach ($this->attributes as list($select, $attr, $field)) {
-            if ($select === $this->_select) {
+            if ($select === $this->select) {
                 $qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $ref, $field, $attr));
             }
         }
@@ -223,7 +211,7 @@ class Schema
      */
     public function initialize(QueryBuilder $qb, string $self)
     {
-        $qb->from($this->type[1], $self);
+        $qb->from($this->getImplType(), $self);
     }
 
     /**
@@ -236,6 +224,7 @@ class Schema
         Graph $graph, QueryBuilder $qb, string $relationship,
         string $self, string $related
     ): Relationship {
+
         list($mask, $relatedType, $link) = $this->relationships[$relationship];
 
         $relatedResource = $graph->get($relatedType);

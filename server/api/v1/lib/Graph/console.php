@@ -69,7 +69,7 @@ try {
         foreach ($root['schemas'] as $resource => $def) {
             $id            = $def['id'] ?? 'id';
             $source        = $def['src'] ?? $resource;
-            $actions       = [];
+            $actionMap     = [];
             $attributes    = [];
             $relationships = [];
 

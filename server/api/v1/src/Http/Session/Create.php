@@ -8,6 +8,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Doctrine\DBAL\Connection;
 use ThePetPark\Services\JWT\Encoder;
+use ThePetPark\Middleware\Session;
 
 use function time;
 use function setcookie;
@@ -33,22 +34,22 @@ final class Create
     public function __invoke(Request $req, Response $res): Response
     {
         $data = json_decode($req->getBody(), true);
-
-        $acct = $this->conn->createQueryBuilder()
+        $qb = $this->conn->createQueryBuilder();
+        $username = $qb->createNamedParameter($data['username']);
+        $acct = $qb
             ->select([
                 'u.id',
-                'u.idp_code     AS idpCode',
-                'u.first_name   AS firstName',
-                'u.last_name    AS lastName',
-                'u.avatar_url   AS avatar',
-                'u.created_at   AS createdAt',
-                'p.passwd       AS password',
+                'u.idp_code    idpCode',
+                'u.first_name  firstName',
+                'u.last_name   lastName',
+                'u.avatar_url  avatar',
+                'u.created_at  createdAt',
+                'p.passwd      password',
             ])
             ->from('users', 'u')
             ->join('u', 'user_passwords', 'p', 'p.id = u.id')
-            ->where('u.username = :usr')
-            ->orWhere('u.email = :usr')
-            ->setParameter(':usr', $data['username'])
+            ->where('u.username = ' . $username)
+            ->orWhere('u.email = ' . $username)
             ->execute()
             ->fetch();
 
@@ -78,7 +79,7 @@ final class Create
 
         $token = $this->encoder->encode($payload);
 
-        setcookie('session', $token, $expiry, $root, $host, true, true);
+        setcookie(Session::TOKEN, $token, $expiry, $root, $host, true, true);
 
         // Cookie was set, let the client know using the 201 status code.
         return $res->withStatus(201);

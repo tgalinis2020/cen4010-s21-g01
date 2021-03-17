@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 use Psr\Container\ContainerInterface;
 use Doctrine\DBAL;
+use ThePetPark\Http;
 use ThePetPark\Services;
+use ThePetPark\Middleware;
 use ThePetPark\Library\Graph\Graph;
 
 use function DI\factory;
 
-/**
- * Any dependencies that are not provided by Slim (other than Controllers)
- * should be listed here.
- */
 return [
 
     DBAL\Connection::class => factory(function (ContainerInterface $c) {
@@ -40,16 +38,39 @@ return [
     }),
 
     Graph::class => factory(function (ContainerInterface $c) {
-        $graph = new Graph(
+        return new Graph(
             $c->get(DBAL\Connection::class),
             $c->get('settings')['graph']
         );
+    }),
 
-        // This app's actions don't have dependencies outside of Doctrine 
-        // so a container is not necessary (yet).
-        //$graph->setContainer($c);
+    Middleware\Session::class => factory(function (ContainerInterface $c) {
+        return new Middleware\Session(
+            $c->get(Services\JWT\Decoder::class)
+        );
+    }),
 
-        return $graph;
+    Http\HelloWorld::class => factory(function (ContainerInterface $c) {
+        return new Http\HelloWorld();
+    }),
+
+    Http\UploadFile::class => factory(function (ContainerInterface $c) {
+        return new Http\UploadFile();
+    }),
+
+    Http\Session\Resolve::class => factory(function (ContainerInterface $c) {
+        return new Http\Session\Resolve();
+    }),
+
+    Http\Session\Create::class => factory(function (ContainerInterface $c) {
+        return new Http\Session\Create(
+            $c->get(Connection::class),
+            $c->get(Services\JWT\Encoder::class)
+        );
+    }),
+
+    Http\Session\Delete::class => factory(function (ContainerInterface $c) {
+        return new Http\Session\Delete();
     }),
 
 ];

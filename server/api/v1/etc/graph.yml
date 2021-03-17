@@ -41,6 +41,8 @@ schemas:
             to: pet_id
     
   comments:
+    src: post_comments
+    
     attributes:
       text: text_content
       createdAt: created_at

@@ -6,20 +6,21 @@ namespace ThePetPark\Http\Session;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use ThePetPark\Middleware\Session;
 
 /**
  * Unsets the session cookie if it is present.
  */
-final class Destroy
+final class Delete
 {
     public function __invoke(Request $req, Response $res): Response
     {
-        if (!isset($_COOKIE['session'])) {
+        if (!isset($_COOKIE[Session::TOKEN])) {
             return $res->withStatus(401); // No token found, return a 401.
         }
 
         // A cookie with no expiry will be immediately unset.
-        setcookie('session');
+        setcookie(Session::TOKEN);
 
         return $res->withStatus(200);
     }

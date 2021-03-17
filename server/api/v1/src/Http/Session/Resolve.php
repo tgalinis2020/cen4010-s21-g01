@@ -17,7 +17,7 @@ use function json_encode;
  *   - 200 if session token is set
  *   - 404 if session token is not set
  */
-final class Show
+final class Resolve
 {
     public function __invoke(Request $req, Response $res): Response
     {

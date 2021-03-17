@@ -6,10 +6,9 @@ namespace ThePetPark\Library\Graph;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Doctrine\DBAL\Connection;
-
-use Exception;
 use Psr\Container\ContainerInterface;
+use Doctrine\DBAL\Connection;
+use Exception;
 
 use function file_exists;
 use function class_exists;
@@ -62,22 +61,25 @@ class Graph
      */
     private $settings = [
         'defaultPageSize' => 12,
-        'cache' => null,
+        'cache'           => null,
     ];
 
     /** @var \Psr\Container\ContainerInterface */
-    private $container = null;
+    private $container;
 
-    public function __construct(Connection $conn, array $settings = [])
+    public function __construct(Connection $conn, array $settings = [], $container = null)
     {
         $this->conn = $conn;
         $this->settings = array_merge($this->settings, $settings);
+        $this->container = $container;
 
         if ((($f = $this->settings['cache']) !== null) && file_exists($f)) {
             $this->parseArray(require $f);
         } else {
-            // Cached definitions already include the NotImplemented handler.
-            $this->actions[$this->nactions++] = new Handlers\NotImplemented();
+            throw new Exception(
+                'A YAML configuration file is required to initialize the Graph. '
+                . 'Use bin/graph to create definitions'
+            );
         }
     }
 
@@ -112,22 +114,14 @@ class Graph
     
             } else {
 
-                throw new Exception('Cannot create instance of action ' . $action);
+                throw new Exception(sprintf(
+                    'Cannot create instance of %s action',
+                    $action
+                ));
             }
 
         }
 
-  
-    }
-
-    /**
-     * If actions are defined in a PSR-11 container, Graph can try to resolve
-     * them from it instead of instantiating them itself. A container is
-     * required if actions have dependencies injected in their constructor.
-     */
-    public function setContainer(ContainerInterface $c)
-    {
-        $this->container = $c;
     }
 
     public function getDefaultPageSize(): int
