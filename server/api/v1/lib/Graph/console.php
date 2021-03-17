@@ -5,7 +5,7 @@ declare(strict_types=1);
 require __DIR__ . '/../../vendor/autoload.php';
 
 use ThePetPark\Library\Graph\Graph;
-use ThePetPark\Library\Graph\Handlers;
+use ThePetPark\Library\Graph\Actions;
 use ThePetPark\Library\Graph\Relationship as R;
 
 if ($argc < 3) {
@@ -27,7 +27,7 @@ $schemas = [];
 
 /** @var \ThePetPark\Library\Graph\ActionInterface[] */
 $actions = [
-    Handlers\NotImplemented::class,
+    Actions\NotImplemented::class,
 ];
 
 /** @var int */

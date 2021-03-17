@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Library\Graph\Handlers\JSONAPI\Resource;
+namespace ThePetPark\Library\Graph\Actions\JSONAPI\Resource;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
