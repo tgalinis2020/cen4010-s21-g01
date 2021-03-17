@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use ThePetPark\Library\Graph;
+use ThePetPark\Library\Graph\Graph;
 
 date_default_timezone_set('UTC');
 
@@ -15,7 +15,6 @@ return (function () {
     $builder->addDefinitions(__DIR__ . '/def/slim.php');
     $builder->addDefinitions(__DIR__ . '/def/services.php');
     $builder->addDefinitions(__DIR__ . '/def/http.php');
-    //$builder->addDefinitions(__DIR__ . '/def/resources.php');
     $builder->addDefinitions(__DIR__ . '/def/middleware.php');
 
     $app = new Slim\App($builder->build());
@@ -37,7 +36,11 @@ return (function () {
     $app->map(['GET'], '/hello[/{name}]', ThePetPark\Http\HelloWorld::class);
 
     // Mount the resource graph.
-    $app->group('', Graph\Adapters\SlimAdapter::class);
+    $app->map(
+        ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+        '/{' . Graph::TOKENS . ':.*}',
+        [Graph::class, 'resolve']
+    );
 
     return $app;
 })();

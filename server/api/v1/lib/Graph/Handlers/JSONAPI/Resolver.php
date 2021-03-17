@@ -42,9 +42,9 @@ class Resolver implements ActionInterface
     ): ResponseInterface {
         parse_str($request->getUri()->getQuery(), $params);
 
-        $type = $request->getAttribute(Graph::RESOURCE_TYPE);
-        $resourceID = $request->getAttribute(Graph::RESOURCE_ID);
-        $relationship = $request->getAttribute(Graph::RELATIONSHIP_TYPE);
+        $type = $request->getAttribute(Graph::PARAM_RESOURCE);
+        $resourceID = $request->getAttribute(Graph::PARAM_ID);
+        $relationship = $request->getAttribute(Graph::PARAM_RELATIONSHIP);
 
         $conn = $graph->getConnection();
         $qb = $conn->createQueryBuilder();

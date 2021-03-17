@@ -12,6 +12,9 @@ use Exception;
 use Psr\Container\ContainerInterface;
 
 use function file_exists;
+use function class_exists;
+use function explode;
+use function count;
 
 /**
  * Resource schema container.
@@ -27,24 +30,19 @@ class Graph
      * The root action is the Graph itself. If no schema actions
      * were defined beforehand, the Graph will return a 501 Not Implemented.
      */
-    const ACTION_NOT_IMPL    = 0;
-    
-    /**
-     * Required to differetiate actions between resources and relationships.
-     * Must be present in the request as an attribute.
-     */
-    const CONTEXT            = 'graph_context';
+    const ACTION_NOT_IMPL     = 0;
 
     // Context types
-    const RESOURCE           = 0;
-    const RELATIONSHIP       = 1;
+    const RESOURCE            = 0;
+    const RELATIONSHIP        = 1;
     
     // These constants hold request attribute keys that must exist in the
     // request. An adapter must map them to routes.
-    const RESOURCE_TYPE      = 'graph_type';
-    const RESOURCE_ID        = 'graph_id';
-    const RELATIONSHIP_TYPE  = 'graph_relationship';
-    const ID_REGEX_INT       = '[0-9]+';
+    const TOKENS              = 'graph_tokens';
+    const PARAM_CONTEXT       = 'graph_context';
+    const PARAM_RESOURCE      = 'graph_resource';
+    const PARAM_ID            = 'graph_id';
+    const PARAM_RELATIONSHIP  = 'graph_relationship';
 
     /** @var \Doctrine\DBAL\Connection */
     private $conn;
@@ -135,17 +133,6 @@ class Graph
     {
         return $this->settings['defaultPageSize'];
     }
-    /**
-     * The Graph itself is an ActionHandler.
-     * It reports that the current operation is unsupported.
-     */
-    public function execute(
-        Graph $graph,
-        ServerRequestInterface $request,
-        ResponseInterface $response
-    ): ResponseInterface {
-        return $response->withStatus(501);
-    }
 
     public function getConnection(): Connection
     {
@@ -192,32 +179,60 @@ class Graph
         }
     }
 
+    /**
+     * Since this app was developed with Slim 3 in mind, it expects tokens in
+     * the request attributes in the form of a string with each token delimited
+     * with a forward-slash.
+     */
     public function resolve(
         ServerRequestInterface $request,
         ResponseInterface $response
     ): ResponseInterface {
 
-        $ctx = $request->getAttribute(Graph::CONTEXT);
-        $type = $request->getAttribute(Graph::RESOURCE_TYPE);
-        $relationship = $request->getAttribute(Graph::RELATIONSHIP_TYPE);
-        $schema = $this->get($type);
+        $tokens = explode('/', $request->getAttribute(Graph::TOKENS, []));
+        $context = Graph::RESOURCE;
+        $source = null;
+        $id = null;
+        $relationship = null;
 
-        if ($ctx === null) {
-            throw new Exception('Graph::CONTEXT request attribute is missing');
+        switch (count($tokens)) {
+        case 4:
+            if ($tokens[2] === 'relationship') {
+                $context = Graph::RELATIONSHIP;
+                $tokens = [$tokens[0], $tokens[1], $tokens[3]];
+            } else {
+                $response->withStatus(400);     // Malformed request
+            }
+
+        case 3:
+            $relationship = $tokens[2];
+        case 2:
+            $id = $tokens[1];
+        case 1:
+            $source = $tokens[0];
+            break;
+
+        default:
+            return $response->withStatus(400);  // Malformed request
         }
 
-        // Can't resolve a relationship if it wasn't specified.
-        if ($ctx === Graph::RELATIONSHIP && $relationship === null) {
-            return $response->withStatus(400);
-        }
+        $schema = $this->get($source);
 
         if ($schema === null) {
-            return $response->withStatus(404);
+            return $response->withStatus(404);  // Resource not found
         }
 
-        $action = $this->actions[$schema->getActionKey($ctx, $request->getMethod())];
+        $action = $this->actions[$schema->getActionKey($context, $request->getMethod())];
         
-        return $action->execute($this, $request, $response);
+        return $action->execute(
+            $this,
+            $request
+                ->withAttribute(Graph::PARAM_CONTEXT,      $context)
+                ->withAttribute(Graph::PARAM_RESOURCE,     $source)
+                ->withAttribute(Graph::PARAM_ID,           $id)
+                ->withAttribute(Graph::PARAM_RELATIONSHIP, $relationship),
+            $response
+        );
 
     }
 }
