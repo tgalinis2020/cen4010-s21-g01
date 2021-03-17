@@ -112,6 +112,32 @@ schemas:
             from: tag_id
             to: post_id
 
+  pets:
+    attributes:
+      name: pet_name
+      description: pet_description
+      avatar: avatar_url
+    
+    relationships:
+      users:
+        belongsTo: users
+        using: user_id
+
+      posts:
+        belongsToMany: posts
+        using:
+          - relation: post_pets
+            from: pet_id
+            to: post_id
+
+      breed:
+        belongsTo: pet-breeds
+        using: breed_id
+
+      type:
+        belongsTo: pet-types
+        using: type_id
+
   pet-breeds:
     src: pet_breeds # need to specify source table since resource name is different
 

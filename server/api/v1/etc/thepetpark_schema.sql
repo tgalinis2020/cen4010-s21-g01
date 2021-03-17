@@ -59,10 +59,10 @@ CREATE TABLE pets (
     id INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
     pet_name VARCHAR(255) NOT NULL,
     pet_description TEXT,
+    avatar_url VARCHAR(255),
     type_id  INTEGER UNSIGNED NOT NULL,
     breed_id INTEGER UNSIGNED,
     user_id INTEGER UNSIGNED NOT NULL,
-    avatar_url VARCHAR(255),
 
     CONSTRAINT pets_pk PRIMARY KEY (id),
     CONSTRAINT pets_type_fk FOREIGN KEY (type_id) REFERENCES pet_types (id),

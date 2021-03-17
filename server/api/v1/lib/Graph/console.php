@@ -24,6 +24,8 @@ $cache = [];
 
 /** @var array */
 $schemas = [];
+$typeSchemaMap = [];
+$nschemas = 0;
 
 /** @var \ThePetPark\Library\Graph\ActionInterface[] */
 $actions = [
@@ -155,7 +157,9 @@ try {
                 $relationships[$name] = [$mask, $related, $using];
             }
 
-            $schemas[] = [
+            $typeSchemaMap[$resource] = $nschemas;
+
+            $schemas[++$nschemas] = [
                 [$resource, $source, $id], // table/primary key info
                 $attributes,
                 $relationships,
@@ -164,8 +168,29 @@ try {
         }
     }
 
+    
+    // Assert all declared relationships point to a schema in the graph.
+    foreach ($schemas as $schema) {
+        list($def, $attributes, $relationships, $actionMap) = $schema;
+        list($type, $implType, $id) = $def;
+
+        // Relationships are defined in index 2.
+        foreach ($schema[2] as $relationship => $relationshipData) {
+            list($mask, $related, $using) = $relationshipData;
+
+            if (isset($typeSchemaMap[$related]) === false) {
+                throw new Exception(sprintf(
+                    'Schema %s referenced in relationship %s.%s is not defined in the graph',
+                    $related,
+                    $type,
+                    $relationship
+                ));
+            }
+        }
+    }
+
 } catch (Exception $e) {
-    echo $argv[0], ': ', $e->getMessage(), PHP_EOL, PHP_EOL;
+    echo 'error: ', $e->getMessage(), PHP_EOL;
 }
 
 $cache = [$actions, $schemas];
