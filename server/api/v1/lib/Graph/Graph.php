@@ -142,7 +142,7 @@ class Graph
             throw new Exception(sprintf('Unknown strategy: %s', $problem));
         }
 
-        if (class_exists($this->settings['strategies'][$problem])) {
+        if (class_exists($this->settings['strategies'][$problem]) === false) {
             throw new Exception(sprintf(
                 'Cannot create strategy: %s', $this->settings['strategies'][$problem]
             ));
