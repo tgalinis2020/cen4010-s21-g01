@@ -57,28 +57,40 @@ class Graph
     private $nactions = 0;
 
     /**
+     * Default settings.
+     * 
      * @var array
      */
     private $settings = [
-        'defaultPageSize' => 12,
-        'cache'           => null,
+        'definitions' => null,
+        'pagination' => [
+            'maxPageSize' => 12,
+        ],
+        'strategies' => [
+            'pagination'  => Strategies\Pagination\Cursor::class,
+            'filter'      => Strategies\Filtering\Simple::class,
+            'sort'        => Strategies\Sorting\Simple::class,
+        ],
     ];
 
     /** @var \Psr\Container\ContainerInterface */
     private $container;
 
-    public function __construct(Connection $conn, array $settings = [], $container = null)
+    /** @var \ThePetPark\Library\Graph\ReferenceTable */
+    private $reftable;
+
+    public function __construct(Connection $conn, array $settings = [], $c = null)
     {
         $this->conn = $conn;
         $this->settings = array_merge($this->settings, $settings);
-        $this->container = $container;
+        $this->container = $c;
 
-        if ((($f = $this->settings['cache']) !== null) && file_exists($f)) {
+        if ((($f = $this->settings['definitions']) !== null) && file_exists($f)) {
             $this->parseArray(require $f);
         } else {
             throw new Exception(
-                'A YAML configuration file is required to initialize the Graph. '
-                . 'Use bin/graph to create definitions'
+                'Compiled definitions file is required to initialize the Graph. '
+                . 'Create a YAML definitions file and use bin/graph to compile them.'
             );
         }
     }
@@ -124,9 +136,18 @@ class Graph
 
     }
 
-    public function getDefaultPageSize(): int
+    public function getStrategy(string $problem): StrategyInterface
     {
-        return $this->settings['defaultPageSize'];
+        if (isset($this->settings['strategies'][$problem]) === false) {
+            throw new Exception(sprintf('Unknown strategy: %s', $problem));
+        }
+
+        return $this->settings['strategies'][$problem];
+    }
+
+    public function getMaxPageSize(): int
+    {
+        return $this->settings['pagination']['maxPageSize'];
     }
 
     public function getConnection(): Connection
@@ -139,9 +160,26 @@ class Graph
         return $this->schemas[$resource] ?? null;
     }
 
+    /**
+     * Precondition: reference table must be initialized. In other words,
+     * can only use this after a call to Graph::resolve.
+     * 
+     * This is always true however, schema actions are called immediately after
+     * the table has been initialized.
+     */
+    public function getByRef(string $ref)
+    {
+        return $this->schemas[$this->reftable->getResourceType($ref)];
+    }
+
     public function add(Schema $schema)
     {
         $this->schemas[$schema->getType()] = $schema;
+    }
+
+    public function getReferenceTable(): ReferenceTable
+    {
+        return $this->reftable;
     }
 
     /**
@@ -188,6 +226,8 @@ class Graph
         }
 
         $action = $this->actions[$schema->getActionKey($context, $request->getMethod())];
+
+        $this->reftable = new ReferenceTable($source);
         
         return $action->execute(
             $this,

@@ -248,11 +248,10 @@ class Schema
         //       relationships. Verify this is true!
         if (is_array($link)) {
 
-            $i = 0;
             $joinOn = $self;
             $joinOnField = $this->id;
             
-            foreach ($link as list($pivot, $from, $to)) {
+            foreach ($link as $i => list($pivot, $from, $to)) {
                 $pivotEnum = $self . '_' . $i; // pivots need their own relation enums
                 
                 $qb->innerJoin($joinOn, $pivot, $pivotEnum, $qb->expr()->eq(
@@ -262,7 +261,6 @@ class Schema
 
                 $joinOn = $pivotEnum;
                 $joinOnField = $to;
-                $i++;
             }
 
             // TODO: What if the chain doesn't end in the related resource's

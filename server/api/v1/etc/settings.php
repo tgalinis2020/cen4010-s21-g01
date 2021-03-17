@@ -25,8 +25,8 @@ return (function () {
                 'php-jwt' => [
                     // The secret is a series of random bytes that should make it
                     // nearly impossible for malicious actors to forge their own
-                    // tokens and pretend to be another user.
-                    'secret_key' => __DIR__ . '/secret.txt',
+                    // tokens and masquerade as another user.
+                    'secret_key' => __DIR__ . '/secret.key',
                     'algorithms' => ['HS256', 'HS512'],
                     'selected_algorithm' => 0,
                 ],
@@ -38,14 +38,18 @@ return (function () {
                     'host'     => $conf['host'],
                     'port'     => $conf['port'],
                     'dbname'   => $conf['database'],
-                    'charset'  => 'utf8',
+                    'charset'  => $conf['charset'],
                     'user'     => $conf['user'],
                     'password' => $conf['pass'],
                 ]
             ],
 
             'graph' => [
-                'cache' => __DIR__ . '/../var/cache/graph.cache',
+                'definitions' => __DIR__ . '/../var/cache/graph.cache',
+                'pagination' => [
+                    'maxPageSize' => 15,
+                    'strategy' => 'cursor',
+                ]
             ],
         ],
     ];

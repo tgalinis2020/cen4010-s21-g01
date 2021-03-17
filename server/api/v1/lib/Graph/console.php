@@ -9,7 +9,7 @@ use ThePetPark\Library\Graph\Actions;
 use ThePetPark\Library\Graph\Relationship as R;
 
 if ($argc < 3) {
-    printf('usage: php %s <src> <dest>', $argv[0]);
+    printf('usage: php %s <yml-src> <cache-dest>', $argv[0]);
     echo "\n";
     exit(1);
 }
