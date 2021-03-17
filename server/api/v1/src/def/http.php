@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 use Psr\Container\ContainerInterface;
 use ThePetPark\Http;
-use ThePetPark\Repositories\PetRepository;
-use ThePetPark\Repositories\PostRepository;
-use ThePetPark\Repositories\UserRepository;
 use ThePetPark\Services;
 use Doctrine\DBAL\Connection;
 

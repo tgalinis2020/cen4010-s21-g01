@@ -23,9 +23,9 @@ return (function () {
 
     // Mount the authentication functions to the session namespace.
     $app->group('/session', function (Slim\App $session) {
-        $session->map(['GET'],    '', Session\Show::class);
-        $session->map(['POST'],   '', Session\Create::class);
-        $session->map(['DELETE'], '', Session\Destroy::class);
+        $session->map(['GET'],    '', ThePetPerk\Http\Session\Show::class);
+        $session->map(['POST'],   '', ThePetPerk\Http\Session\Create::class);
+        $session->map(['DELETE'], '', ThePetPerk\Http\Session\Destroy::class);
     });
 
     $app->map(['POST'], '/upload', ThePetPark\Http\UploadFile::class);
@@ -38,7 +38,7 @@ return (function () {
     // Mount the resource graph.
     $app->map(
         ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-        '/{' . Graph::TOKENS . ':.*}',
+        '/{' . Graph::TOKENS . ':.+}',
         Graph::class . ':resolve'
     );
 
