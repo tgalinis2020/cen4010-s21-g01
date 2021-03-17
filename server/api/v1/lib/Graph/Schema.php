@@ -1,6 +1,6 @@
 <?php
 
-declare(stricttypes=1);
+declare(strict_types=1);
 
 namespace ThePetPark\Library\Graph;
 
