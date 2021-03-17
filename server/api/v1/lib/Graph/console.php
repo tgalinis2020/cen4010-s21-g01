@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use ThePetPark\Library\Graph;
+use ThePetPark\Library\Graph\Graph;
+use ThePetPark\Library\Graph\Relationship as R;
 
 if ($argc < 3) {
     printf('usage: php %s <src> <dest>', $argv[0]);
@@ -24,7 +25,7 @@ $cache = [];
 $schemas = [];
 
 /** @var \ThePetPark\Library\Graph\ActionInterface[] */
-$graphActions = [
+$actions = [
     Graph\Handlers\NotImplemented::class,
 ];
 
@@ -35,21 +36,21 @@ $nactions = 1;
 $defaultActions = [];
 
 /** @var \ThePetPark\Library\Graph\ActionInterface[] */
-$defaultActions[Graph\Graph::RESOURCE]     = [];
+$defaultActions[Graph::RESOURCE]     = [];
 
 /** @var \ThePetPark\Library\Graph\ActionInterface[] */
-$defaultActions[Graph\Graph::RELATIONSHIP] = [];
+$defaultActions[Graph::RELATIONSHIP] = [];
 
 $contextTypes = [
-    'resource'      => Graph\Graph::RESOURCE,
-    'relationship'  => Graph\Graph::RELATIONSHIP,
+    'resource'      => Graph::RESOURCE,
+    'relationship'  => Graph::RELATIONSHIP,
 ];
 
 $relationshipTypes = [
-    'belongsTo'     => Graph\Relationship::OWNED|Graph\Relationship::ONE,
-    'belongsToMany' => Graph\Relationship::OWNED|Graph\Relationship::MANY,
-    'has'           => Graph\Relationship::OWNS|Graph\Relationship::ONE,
-    'hasMany'       => Graph\Relationship::OWNS|Graph\Relationship::MANY,
+    'belongsTo'     => R::OWNED|R::ONE,
+    'belongsToMany' => R::OWNED|R::MANY,
+    'has'           => R::OWNS|R::ONE,
+    'hasMany'       => R::OWNS|R::MANY,
 ];
 
 try {
@@ -59,7 +60,7 @@ try {
         foreach ($contextTypes as $ctx => $type) {
             foreach ($root['actions'][$ctx] ?? [] as $httpVerb => $action) {
                 $defaultActions[$type][$httpVerb] = $nactions++;
-                $graphActions[] = $action;
+                $actions[] = $action; // register default action
             }
         }
     }
@@ -75,23 +76,23 @@ try {
             // Initialize action map using not-implemented action.
             foreach ($contextTypes as $type) {
                 $actionMap[$type] = [
-                    'GET'     => Graph\Graph::ACTION_NOT_IMPL,
-                    'POST'    => Graph\Graph::ACTION_NOT_IMPL,
-                    'PUT'     => Graph\Graph::ACTION_NOT_IMPL,
-                    'PATCH'   => Graph\Graph::ACTION_NOT_IMPL,
-                    'DELETE'  => Graph\Graph::ACTION_NOT_IMPL,
+                    'GET'     => Graph::ACTION_NOT_IMPL,
+                    'POST'    => Graph::ACTION_NOT_IMPL,
+                    'PUT'     => Graph::ACTION_NOT_IMPL,
+                    'PATCH'   => Graph::ACTION_NOT_IMPL,
+                    'DELETE'  => Graph::ACTION_NOT_IMPL,
                 ];
             }
 
             foreach ($contextTypes as $ctx => $type) {
                 foreach ($def['actions'][$ctx] ?? [] as $httpVerb => $action) {
                     $actionMap[$type][$httpVerb] = $nactions++;
-                    $graphActions[] = $action;
+                    $actions[] = $action; // register schema action
                 }
 
                 // Map defaults to unimplemented schema actions.
                 foreach ($defaultActions[$type] as $httpVerb => $actionEnum) {
-                    if ($actionMap[$type][$httpVerb] === Graph\Graph::ACTION_NOT_IMPL) {
+                    if ($actionMap[$type][$httpVerb] === Graph::ACTION_NOT_IMPL) {
                         $actionMap[$type][$httpVerb] = $actionEnum;
                     }
                 }
@@ -166,6 +167,6 @@ try {
     echo $argv[0], ': ', $e->getMessage(), PHP_EOL, PHP_EOL;
 }
 
-$cache = [$graphActions, $schemas];
+$cache = [$actions, $schemas];
 
 file_put_contents($dest, sprintf("<?php return %s;", var_export($cache, true)));

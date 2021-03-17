@@ -45,8 +45,8 @@ return [
             $c->get('settings')['graph']
         );
 
-        // This app's actions don't have dependencies outside of Doctrine
-        // so a container is not necessary.
+        // This app's actions don't have dependencies outside of Doctrine 
+        // so a container is not necessary (yet).
         //$graph->setContainer($c);
 
         return $graph;
