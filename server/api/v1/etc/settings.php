@@ -14,7 +14,7 @@ return (function () {
     $secretKey = file_get_contents(__DIR__ . '/secret.txt');
 
     // Use MySQL config file to initialize the database connection.
-    $conf = parse_ini_file(__DIR__ . '/../../../../../.my.cnf');
+    $conf = parse_ini_file(__DIR__ . '/../../../../.my.cnf');
 
     return [
         'settings' => [

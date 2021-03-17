@@ -17,7 +17,9 @@ return (function () {
 
     $app = new Slim\App($builder->build());
 
-    $app->add(ThePetPark\Middleware\SessionMiddleware::class);
+    // The Session middleware reads the session cookie and attaches the user's
+    // session details to the request.
+    $app->add(ThePetPark\Middleware\Session::class);
 
     // Mount the authentication functions to the session namespace.
     $app->group('/session', function (Slim\App $session) {
