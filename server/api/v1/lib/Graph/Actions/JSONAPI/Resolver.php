@@ -286,7 +286,7 @@ class Resolver implements ActionInterface
         // See if the expected query is generated.
         $includesSQL = $qb->getSQL();
 
-        $res->getBody()->write("Query 1:\n$mainSQL\n\nQuery 2:\n$includesSQL");
+        $response->getBody()->write("Query 1:\n$mainSQL\n\nQuery 2:\n$includesSQL");
 
         return $res
             ->withHeader('Content-Type', 'text/plain')
