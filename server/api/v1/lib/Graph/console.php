@@ -112,7 +112,7 @@ try {
             foreach ($def['relationships'] ?? [] as $name => $r) {
                 if (isset($r['using']) === false) {
                     throw new Exception(sprintf(
-                        'Missing using clause in %s.%s relationship', $resource, $name
+                        'missing using clause in %s.%s relationship', $resource, $name
                     ));
                 }
 
@@ -124,7 +124,7 @@ try {
                 // were more fields than necessary.
                 if (count($r) > 1) {
                     throw new Exception(sprintf(
-                        'Malformed relationship: %s.%s', $resource, $name
+                        'malformed relationship: %s.%s', $resource, $name
                     ));
                 }
 
@@ -133,7 +133,7 @@ try {
 
                 if (isset($relationshipTypes[$relationshipType]) === false) {
                     throw new Exception(sprintf(
-                        'Missing relationship type for %s.%s', $resource, $name
+                        'undefined relationship type for %s.%s', $resource, $name
                     ));
                 }
 
@@ -144,7 +144,7 @@ try {
 
                     foreach ($using as $p) {
                         if (isset($p['relation'], $p['from'], $p['to']) === false) {
-                            throw new Exception('Pivot relationships must have the '
+                            throw new Exception('pivot relationships must have the '
                                     . 'following fields: relation, from, to');
                         }
 
@@ -180,7 +180,7 @@ try {
 
             if (isset($typeSchemaMap[$related]) === false) {
                 throw new Exception(sprintf(
-                    'Schema %s referenced in relationship %s.%s is not defined in the graph',
+                    'schema %s referenced in relationship %s.%s is not defined in the graph',
                     $related,
                     $type,
                     $relationship
