@@ -11,7 +11,7 @@ use ThePetPark\Library\Graph\Graph;
 
 use function json_decode;
 
-class Create implements ActionInterface
+class Update implements ActionInterface
 {
     public function execute(Graph $graph, Request $req, Response $res): Response
     {
