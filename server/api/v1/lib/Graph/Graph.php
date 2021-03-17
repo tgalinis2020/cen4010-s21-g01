@@ -13,6 +13,7 @@ use Psr\Container\ContainerInterface;
 
 use function file_exists;
 use function class_exists;
+use function array_merge;
 use function explode;
 use function count;
 
@@ -70,7 +71,7 @@ class Graph
     public function __construct(Connection $conn, array $settings = [])
     {
         $this->conn = $conn;
-        $this->settings += $settings;
+        $this->settings = array_merge($this->settings, $settings);
 
         if ((($f = $this->settings['cache']) !== null) && file_exists($f)) {
             $this->parseArray(require $f);
