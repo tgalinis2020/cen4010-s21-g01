@@ -1,4 +1,8 @@
 {
+    "scripts": {
+        "graph": "php bin/graph etc/graph.yml var/cache/graph.cache"
+    },
+
     "require": {
         "php": ">=7.0",
         "slim/slim": "^3.1",
