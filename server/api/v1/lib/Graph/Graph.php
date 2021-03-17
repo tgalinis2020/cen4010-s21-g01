@@ -108,17 +108,17 @@ class Graph
 
                 $this->actions[$this->nactions++] = $this->container->get($action);
 
-            } else/*if (class_exists($action))*/ {
+            } elseif (class_exists($action)) {
                 
                 $this->actions[$this->nactions++] = new $action;
     
-            } /*else {
+            } else {
 
                 throw new Exception(sprintf(
                     'Cannot create instance of %s action',
                     $action
                 ));
-            }*/
+            }
 
         }
 

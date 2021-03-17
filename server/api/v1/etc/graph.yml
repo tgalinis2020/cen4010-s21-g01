@@ -1,7 +1,7 @@
 # default actions will map to unimplemented schema actions
 actions:
   resource:
-    GET: ThePetPark\Library\Graph\Actions\JSONAPI\Resource\Resolver
+    GET: ThePetPark\Library\Graph\Actions\JSONAPI\Resolver
   #relationship:
   #  GET: ThePetPark\Library\Graph\Actions\JSONAPI\Relationship\Resolver
 
