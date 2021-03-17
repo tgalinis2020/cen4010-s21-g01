@@ -2,7 +2,7 @@
   0 => 
   array (
     0 => 'ThePetPark\\Library\\Graph\\Actions\\NotImplemented',
-    1 => 'ThePetPark\\Library\\Graph\\Actions\\JSONAPI\\Resolver',
+    1 => 'ThePetPark\\Library\\Graph\\Actions\\Resolve',
     2 => 'ThePetPark\\Http\\Actions\\Posts\\Create',
     3 => 'ThePetPark\\Http\\Actions\\Posts\\Update',
     4 => 'ThePetPark\\Http\\Actions\\Posts\\Delete',
