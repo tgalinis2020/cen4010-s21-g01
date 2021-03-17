@@ -80,6 +80,12 @@
             ),
           ),
         ),
+        'comments' => 
+        array (
+          0 => 6,
+          1 => 'comments',
+          2 => 'post_id',
+        ),
       ),
       3 => 
       array (

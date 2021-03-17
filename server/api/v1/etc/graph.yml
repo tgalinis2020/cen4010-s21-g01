@@ -39,6 +39,10 @@ schemas:
           - relation: post_pets
             from: post_id
             to: pet_id
+
+      comments:
+        hasMany: comments
+        using: post_id
     
   comments:
     src: post_comments
