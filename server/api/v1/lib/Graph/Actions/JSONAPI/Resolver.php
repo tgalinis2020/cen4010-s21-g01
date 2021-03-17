@@ -288,7 +288,7 @@ class Resolver implements ActionInterface
 
         $response->getBody()->write("Query 1:\n$mainSQL\n\nQuery 2:\n$includesSQL");
 
-        return $res
+        return $response
             ->withHeader('Content-Type', 'text/plain')
             ->withStatus(200);
 
