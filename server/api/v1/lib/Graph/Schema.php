@@ -153,6 +153,19 @@ class Schema
         return $this->attr($attribute, 2);
     }
 
+    public function getSelectedAttributes(): array
+    {
+        $attrs = [];
+
+        foreach ($this->attributes as $attr) {
+            if ($attr[0] === $this->select) {
+                $attrs[] = $attr;
+            }
+        }
+
+        return $attrs;
+    }
+
     public function getRelationship(string $relationship)
     {
         return $this->relationships[$relationship] ?? null;

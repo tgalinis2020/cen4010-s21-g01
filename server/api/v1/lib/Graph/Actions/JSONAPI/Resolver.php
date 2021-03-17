@@ -14,6 +14,7 @@ use ThePetPark\Library\Graph\ActionInterface;
 use ThePetPark\Library\Graph\Relationship as R;
 
 use function explode;
+use function count;
 use function is_numeric;
 
 /**
@@ -82,14 +83,15 @@ class Resolver implements ActionInterface
         // relationship, therefore its key is an empty string.
         // Enumerations are prefixed with 't' since MySQL aliases cannot
         // begin with a number.
-        $ref = ['' => $this->getRef()];
+        $sel = '';                          // seleted relation
+        $ref = [$sel => $this->getRef()];   // relation-to-ref
 
         // The following are parallel arrays indexed by a reference value
         // from $ref
-        $map = [$ref[''] => $resource]; // ref-to-resource
-        $raw = [];                      // ref-to-raw data
-        $dat = [];                      // ref-to-transformed data
-        $rel = [];                      // ref-to-relationships
+        $map = [$ref[$sel] => $resource];   // ref-to-resource
+        $raw = [];                          // ref-to-raw data
+        $dat = [];                          // ref-to-transformed data
+        $rel = [];                          // ref-to-relationships
 
         $resource->initialize($qb, $ref['']);
 
@@ -98,27 +100,29 @@ class Resolver implements ActionInterface
         if ($resourceID !== null) {
 
             $conditions->add($qb->expr()->eq(
-                $ref[''] . '.' . $resource->getId(),
+                $ref[$sel] . '.' . $resource->getId(),
                 $qb->createNamedParameter($resourceID)
             ));
 
             if ($relationship !== null) {
 
+                // Create a new reference for the related resource.
                 $ref[$relationship] = $this->newRef();
                 
                 $related = $resource->resolve(
                     $this->graph,
                     $qb,
                     $relationship,
-                    $ref[''],
+                    $ref[$sel],
                     $ref[$relationship]
                 );
 
-                $relatedSchema = $related->getSchema();
+                // Select the fields from the related resource.
+                $sel = $relationship;
 
-                $relatedSchema->includeFields($qb, $ref[$relationship], $sparseFields);
+                $resource = $related->getSchema();
 
-                $res[$this->getRef()] = $relatedSchema;
+                $res[$ref[$sel]] = $resource;
 
                 if ($related->getType() & R::ONE) {
                     $amount = R::ONE;
@@ -127,15 +131,11 @@ class Resolver implements ActionInterface
             } else {
 
                 $amount = R::ONE;
-
-                $resource->includeFields($qb, $ref[''], $sparseFields);
             }
         
-        } else {
-
-            $resource->includeFields($qb, $ref[''], $sparseFields);
-
         }
+
+        $resource->includeFields($qb, $ref[$sel], $sparseFields);
 
         if (isset($params['page']) && ($amount === R::MANY)) {
 
@@ -156,7 +156,103 @@ class Resolver implements ActionInterface
 
         $qb->setMaxResults($size);
 
-        // TODO: parse filters, defer filters that do not affect main query.
+        // TODO: apply query filters (and resolve relationships as needed)
+        if (isset($params['filter'])) {
+            foreach ($params['filter'] as $field => $rvalue) {
+
+                // TOOD: parse provided field. Fields can be attributes of
+                // the resource or attributes of a resource from a resolved
+                // relationship. Might have to add joins to apply the filter.
+                // If this is the case, add the new reference to the ref map.
+                $tokens = explode('.', $field);
+                $ntokens = count($tokens);
+
+                if ($ntokens == 1 && $resource->hasAttribute($tokens[0])) {
+
+
+
+                } elseif ($resource->hasRelationship($tokens[0])) {
+
+                    // TODO: resolve relationships in order to apply filters.
+
+                    if ($ntokens > 1) {
+
+                        
+
+                    } else {
+
+                        // If only a relationship was given, filter by related
+                        // resource ID.
+
+                    }
+
+                } else {
+
+                    return $res->withStatus(400);   // Invalid token.
+                
+                }
+
+                $tokens = explode(' ', $rvalue);
+    
+                switch (count($tokens)) {
+                case 1:
+                    $tokens = ['eq', $rvalue];
+                case 2:
+                    list($op, $value) = $tokens;
+
+                    // TODO: map expression to ExpressionBuilder function
+    
+                    /*
+                    if (!isset($this->expressions[$op])) {
+                        //return self::EINVALIDEXPR;
+                    }
+    
+                    if (!isset($this->fieldMap[$field])) {
+                        //return self::EINVALIDFIELD;
+                    }
+    
+                    // This silly looking block of code calls the filter's
+                    // corresponding ExpressionBuilder method.
+                    $this->conditions->add(call_user_func(
+                        [$this->qb->expr(), self::FILTERS[$op]],
+                        $this->fieldMap[$field],
+                        $this->qb->createNamedParameter($value)
+                    ));
+                    */
+                }
+            }
+        }
+
+        // TODO: apply sorting (should do this before executing the previous
+        // query too FYI)
+        if (isset($params['sort'])) {
+            $fields = explode(',', $params['sort']);
+            $order = 'ASC';
+
+            foreach ($fields as $field) {
+
+                switch (substr($field, 0, 1)) {
+                case '-':
+                    $field = substr($field, 1);
+                    $order = 'DESC';
+                    break;
+                case '+':
+                    $field = substr($field, 1);
+                }
+
+                // TODO: make sure field is in relation
+
+                
+                /*
+                if (!isset($this->fieldMap[$field])) {
+                    return $res->withStatus(400);
+                }
+                
+                $qb->addOrderBy('u.' . $this->fieldMap[$field], $order);
+                */
+
+            }
+        }
 
         $mainSQL = $qb->getSQL();
 
@@ -177,8 +273,6 @@ class Resolver implements ActionInterface
         ]];
         $resolved = $dat[$this->getRef()];
         $rowCount = count($resolved);
-
-        // (optional) TODO: apply sparse fields before selecting
 
         if ($rowCount > 0 && isset($params['include'])) {
 
@@ -238,73 +332,6 @@ class Resolver implements ActionInterface
 
             // TODO: parse includes
         }
-
-        // TODO: apply query filters (and resolve relationships as needed)
-        // (should do this before executing the previous query too FYI)
-        if (isset($params['filter'])) {
-            foreach ($params['filter'] as $field => $rvalue) {
-                $tokens = explode(' ', $rvalue);
-    
-                switch (count($tokens)) {
-                case 1:
-                    $tokens = ['eq', $rvalue];
-                case 2:
-                    list($op, $value) = $tokens;
-
-                    // TODO: map expression to ExpressionBuilder function
-    
-                    /*
-                    if (!isset($this->expressions[$op])) {
-                        //return self::EINVALIDEXPR;
-                    }
-    
-                    if (!isset($this->fieldMap[$field])) {
-                        //return self::EINVALIDFIELD;
-                    }
-    
-                    // This silly looking block of code calls the filter's
-                    // corresponding ExpressionBuilder method.
-                    $this->conditions->add(call_user_func(
-                        [$this->qb->expr(), self::FILTERS[$op]],
-                        $this->fieldMap[$field],
-                        $this->qb->createNamedParameter($value)
-                    ));
-                    */
-                }
-            }
-        }
-
-        // TODO: apply sorting (should do this before executing the previous
-        // query too FYI)
-        if (isset($params['sort'])) {
-            $fields = explode(',', $params['sort']);
-            $order = 'ASC';
-
-            foreach ($fields as $field) {
-
-                switch (substr($field, 0, 1)) {
-                case '-':
-                    $field = substr($field, 1);
-                    $order = 'DESC';
-                    break;
-                case '+':
-                    $field = substr($field, 1);
-                }
-
-                // TODO: make sure field is in relation
-                
-                /*
-                if (!isset($this->fieldMap[$field])) {
-                    return $res->withStatus(400);
-                }
-                
-                $qb->addOrderBy('u.' . $this->fieldMap[$field], $order);
-                */
-
-            }
-        }
-
-        $qb->where($conditions);
 
         // TODO: serialize raw data and relationships to a JSONAPI document
 
