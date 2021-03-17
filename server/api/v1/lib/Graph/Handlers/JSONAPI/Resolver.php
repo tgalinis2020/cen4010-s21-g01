@@ -179,10 +179,10 @@ class Resolver implements ActionInterface
                         }
 
                         $ref[$token] = $this->newRef();
-                        list($related, $mask) = $cursor->resolve($graph, $qb, $r,
+                        $related = $cursor->resolve($graph, $qb, $r,
                                 $parentRef, $ref[$token]);
                         $parentRef = $ref[$token];
-                        $cursor = $related;
+                        $cursor = $related->getSchema();
                         $cursor->includeFields($qb, $ref[$token]);
                         $map[$ref[$token]] = $cursor;
                     }
@@ -209,8 +209,69 @@ class Resolver implements ActionInterface
         }
 
         // TODO: apply query filters (and resolve relationships as needed)
+        // (should do this before executing the previous query too FYI)
+        if (isset($params['filter'])) {
+            foreach ($params['filter'] as $field => $rvalue) {
+                $tokens = explode(' ', $rvalue);
+    
+                switch (count($tokens)) {
+                case 1:
+                    $tokens = ['eq', $rvalue];
+                case 2:
+                    list($op, $value) = $tokens;
 
-        // TODO: apply sorting
+                    // TODO: map expression to ExpressionBuilder function
+    
+                    /*
+                    if (!isset($this->expressions[$op])) {
+                        //return self::EINVALIDEXPR;
+                    }
+    
+                    if (!isset($this->fieldMap[$field])) {
+                        //return self::EINVALIDFIELD;
+                    }
+    
+                    // This silly looking block of code calls the filter's
+                    // corresponding ExpressionBuilder method.
+                    $this->conditions->add(call_user_func(
+                        [$this->qb->expr(), self::FILTERS[$op]],
+                        $this->fieldMap[$field],
+                        $this->qb->createNamedParameter($value)
+                    ));
+                    */
+                }
+            }
+        }
+
+        // TODO: apply sorting (should do this before executing the previous
+        // query too FYI)
+        if (isset($params['sort'])) {
+            $fields = explode(',', $params['sort']);
+            $order = 'ASC';
+
+            foreach ($fields as $field) {
+
+                switch (substr($field, 0, 1)) {
+                case '-':
+                    $field = substr($field, 1);
+                    $order = 'DESC';
+                    break;
+                case '+':
+                    $field = substr($field, 1);
+                }
+
+                // TODO: make sure field is in relation
+                
+                /*
+                if (!isset($this->fieldMap[$field])) {
+                    return $res->withStatus(400);
+                }
+                
+                $qb->addOrderBy('u.' . $this->fieldMap[$field], $order);
+                */
+
+            }
+        }
 
         $qb->where($conditions);
 

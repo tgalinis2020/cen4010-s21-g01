@@ -39,7 +39,7 @@ return (function () {
     $app->map(
         ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
         '/{' . Graph::TOKENS . ':.*}',
-        [Graph::class, 'resolve']
+        Graph::class . ':resolve'
     );
 
     return $app;
