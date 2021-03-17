@@ -284,7 +284,7 @@ class Resolver implements ActionInterface
 
             foreach (explode(',', $params['include']) as $included) {
                 $cursor = $resource;
-                $parentRef = $ref[''];
+                $parentRef = $ref[$sel]; 
                 $tokens = explode('.', $included);
                 $token = $tokens[0];
                 $delim = '';
@@ -299,7 +299,7 @@ class Resolver implements ActionInterface
                             // If provided token isn't a valid relationship,
                             // stop here. TODO: might be worth deferring error
                             // handling to another controller.
-                            return $res->withStatus(400);
+                            return $response->withStatus(400);
                         
                         }
 
