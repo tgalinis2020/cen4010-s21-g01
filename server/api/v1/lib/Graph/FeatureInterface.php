@@ -16,6 +16,12 @@ interface FeatureInterface
      * Checks the provided parameters to see if the feature is applicable.
      */
     public function check(array $parameters): bool;
+
+    /**
+     * If necessary, unset any parameters that could be used by conflicting
+     * filters.
+     */
+    public function clean(array &$parameters);
     
     /**
      * Apply a transformation to the query.

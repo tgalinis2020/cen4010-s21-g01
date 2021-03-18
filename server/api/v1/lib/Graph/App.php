@@ -180,6 +180,7 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
 
             if ($feat->check($parameters)) {
                 $feat->apply($this, $queryBuilder, $parameters);
+                $feat->clean();
             }
         }
     }

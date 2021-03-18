@@ -33,6 +33,11 @@ class Advanced implements Graph\FeatureInterface
         return isset($params['filter']);
     }
 
+    public function clean(array &$params)
+    {
+        unset($params['filter']);
+    }
+
     public function apply(Graph\App $graph, QueryBuilder $qb, array $params): bool
     {
         foreach ($params['filter'] as $fieldAndFilter => $value) {

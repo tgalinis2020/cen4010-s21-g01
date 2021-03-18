@@ -23,6 +23,11 @@ class Simple implements Graph\FeatureInterface
         return isset($params['filter']);
     }
 
+    public function clean(array &$params)
+    {
+        unset($params['filter']);
+    }
+
     public function apply(Graph\App $graph, QueryBuilder $qb, array $params): bool
     {
         foreach ($params['filter'] as $field => $value) {
@@ -34,7 +39,7 @@ class Simple implements Graph\FeatureInterface
             // relationship. Might have to add joins to apply the filter.
             // If this is the case, add the new reference to the ref map.
             $tokens = explode('.', $field);
-            $field = array_pop($tokens);
+            $attr = array_pop($tokens);
             $delim = '';
             $token = '';
 
@@ -57,20 +62,16 @@ class Simple implements Graph\FeatureInterface
                 $delim = '.';
             }
 
-            if ($field === 'id') {
+            if ($schema->hasAttribute($attr)) {
 
-                $field = $schema->getId();
+                $attr = $schema->getImplAttribute($attr);
 
-            } elseif ($schema->hasAttribute($field)) {
+            } elseif ($schema->hasRelationship($attr)) {
 
-                $field = $schema->getImplAttribute($field);
-
-            } elseif ($schema->hasRelationship($field)) {
-
-                $relationship = $schema->getRelationship($field);
+                $relationship = $schema->getRelationship($attr);
                 $ref = $relationship->getRef();
                 $schema = $relationship->getSchema();
-                $field = $schema->getId();
+                $attr = $schema->getId();
 
             } else {
 
@@ -79,7 +80,7 @@ class Simple implements Graph\FeatureInterface
             }
 
             $qb->andWhere($qb->expr()->eq(
-                $ref . '.' . $field,
+                $ref . '.' . $attr,
                 $qb->createNamedParameter($value)
             ));
         }

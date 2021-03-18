@@ -7,6 +7,8 @@ namespace ThePetPark\Library\Graph\Features\Sorting;
 use Doctrine\DBAL\Query\QueryBuilder;
 use ThePetPark\Library\Graph;
 
+use function trim;
+
 /**
  * The simple sorting strategy sorts main data by the resource's attributes.
  */
@@ -17,6 +19,11 @@ class Simple implements Graph\FeatureInterface
         return isset($params['sort']);
     }
 
+    public function clean(array &$params)
+    {
+        unset($params['sort']);
+    }
+
     public function apply(Graph\App $graph, QueryBuilder $qb, array $params): bool
     {
         foreach (explode(',', $params['sort']) as $attr) {
@@ -25,6 +32,7 @@ class Simple implements Graph\FeatureInterface
             }
 
             $order = 'ASC';
+            $attr = trim($attr);
 
             switch (substr($attr, 0, 1)) {
             case '-':
@@ -36,12 +44,10 @@ class Simple implements Graph\FeatureInterface
             $ref = $graph->getBaseRef();
             $schema = $graph->getSchemaByRef($ref);
 
-            if ($attr === 'id') {
-                $attr = $schema->getId();
-            } elseif ($schema->hasAttribute($attr) === false) {
-                return false;
-            } else {
+            if ($schema->hasAttribute($attr)) {
                 $attr = $schema->getImplAttribute($attr);
+            } else {
+                return false;
             }
 
             $qb->addOrderBy($ref . '.' . $attr, $order);

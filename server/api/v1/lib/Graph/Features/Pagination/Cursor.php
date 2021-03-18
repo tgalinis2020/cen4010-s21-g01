@@ -19,6 +19,11 @@ class Cursor implements FeatureInterface
         return isset($params['page'], $params['page']['cursor']);
     }
 
+    public function clean(array &$params)
+    {
+        unset($params['page']);
+    }
+
     public function apply(Graph\App $graph, QueryBuilder $qb, array $params): bool
     {
         $page = $params['page'];
@@ -31,11 +36,16 @@ class Cursor implements FeatureInterface
             $qb->createNamedParameter($page['cursor'])
         ));
 
+        unset($params['page']['cursor']);
+
         if (isset($page['size']) && is_numeric($page['size'])) {
             $size = (int) $page['size'];
+            unset($params['page']['size']);
         }
 
         $qb->setMaxResults($size);
+
+        unset($params['page']);
         
         return true;
     }

@@ -129,14 +129,14 @@ class Schema
         return $this->type[1];
     }
 
-    public function hasAttribute(string $attribute): bool
+    public function hasAttribute(string $attr): bool
     {
-        return isset($this->attributes[$attribute]);
+        return isset($this->attributes[$attr]) || ($attr === 'id');
     }
 
-    public function getImplAttribute(string $attribute)
+    public function getImplAttribute(string $attr)
     {
-        return $this->attributes[$attribute][2];
+        return ($attr === 'id') ? $this->id : $this->attributes[$attr][2];
     }
 
     public function getSelectedAttributes(): array
