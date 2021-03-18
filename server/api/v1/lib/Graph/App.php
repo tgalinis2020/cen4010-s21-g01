@@ -173,14 +173,14 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
         }
     }
 
-    public function applyFeatures(QueryBuilder $queryBuilder, array $parameters)
+    public function applyFeatures(QueryBuilder $queryBuilder, array &$parameters)
     {
         foreach ($this->settings['features'] as $feature) {
             $feat = new $feature;
 
             if ($feat->check($parameters)) {
                 $feat->apply($this, $queryBuilder, $parameters);
-                $feat->clean();
+                $feat->clean($parameters);
             }
         }
     }
