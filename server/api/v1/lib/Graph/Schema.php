@@ -191,8 +191,11 @@ class Schema
      * Use provided enumeration $ref to uniquely identify the selected resource.
      * Sparse fields must be a resourceType -> list of attributes map.
      */
-    public function includeFields(QueryBuilder $qb, string $ref, array $sparseFields = [])
-    {
+    public function addAttributesToQuery(
+        QueryBuilder $qb,
+        string $ref,
+        array $sparseFields = []
+    ) {
         // Always select the resource's ID.
         $qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $ref, $this->id, 'id'));
 

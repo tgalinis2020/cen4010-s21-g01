@@ -31,7 +31,7 @@ class Resolve implements Graph\ActionInterface
         $relationship = $request->getAttribute(Graph\App::PARAM_RELATIONSHIP);
 
         $conn = $graph->getConnection();
-        $qb = $conn->createQueryBuilder();
+        $qb = $conn->createQueryBuilder()->distinct();
         $response = $graph->createResponse();
 
         // Initialize sparse fieldsets. They are attributes to select, indexed
@@ -90,7 +90,7 @@ class Resolve implements Graph\ActionInterface
         
         }
 
-        $baseSchema->includeFields($qb, $baseRef, $sparseFields);
+        $baseSchema->addAttributesToQuery($qb, $baseRef, $sparseFields);
         $graph->applyFeatures($qb, $params);
 
         if ($amount === R::ONE) {
@@ -98,6 +98,7 @@ class Resolve implements Graph\ActionInterface
         }
         
         $mainSQL = $qb->getSQL();
+
 
         //$data[$ref] = $qb->execute()->fetchAll(FetchMode::ASSOCIATIVE);
         $data[$baseRef] = [
@@ -118,7 +119,7 @@ class Resolve implements Graph\ActionInterface
 
             // Reset fields but keep source table(s) and conditions.
             // Create a new query based on retrieved data.
-            $qb->resetQueryPart('select');
+            $qb->resetQueryParts(['select', 'distinct']);
             $qb->setMaxResults(null);
 
             foreach (explode(',', $params['include']) as $included) {
@@ -154,7 +155,7 @@ class Resolve implements Graph\ActionInterface
 
                     }
                     
-                    $schema->includeFields($qb, $relatedRef, $sparseFields);
+                    $schema->addAttributesToQuery($qb, $relatedRef, $sparseFields);
                     $ref = $relatedRef;
 
                     $delim = '.';
