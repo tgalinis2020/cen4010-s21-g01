@@ -53,7 +53,7 @@ return (function () {
                 ],
                 'features' => [
                     Graph\Features\Pagination\Cursor::class,
-                    Graph\Features\Filter\Advanced::class,
+                    Graph\Features\Filters\Advanced::class,
                     Graph\Features\Sorting\Simple::class,
                 ]
             ],
