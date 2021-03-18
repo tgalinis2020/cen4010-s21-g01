@@ -19,13 +19,8 @@ use ThePetPark\Library\Graph\StrategyInterface;
  */
 class Simple implements StrategyInterface
 {
-    public function apply(
-        Graph $graph,
-        QueryBuilder $qb,
-        CompositeExpression $conditions,
-        array $params
-    ): bool {
-
+    public function apply(Graph $graph, QueryBuilder $qb, array $params): bool
+    {
         $reftable = $graph->getReferenceTable();
 
         foreach (($params['filter'] ?? []) as $field => $value) {
@@ -56,13 +51,12 @@ class Simple implements StrategyInterface
 
             }
 
-            $conditions->add($qb->expr()->eq(
+            $qb->andWhere($qb->expr()->eq(
                 $ref . '.' . $attribute,
                 $qb->createNamedParameter($value)
             ));
         }
 
         return true;
-    
     }
 }

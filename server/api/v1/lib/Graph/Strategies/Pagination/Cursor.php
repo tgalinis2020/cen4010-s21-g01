@@ -16,13 +16,8 @@ use ThePetPark\Library\Graph\StrategyInterface;
  */
 class Cursor implements StrategyInterface
 {
-    public function apply(
-        Graph $graph,
-        QueryBuilder $qb,
-        CompositeExpression $conditions,
-        array $params
-    ): bool {
-
+    public function apply(Graph $graph, QueryBuilder $qb, array $params): bool
+    {
         $reftable = $graph->getReferenceTable();
         $size = $graph->getMaxPageSize();
 
@@ -36,7 +31,7 @@ class Cursor implements StrategyInterface
             }
 
             if (isset($page['cursor'])) {
-                $conditions->add($qb->expr()->gt(
+                $qb->andWhere($qb->expr()->gt(
                     $ref . '.' . $resource->getId(),
                     $qb->createNamedParameter($page['cursor'])
                 ));
@@ -47,6 +42,5 @@ class Cursor implements StrategyInterface
         $qb->setMaxResults($size);
         
         return true;
-
     }
 }

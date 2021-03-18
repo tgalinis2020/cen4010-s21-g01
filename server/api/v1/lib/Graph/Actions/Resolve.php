@@ -11,12 +11,8 @@ use ThePetPark\Library\Graph\Graph;
 use ThePetPark\Library\Graph\ActionInterface;
 use ThePetPark\Library\Graph\Relationship as R;
 
-use Exception;
-use ThePetPark\Library\Graph\ReferenceTable;
-
 use function explode;
 use function count;
-use function is_numeric;
 
 /**
  * Generates a query using the information provided in the request's
@@ -38,8 +34,6 @@ class Resolve implements ActionInterface
 
         $conn = $graph->getConnection();
         $qb = $conn->createQueryBuilder();
-        $conditions = $qb->expr()->andX();
-        $qb->where($conditions);
 
         // Initialize sparse fieldsets. They are attributes to select, indexed
         // by resource type.
@@ -73,7 +67,7 @@ class Resolve implements ActionInterface
 
         if ($resourceID !== null) {
 
-            $conditions->add($qb->expr()->eq(
+            $qb->andWhere($qb->expr()->eq(
                 $ref . '.' . $resource->getId(),
                 $qb->createNamedParameter($resourceID)
             ));
@@ -112,14 +106,14 @@ class Resolve implements ActionInterface
 
         if ($amount === R::MANY) {
             $graph->getStrategy('pagination')
-                ->apply($graph, $qb, $conditions, $params);
+                ->apply($graph, $qb, $params);
         } else {
             $qb->setMaxResults(1);
         }
 
         foreach (['filter', 'sort'] as $s) {
             $graph->getStrategy($s)
-                ->apply($graph, $qb, $conditions, $params);
+                ->apply($graph, $qb, $params);
         }
         
         $mainSQL = $qb->getSQL();
@@ -199,7 +193,7 @@ class Resolve implements ActionInterface
                 $idField = $baseRef . '.' . $base->getId();
 
                 // Only include data relevant to the previously fetched data.
-                $conditions->add($qb->expr()->andX(
+                $qb->andWhere($qb->expr()->andX(
                     $qb->expr()->gte($idField, $resolved[0]['id']),
                     $qb->expr()->lte($idField, $resolved[$rowCount - 1]['id'])
                 ));

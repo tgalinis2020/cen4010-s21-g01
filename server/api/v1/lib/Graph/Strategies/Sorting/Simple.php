@@ -15,18 +15,12 @@ use ThePetPark\Library\Graph\StrategyInterface;
  */
 class Simple implements StrategyInterface
 {
-    public function apply(
-        Graph $graph,
-        QueryBuilder $qb,
-        CompositeExpression $conditions,
-        array $params
-    ): bool {
-
+    public function apply(Graph $graph, QueryBuilder $qb, array $params): bool
+    {
         $reftable = $graph->getReferenceTable();
         $order = 'ASC';
 
         foreach ((explode(',', $params['sort'] ?? '')) as $attr) {
-
             if ($attr === '') {
                 return false;
             }
@@ -48,10 +42,8 @@ class Simple implements StrategyInterface
             }
 
             $qb->addOrderBy($ref . '.' . $attr, $order);
-
         }
 
         return true;
-
     }
 }

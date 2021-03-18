@@ -9,7 +9,7 @@ use Doctrine\DBAL\Query\Expression\CompositeExpression;
 
 /**
  * Strategies allow different ways to apply sorting, filtering and pagination
- * to a request.
+ * to a request. Breaks a big actions into smaller, replaceable actions.
  */
 interface StrategyInterface
 {
@@ -18,10 +18,5 @@ interface StrategyInterface
      * 
      * @return bool True if transformation was applied successfully, false otherwise.
      */
-    public function apply(
-        Graph $graph,
-        QueryBuilder $qb,
-        CompositeExpression $conditions,
-        array $params
-    ): bool;
+    public function apply(Graph $graph, QueryBuilder $qb, array $params): bool;
 }
