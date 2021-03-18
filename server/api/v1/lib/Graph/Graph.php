@@ -151,7 +151,7 @@ class Graph
 
     public function getMaxPageSize(): int
     {
-        return $this->settings['pagination']['maxPageSize'];
+        return $this->settings['pagination.maxPageSize'];
     }
 
     public function getConnection(): Connection
