@@ -9,7 +9,7 @@ use function strrchr;
 
 class ReferenceTable
 {
-    const PREFIX = 't';
+    const REF_PREFIX = 't';
 
     /**
      * Reference number of most recently enumerated value.
@@ -80,7 +80,7 @@ class ReferenceTable
 
     public function newRef(string $token, string $parentRef)
     {
-        $ref = self::PREFIX . (++$this->ref);
+        $ref = self::REF_PREFIX . (++$this->ref);
         $token = $this->tokenPrefix . '.' . $token;
 
         $this->references[$token] = $ref;
@@ -143,12 +143,12 @@ class ReferenceTable
 
     public function getLatestRef(): string
     {
-        return self::PREFIX . $this->ref;
+        return self::REF_PREFIX . $this->ref;
     }
 
     public function getRootRef(): string
     {
-        return self::PREFIX . '0';
+        return self::REF_PREFIX . '0';
     }
 
     public function getResourceType(string $ref): string

@@ -7,7 +7,7 @@ use Doctrine\DBAL;
 use ThePetPark\Http;
 use ThePetPark\Services;
 use ThePetPark\Middleware;
-use ThePetPark\Library\Graph\Graph;
+use ThePetPark\Library\Graph;
 
 use function DI\factory;
 
@@ -37,11 +37,13 @@ return [
         );
     }),
 
-    Graph::class => factory(function (ContainerInterface $c) {
-        return new Graph(
+    Graph\Adapters\Slim\Adapter::class => factory(function (ContainerInterface $c) {
+        $graph = new Graph\App(
             $c->get(DBAL\Connection::class),
             $c->get('settings')['graph']
         );
+
+        return new Graph\Adapters\Slim\Adapter($graph, $c->get('response'));
     }),
 
     Middleware\Session::class => factory(function (ContainerInterface $c) {

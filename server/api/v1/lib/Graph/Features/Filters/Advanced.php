@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Library\Graph\Strategies\Filtering;
+namespace ThePetPark\Library\Graph\Features\Filters;
 
 use Doctrine\DBAL\Query\QueryBuilder;
-use Doctrine\DBAL\Query\Expression\CompositeExpression;
 use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
-use ThePetPark\Library\Graph\Graph;
-use ThePetPark\Library\Graph\StrategyInterface;
+use ThePetPark\Library\Graph;
+
+use function array_replace;
 
 /**
  * This filtering strategy adds granular filters, such as <, <=, >, and >=.
@@ -17,7 +17,7 @@ use ThePetPark\Library\Graph\StrategyInterface;
  * 
  * GET /articles?filter[createdAt:lt]=2021-03-17
  */
-class Granular implements StrategyInterface
+class Advanced implements Graph\FeatureInterface
 {
     const SUPPORTED_FILTERS = [
         'eq' => ExpressionBuilder::EQ,
@@ -28,13 +28,16 @@ class Granular implements StrategyInterface
         'ge' => ExpressionBuilder::GTE,
     ];
 
-    public function apply(Graph $graph, QueryBuilder $qb, array $params): bool
+    public function check(array $params): bool
     {
-        $reftable = $graph->getReferenceTable();
+        return isset($params['filter']);
+    }
 
-        foreach (($params['filter'] ?? []) as $fieldAndFilter => $value) {
-            $ref = $reftable->getBaseRef();
-            $resource = $graph->getByRef($ref);
+    public function apply(Graph\App $graph, QueryBuilder $qb, array $params): bool
+    {
+        foreach ($params['filter'] as $fieldAndFilter => $value) {
+            $ref = $graph->getBaseRef();
+            $schema = $graph->getSchemaByRef($ref);
             $tokens = explode(':', $fieldAndFilter);
 
             if (count($tokens) > 2) {
@@ -53,18 +56,43 @@ class Granular implements StrategyInterface
             $token = '';
 
             foreach ($tokens as $r) {
-
                 $token .= $delim . $r;
 
-                $relatedRef = $reftable->newRef($token, $ref);
-                $relationship = $resource->resolve($graph, $qb, $r, $ref, $relatedRef);
-                $relatedResource = $relationship->getSchema();
-                $reftable->setResource($relatedRef, $relatedResource);
+                if ($graph->hasRefForToken($token)) {
 
-                $ref = $relatedRef;
-                $resource = $relatedResource;
+                    $ref = $graph->getRefByToken($token);
+                    $schema = $graph->getSchemaByRef($ref);
+                    
+                } else {
+
+                    $relationship = $schema->resolve($graph, $qb, $ref, $r);
+                    $ref = $relationship->getRef();
+                    $schema = $relationship->getSchema();
+
+                }
+
                 $delim = '.';
+            }
 
+            if ($field === 'id') {
+
+                $field = $schema->getId();
+
+            } elseif ($schema->hasAttribute($field)) {
+
+                $field = $schema->getImplAttribute($field);
+
+            } elseif ($schema->hasRelationship($field)) {
+
+                $relationship = $schema->getRelationship($field);
+                $ref = $relationship->getRef();
+                $schema = $relationship->getSchema();
+                $field = $schema->getId();
+
+            } else {
+
+                return false; // Malformed expression, attribute does not exist
+            
             }
 
             if (isset(self::SUPPORTED_FILTERS[$filter])) {

@@ -18,10 +18,19 @@ class Relationship
     /** @var int */
     protected $type;
 
-    public function __construct(Schema $related, int $mask)
+    /** @var string */
+    protected $ref;
+
+    public function __construct(string $ref, Schema $schema, int $mask)
     {
-        $this->related = $related;
+        $this->ref = $ref;
+        $this->related = $schema;
         $this->type = $mask;
+    }
+
+    public function getRef(): string
+    {
+        return $this->ref;
     }
 
     public function getSchema(): Schema

@@ -7,8 +7,7 @@ namespace ThePetPark\Library\Graph\Actions;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
-use ThePetPark\Library\Graph\Graph;
-use ThePetPark\Library\Graph\ActionInterface;
+use ThePetPark\Library\Graph;
 use ThePetPark\Library\Graph\Relationship as R;
 
 use function explode;
@@ -18,34 +17,35 @@ use function count;
  * Generates a query using the information provided in the request's
  * attributes. Returns a JSON-API document.
  */
-class Resolve implements ActionInterface
+class Resolve implements Graph\ActionInterface
 {
     public function execute(
-        Graph $graph,
-        ServerRequestInterface $request,
-        ResponseInterface $response
+        Graph\App $graph,
+        ServerRequestInterface $request
     ): ResponseInterface {
 
         parse_str($request->getUri()->getQuery(), $params);
 
-        $type = $request->getAttribute(Graph::PARAM_RESOURCE);
-        $resourceID = $request->getAttribute(Graph::PARAM_ID);
-        $relationship = $request->getAttribute(Graph::PARAM_RELATIONSHIP);
+        $type = $request->getAttribute(Graph\App::PARAM_RESOURCE);
+        $resourceID = $request->getAttribute(Graph\App::PARAM_ID);
+        $relationship = $request->getAttribute(Graph\App::PARAM_RELATIONSHIP);
 
         $conn = $graph->getConnection();
         $qb = $conn->createQueryBuilder();
+        $response = $graph->createResponse();
 
         // Initialize sparse fieldsets. They are attributes to select, indexed
         // by resource type.
         $sparseFields = [];
+        $data = [];
 
         foreach (($params['fields'] ?? []) as $resourceType => $fieldList) {
-            if (($resource = $graph->get($resourceType)) !== null) {
+            if (($schema = $graph->getSchema($resourceType)) !== null) {
                 // Silently ignore invalid types
                 $sparseFields[$resourceType] = [];
 
                 foreach (explode(',', $fieldList) as $attr) {
-                    if ($resource->hasAttribute($attr)) {
+                    if ($schema->hasAttribute($attr)) {
                         $sparseFields[$resourceType][] = $attr;
                     } else {
                         // TODO: silently ignore or send a 400?
@@ -58,38 +58,26 @@ class Resolve implements ActionInterface
             }
         }
 
-        $resource   = $graph->get($type);
-        $amount     = R::MANY; // Assume fetching a collection.
-        $reftable   = $graph->getReferenceTable();
-        $ref        = $reftable->getBaseRef();
+        $baseRef    = $graph->getBaseRef();
+        $baseSchema = $graph->getSchema($type);
+        $amount     = R::MANY;
 
-        $resource->initialize($qb, $ref);
+        $baseSchema->initialize($qb, $baseRef);
 
         if ($resourceID !== null) {
 
             $qb->andWhere($qb->expr()->eq(
-                $ref . '.' . $resource->getId(),
+                $baseRef . '.' . $baseSchema->getId(),
                 $qb->createNamedParameter($resourceID)
             ));
 
             if ($relationship !== null) {
 
-                // Create a new reference for the related resource.
-                //$ref[$relationship] = $this->newRef();
-                $relatedRef = $reftable->newRef($relationship, $ref);
-                $relationship = $resource->resolve(
-                    $graph,
-                    $qb,
-                    $relationship,
-                    $ref,
-                    $relatedRef
-                );
-
-                // Select the fields from the related resource.
-                $resource = $relationship->getSchema();
-                $reftable->setResource($relatedRef, $resource);
-                $reftable->pushRef($relatedRef);
-                $ref = $relatedRef;
+                // Base the query on related resource.
+                $relationship = $baseSchema->resolve($graph, $qb, $baseRef, $relationship);
+                $baseSchema = $relationship->getSchema();
+                $baseRef = $relationship->getRef();
+                $graph->promoteRef($baseRef);
 
                 if ($relationship->getType() & R::ONE) {
                     $amount = R::ONE;
@@ -102,38 +90,28 @@ class Resolve implements ActionInterface
         
         }
 
-        $resource->includeFields($qb, $ref, $sparseFields);
+        $baseSchema->includeFields($qb, $baseRef, $sparseFields);
+        $graph->applyFeatures($qb, $params);
 
-        if ($amount === R::MANY) {
-            $graph->getStrategy('pagination')
-                ->apply($graph, $qb, $params);
-        } else {
+        if ($amount === R::ONE) {
             $qb->setMaxResults(1);
-        }
-
-        foreach (['filter', 'sort'] as $s) {
-            $graph->getStrategy($s)
-                ->apply($graph, $qb, $params);
         }
         
         $mainSQL = $qb->getSQL();
 
-        /*
-        $raw[$this->getRef()] = $qb->where($conditions)
-            ->execute()
-            ->fetchAll(FetchMode::ASSOCIATIVE);
-        */
+        //$data[$ref] = $qb->execute()->fetchAll(FetchMode::ASSOCIATIVE);
+        $data[$baseRef] = [
+            ['id' =>   0],
+            ['id' => 100],
+        ];
 
         // TODO: remove prefix from results
         
         // TODO: propagate relationships to parent, if applicable
         // (might be able to do this while removing prefixes)
 
-        $dat = [$reftable->getBaseRef() => [
-            ['id' =>  0],
-            ['id' => 100],
-        ]];
-        $resolved = $dat[$reftable->getBaseRef()];
+        
+        $resolved = $data[$baseRef];
         $rowCount = count($resolved);
 
         if ($rowCount > 0 && isset($params['include'])) {
@@ -144,15 +122,15 @@ class Resolve implements ActionInterface
             $qb->setMaxResults(null);
 
             foreach (explode(',', $params['include']) as $included) {
-                $ref = $reftable->getBaseRef();
-                $cursor = $graph->getByRef($ref);
+                $ref = $baseRef;
+                $schema = $baseSchema;
                 $token = '';
                 $delim = '';
                 
                 foreach (explode('.', $included) as $r) {
                     $token .= $delim . $r;
 
-                    if ($cursor->hasRelationship($r) === false) {
+                    if ($schema->hasRelationship($r) === false) {
 
                         // If provided token isn't a valid relationship,
                         // stop here. TODO: might be worth deferring error
@@ -163,22 +141,20 @@ class Resolve implements ActionInterface
                     
                     // A resource may have already been resolved (joined in
                     // the query) if it was used in a filter.
-                    if ($reftable->hasRefForToken($token)) {
+                    if ($graph->hasRefForToken($token)) {
 
-                        $relatedRef = $reftable->getRefByToken($token);
-                        $cursor = $graph->getByRef($relatedRef);
+                        $relatedRef = $graph->getRefByToken($token);
+                        $schema = $graph->getSchemaByRef($relatedRef);
                         
                     } else {
 
-                        $relatedRef = $reftable->newRef($token, $ref);
-                        $related = $cursor->resolve($graph, $qb, $r,
-                            $ref, $relatedRef);
-                        $cursor = $related->getSchema();
-                        $reftable->setResource($relatedRef, $cursor);
+                        $relationship = $schema->resolve($graph, $qb, $ref, $r);
+                        $relatedRef = $relationship->getRef();
+                        $schema = $relationship->getSchema();
 
                     }
                     
-                    $cursor->includeFields($qb, $relatedRef, $sparseFields);
+                    $schema->includeFields($qb, $relatedRef, $sparseFields);
                     $ref = $relatedRef;
 
                     $delim = '.';
@@ -188,9 +164,7 @@ class Resolve implements ActionInterface
             // No need to constrain the second query any further if there's
             // only one result.
             if ($rowCount > 1) {
-                $baseRef = $reftable->getBaseRef();
-                $base = $graph->getByRef($baseRef);
-                $idField = $baseRef . '.' . $base->getId();
+                $idField = $baseRef . '.' . $baseSchema->getId();
 
                 // Only include data relevant to the previously fetched data.
                 $qb->andWhere($qb->expr()->andX(
@@ -205,7 +179,7 @@ class Resolve implements ActionInterface
         // TODO: serialize raw data and relationships to a JSONAPI document
 
         // See if the expected query is generated.
-        $includesSQL = $qb->getSQL();
+        $includesSQL = isset($params['include']) ? $qb->getSQL() : '(not applicable)';
 
         $response->getBody()->write("Query 1:\n$mainSQL\n\nQuery 2:\n$includesSQL");
 

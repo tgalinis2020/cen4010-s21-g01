@@ -4,23 +4,24 @@ declare(strict_types=1);
 
 namespace ThePetPark\Library\Graph\Strategies\Sorting;
 
-use ThePetPark\Library\Graph\Graph;
-use ThePetPark\Library\Graph\ReferenceTable;
 use Doctrine\DBAL\Query\QueryBuilder;
-use Doctrine\DBAL\Query\Expression\CompositeExpression;
-use ThePetPark\Library\Graph\StrategyInterface;
+use ThePetPark\Library\Graph;
 
 /**
  * The simple sorting strategy sorts main data by the resource's attributes.
  */
-class Simple implements StrategyInterface
+class Simple implements Graph\FeatureInterface
 {
-    public function apply(Graph $graph, QueryBuilder $qb, array $params): bool
+    public function check(array $params): bool
     {
-        $reftable = $graph->getReferenceTable();
+        return isset($params['sort']);
+    }
+
+    public function apply(Graph\App $graph, QueryBuilder $qb, array $params): bool
+    {
         $order = 'ASC';
 
-        foreach ((explode(',', $params['sort'] ?? '')) as $attr) {
+        foreach (explode(',', $params['sort']) as $attr) {
             if ($attr === '') {
                 return false;
             }
@@ -32,12 +33,12 @@ class Simple implements StrategyInterface
                 $attr = substr($attr, 1);
             }
 
-            $ref = $reftable->getBaseRef();
-            $resource = $graph->getByRef($ref);
+            $ref = $graph->getBaseRef();
+            $schema = $graph->getSchemaByRef($ref);
 
             if ($attr === 'id') {
-                $attr = $resource->getId();
-            } elseif ($resource->hasAttribute($attr) === false) {
+                $attr = $schema->getId();
+            } elseif ($schema->hasAttribute($attr) === false) {
                 return false;
             }
 

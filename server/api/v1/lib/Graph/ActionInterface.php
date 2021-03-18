@@ -4,17 +4,14 @@ declare(strict_types=1);
 
 namespace ThePetPark\Library\Graph;
 
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
- * Action handlers map a HTTP verb to a schema action.
+ * Graph defers handling any actions on resources to classes that implement
+ * this interface.
  */
 interface ActionInterface
 {
-    public function execute(
-        Graph $graph,
-        ServerRequestInterface $request,
-        ResponseInterface $response
-    ): ResponseInterface;
+    public function execute(App $graph, ServerRequestInterface $request): ResponseInterface;
 }

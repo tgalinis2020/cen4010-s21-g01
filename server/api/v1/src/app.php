@@ -31,11 +31,7 @@ return (function () {
     $app->map(['POST'], '/upload', ThePetPark\Http\UploadFile::class);
 
     // Mount the resource graph.
-    $app->map(
-        ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-        '/{' . Graph::TOKENS . ':.+}',
-        Graph::class . ':resolve'
-    );
+    $app->group('', Graph\Adapters\Slim\Adapter::class);
 
     return $app;
 })();

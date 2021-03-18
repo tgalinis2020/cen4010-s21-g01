@@ -176,14 +176,14 @@ class Schema
         return isset($this->relationships[$relationship]);
     }
 
-    public function setActionKey(int $context, string $httpVerb, int $key)
+    public function setActionKey(int $context, string $action, int $key)
     {
-        $this->actions[$context][$httpVerb] = $key;
+        $this->actions[$context][$action] = $key;
     }
 
-    public function getActionKey(int $context, string $httpVerb): int
+    public function getActionKey(int $context, string $action): int
     {
-        return $this->actions[$context][$httpVerb];
+        return $this->actions[$context][$action];
     }
 
     /**
@@ -193,7 +193,7 @@ class Schema
      */
     public function includeFields(QueryBuilder $qb, string $ref, array $sparseFields = [])
     {
-        // Select the resource's ID.
+        // Always select the resource's ID.
         $qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $ref, $this->id, 'id'));
 
         $fields = $sparseFields[$this->getType()] ?? [];
@@ -208,9 +208,8 @@ class Schema
             }
         }
 
-        
         // Add the attributes to the select statement, aliasing the fields
-        // as {resource enum}_{resource attribute}
+        // as {resource ref}_{resource attribute}
         foreach ($this->attributes as list($select, $attr, $field)) {
             if ($select === $this->select) {
                 $qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $ref, $field, $attr));
@@ -230,29 +229,33 @@ class Schema
 
     /**
      * Adds related schema to the query.
+     * Creates a new reference in the graph's reference table.
      * 
      * This resource's enumerated value (self) must have already been added
      * beforehand either by Schema::initialize or Schema::resolve.
      */
     public function resolve(
-        Graph $graph, QueryBuilder $qb, string $relationship,
-        string $self, string $related
+        App $graph,
+        QueryBuilder $qb,
+        string $ref,
+        string $relationship
     ): Relationship {
 
         list($mask, $relatedType, $link) = $this->relationships[$relationship];
 
-        $relatedResource = $graph->get($relatedType);
+        $schema = $graph->getSchema($relatedType);
+        $relatedRef = $graph->createRef($relationship, $relatedType, $ref);
 
         // TODO: Theoretically resource ownership and aggregation types
         //       should have no effect in relationships following a chain of
         //       relationships. Verify this is true!
         if (is_array($link)) {
 
-            $joinOn = $self;
+            $joinOn = $ref;
             $joinOnField = $this->id;
             
             foreach ($link as $i => list($pivot, $from, $to)) {
-                $pivotEnum = $self . '_' . $i; // pivots need their own relation enums
+                $pivotEnum = $ref . '_' . $i; // pivots need their own relation enums
                 
                 $qb->innerJoin($joinOn, $pivot, $pivotEnum, $qb->expr()->eq(
                     $joinOn . '.' . $joinOnField,
@@ -267,9 +270,9 @@ class Schema
             //       ID but in another relationship? Unlikely for this project
             //       but might want to consider other relationship fields in
             //       the future.
-            $qb->innerJoin($joinOn, $relatedResource->getImplType(), $related, $qb->expr()->eq(
+            $qb->innerJoin($joinOn, $schema->getImplType(), $relatedRef, $qb->expr()->eq(
                 $joinOn . '.' . $joinOnField,
-                $related . '.'. $relatedResource->getId()
+                $relatedRef . '.'. $schema->getId()
             ));
 
         } else {
@@ -278,18 +281,18 @@ class Schema
 
                 // foreign key is in related resource (resource owns another if
                 // there exists a foreign key in the related resource)
-                ? $qb->expr()->eq($self . '.' . $this->id, $related . '.' . $link)
+                ? $qb->expr()->eq($ref . '.' . $this->id, $relatedRef . '.' . $link)
 
                 // foreign key is in this resource (resource is owned by related)
                 : $qb->expr()->eq(
-                    $self . '.' . $link,
-                    $related . '.' . $relatedResource->getId()
+                    $ref        . '.' . $link,
+                    $relatedRef . '.' . $schema->getId()
                 );
 
-            $qb->innerJoin($self, $relatedResource->getImplType(), $related, $joinExpr);
+            $qb->innerJoin($ref, $schema->getImplType(), $relatedRef, $joinExpr);
 
         }
 
-        return new Relationship($relatedResource, $mask);
+        return new Relationship($relatedRef, $schema, $mask);
     }
 }
