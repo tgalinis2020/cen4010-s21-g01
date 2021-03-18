@@ -85,7 +85,7 @@ class Resolve implements ActionInterface
                 $relatedRef = $reftable->newRef($relationship, $ref);
 
                 $relationship = $resource->resolve(
-                    $this->graph,
+                    $graph,
                     $qb,
                     $relationship,
                     $ref,
