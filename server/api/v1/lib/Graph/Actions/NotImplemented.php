@@ -6,16 +6,14 @@ namespace ThePetPark\Library\Graph\Actions;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use ThePetPark\Library\Graph\ActionInterface;
-use ThePetPark\Library\Graph\Graph;
+use ThePetPark\Library\Graph;
 
-class NotImplemented implements ActionInterface
+class NotImplemented implements Graph\ActionInterface
 {
     public function execute(
-        Graph $graph,
-        ServerRequestInterface $request,
-        ResponseInterface $response
+        Graph\App $graph,
+        ServerRequestInterface $request
     ): ResponseInterface {
-        return $response->withStatus(501);
+        return $graph->createResponse(501);
     }
 }
