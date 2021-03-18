@@ -6,15 +6,15 @@ namespace ThePetPark\Http\Actions\Comments;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
-use ThePetPark\Library\Graph\ActionInterface;
-use ThePetPark\Library\Graph\Graph;
+use ThePetPark\Library\Graph;
 
 use function json_decode;
 
-class Delete implements ActionInterface
+class Delete implements Graph\ActionInterface
 {
-    public function execute(Graph $graph, Request $req, Response $res): Response
+    public function execute(Graph\App $graph, Request $req): Response
     {
+        $res = $graph->createResponse();
         $conn = $graph->getConnection();
         $body = json_decode($req->getBody(), true);
         

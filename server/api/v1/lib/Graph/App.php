@@ -50,7 +50,7 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
     /** @var Schema[] */
     protected $schemas = [];
 
-    /** @var \ThePetPark\Library\Graph\ActionInterface[] */
+    /** @var string[] */
     protected $actions = [];
 
     /** @var int */
@@ -178,7 +178,7 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
 
             } elseif (class_exists($action)) {
                 
-                $this->actions[$this->nactions++] = new $action;
+                $this->actions[$this->nactions++] = $action;
     
             } else {
 
@@ -240,8 +240,12 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
         }
         
         $context = $request->getAttribute(self::PARAM_CONTEXT);
-        $action = $this->actions[$schema->getActionKey($context, $method)];
-        $ref    = $this->getLatestRef();
+        $actionClass = $this->actions[$schema->getActionKey($context, $method)];
+        $ref = $this->getLatestRef();
+
+        $action = $this->container === null
+            ? new $actionClass
+            : $this->container->get($actionClass); 
 
         // Initialize graph reference table properties
         $this->baseRef = $ref;

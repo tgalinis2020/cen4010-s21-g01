@@ -6,8 +6,7 @@ namespace ThePetPark\Http\Actions\Users;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
-use ThePetPark\Library\Graph\ActionInterface;
-use ThePetPark\Library\Graph\Graph;
+use ThePetPark\Library\Graph;
 use ThePetPark\Idp;
 
 use Exception;
@@ -17,10 +16,11 @@ use function array_diff;
 use function array_keys;
 use function date;
 
-class Create implements ActionInterface
+class Create implements Graph\ActionInterface
 {
-    public function execute(Graph $graph, Request $req, Response $res): Response
+    public function execute(Graph\App $graph, Request $req): Response
     {
+        $res = $graph->createResponse();
         $body = json_decode($req->getBody(), true);
         $conn = $graph->getConnection();
         $acct = $body['data'];
