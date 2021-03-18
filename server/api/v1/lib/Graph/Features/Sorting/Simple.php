@@ -40,6 +40,8 @@ class Simple implements Graph\FeatureInterface
                 $attr = $schema->getId();
             } elseif ($schema->hasAttribute($attr) === false) {
                 return false;
+            } else {
+                $attr = $schema->getImplAttribute($attr);
             }
 
             $qb->addOrderBy($ref . '.' . $attr, $order);
