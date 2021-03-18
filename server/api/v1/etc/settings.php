@@ -49,7 +49,7 @@ return (function () {
             'graph' => [
                 'definitions' => __DIR__ . '/../var/cache/graph.cache',
                 'pagination.maxPageSize' => 15,
-                'filtering.strategies' => Strategies\Filtering\Granular::class,
+                'filter.strategy' => Strategies\Filtering\Granular::class,
             ],
         ],
     ];

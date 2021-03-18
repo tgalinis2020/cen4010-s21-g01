@@ -65,8 +65,8 @@ class Graph
         'definitions'            => null,
         'pagination.maxPageSize' => 12,
         'pagination.strategy'    => Strategies\Pagination\Cursor::class,
-        'filtering.strategy'     => Strategies\Filtering\Simple::class,
-        'sorting.strategy'       => Strategies\Sorting\Simple::class,
+        'filter.strategy'        => Strategies\Filtering\Simple::class,
+        'sort.strategy'          => Strategies\Sorting\Simple::class,
     ];
 
     /** @var \Psr\Container\ContainerInterface */
@@ -134,17 +134,18 @@ class Graph
 
     public function getStrategy(string $problem): StrategyInterface
     {
-        if (isset($this->settings['strategies'][$problem]) === false) {
+        $key = $problem . '.strategy';
+        if (isset($this->settings['strategies'][$key]) === false) {
             throw new Exception(sprintf('Unknown strategy: %s', $problem));
         }
 
-        if (class_exists($this->settings['strategies'][$problem]) === false) {
+        if (class_exists($this->settings['strategies'][$key]) === false) {
             throw new Exception(sprintf(
-                'Cannot create strategy: %s', $this->settings['strategies'][$problem]
+                'Cannot create strategy: %s', $this->settings['strategies'][$key]
             ));
         }
 
-        return new $this->settings['strategies'][$problem];
+        return new $this->settings['strategies'][$key];
     }
 
     public function getMaxPageSize(): int
