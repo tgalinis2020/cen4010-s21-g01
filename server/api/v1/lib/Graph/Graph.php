@@ -12,7 +12,7 @@ use Exception;
 
 use function file_exists;
 use function class_exists;
-use function array_merge;
+use function array_merge_recursive;
 use function explode;
 use function count;
 
@@ -82,7 +82,7 @@ class Graph
     public function __construct(Connection $conn, array $settings = [], $c = null)
     {
         $this->conn = $conn;
-        $this->settings = array_merge($this->settings, $settings);
+        $this->settings = array_merge_recursive($this->settings, $settings);
         $this->container = $c;
 
         if ((($f = $this->settings['definitions']) !== null) && file_exists($f)) {
