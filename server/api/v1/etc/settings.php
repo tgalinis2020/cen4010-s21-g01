@@ -51,7 +51,7 @@ return (function () {
                 'pagination' => [
                     'maxPageSize' => 15,
                 ],
-                'strategies' => [
+                'features' => [
                     Graph\Features\Pagination\Cursor::class,
                     Graph\Features\Filter\Advanced::class,
                     Graph\Features\Sorting\Simple::class,

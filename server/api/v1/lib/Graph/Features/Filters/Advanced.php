@@ -46,6 +46,10 @@ class Advanced implements Graph\FeatureInterface
 
             list($field, $filter) = array_replace([null, 'eq'], $tokens);
 
+            if (isset(self::SUPPORTED_FILTERS[$filter]) === false) {
+                return false;
+            }
+
             // TOOD: parse provided field. Fields can be attributes of
             // the resource or attributes of a resource from a resolved
             // relationship. Might have to add joins to apply the filter.
@@ -94,14 +98,12 @@ class Advanced implements Graph\FeatureInterface
                 return false; // Malformed expression, attribute does not exist
             
             }
-
-            if (isset(self::SUPPORTED_FILTERS[$filter])) {
-                $qb->andWhere($qb->expr()->comparison(
-                    $ref . '.' . $attribute,
-                    self::SUPPORTED_FILTERS[$filter],
-                    $qb->createNamedParameter($value)
-                ));
-            }
+            
+            $qb->andWhere($qb->expr()->comparison(
+                $ref . '.' . $attribute,
+                self::SUPPORTED_FILTERS[$filter],
+                $qb->createNamedParameter($value)
+            ));
         }
 
         return true;
