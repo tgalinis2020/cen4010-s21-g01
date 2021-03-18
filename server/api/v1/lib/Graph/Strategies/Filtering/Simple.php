@@ -21,13 +21,13 @@ class Simple implements StrategyInterface
 {
     public function apply(
         Graph $graph,
-        ReferenceTable $reftable,
         QueryBuilder $qb,
         CompositeExpression $conditions,
         array $params
     ): bool {
 
         foreach (($params['filter'] ?? []) as $field => $value) {
+            $reftable = $graph->getReferenceTable();
             $ref = $reftable->getBaseRef();
             $resource = $graph->getByRef($ref);
 

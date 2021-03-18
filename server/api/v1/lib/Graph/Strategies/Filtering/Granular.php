@@ -21,12 +21,13 @@ class Granular implements StrategyInterface
 {
     public function apply(
         Graph $graph,
-        ReferenceTable $reftable,
         QueryBuilder $qb,
         CompositeExpression $conditions,
         array $params
     ): bool {
-        
+
+        $reftable = $graph->getReferenceTable();
+
         foreach (($params['filter'] ?? []) as $field => $filters) {
             $ref = $reftable->getBaseRef();
             $resource = $graph->get($reftable->getResourceType($ref));

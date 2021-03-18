@@ -17,12 +17,12 @@ class Simple implements StrategyInterface
 {
     public function apply(
         Graph $graph,
-        ReferenceTable $reftable,
         QueryBuilder $qb,
         CompositeExpression $conditions,
         array $params
     ): bool {
 
+        $reftable = $graph->getReferenceTable();
         $order = 'ASC';
 
         foreach ((explode(',', $params['sort'] ?? '')) as $attr) {

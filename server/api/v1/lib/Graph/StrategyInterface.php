@@ -20,7 +20,6 @@ interface StrategyInterface
      */
     public function apply(
         Graph $graph,
-        ReferenceTable $reftable,
         QueryBuilder $qb,
         CompositeExpression $conditions,
         array $params

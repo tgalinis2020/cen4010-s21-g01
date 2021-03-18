@@ -24,19 +24,6 @@ use function is_numeric;
  */
 class Resolve implements ActionInterface
 {
-    /** @var int */
-    private $refcount = 0;
-
-    private function getRef(): string
-    {
-        return 't' . $this->refcount;
-    }
-
-    private function newRef(): string
-    {
-        return 't' . (++$this->refcount);
-    }
-    
     public function execute(
         Graph $graph,
         ServerRequestInterface $request,
@@ -52,6 +39,7 @@ class Resolve implements ActionInterface
         $conn = $graph->getConnection();
         $qb = $conn->createQueryBuilder();
         $conditions = $qb->expr()->andX();
+        $qb->where($conditions);
 
         // Initialize sparse fieldsets. They are attributes to select, indexed
         // by resource type.
@@ -126,13 +114,15 @@ class Resolve implements ActionInterface
         $resource->includeFields($qb, $reftable->getBaseRef(), $sparseFields);
 
         if ($amount === R::MANY) {
-            $graph->getStrategy('pagination')->apply($graph, $reftable, $qb, $conditions, $params);
+            $graph->getStrategy('pagination')
+                ->apply($graph, $qb, $conditions, $params);
         } else {
             $qb->setMaxResults(1);
         }
 
         foreach (['filter', 'sort'] as $s) {
-            $graph->getStrategy($s)->apply($graph, $reftable, $qb, $conditions, $params);
+            $graph->getStrategy($s)
+                ->apply($graph, $qb, $conditions, $params);
         }
         
         $mainSQL = $qb->getSQL();
@@ -148,11 +138,11 @@ class Resolve implements ActionInterface
         // TODO: propagate relationships to parent, if applicable
         // (might be able to do this while removing prefixes)
 
-        $dat = [$this->getRef() => [
+        $dat = [$reftable->getBaseRef() => [
             ['id' =>  0],
             ['id' => 100],
         ]];
-        $resolved = $dat[$this->getRef()];
+        $resolved = $dat[$reftable->getBaseRef()];
         $rowCount = count($resolved);
 
         if ($rowCount > 0 && isset($params['include'])) {
@@ -208,15 +198,14 @@ class Resolve implements ActionInterface
             // only one result.
             if ($rowCount > 1) {
                 $baseRef = $reftable->getBaseRef();
-                $base = $graph->get($reftable->getResourceType($baseRef));
-                $idField = $reftable->getBaseRef() . '.' . $base->getId();
+                $base = $graph->getByRef($baseRef);
+                $idField = $baseRef . '.' . $base->getId();
 
                 // Only include data relevant to the previously fetched data.
                 $conditions->add($qb->expr()->andX(
                     $qb->expr()->gte($idField, $resolved[0]['id']),
                     $qb->expr()->lte($idField, $resolved[$rowCount - 1]['id'])
                 ));
-
             }
 
             // TODO: parse includes

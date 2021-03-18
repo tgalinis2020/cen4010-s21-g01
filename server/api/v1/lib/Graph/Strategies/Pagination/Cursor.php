@@ -18,12 +18,12 @@ class Cursor implements StrategyInterface
 {
     public function apply(
         Graph $graph,
-        ReferenceTable $reftable,
         QueryBuilder $qb,
         CompositeExpression $conditions,
         array $params
     ): bool {
 
+        $reftable = $graph->getReferenceTable();
         $size = $graph->getMaxPageSize();
 
         if (isset($params['page'])) {
