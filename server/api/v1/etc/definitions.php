@@ -40,10 +40,11 @@ return [
     Graph\Adapters\Slim\Adapter::class => factory(function (ContainerInterface $c) {
         $graph = new Graph\App(
             $c->get(DBAL\Connection::class),
+            $c->get('response'),
             $c->get('settings')['graph']
         );
 
-        return new Graph\Adapters\Slim\Adapter($graph, $c->get('response'));
+        return new Graph\Adapters\Slim\Adapter($graph);
     }),
 
     Middleware\Session::class => factory(function (ContainerInterface $c) {
