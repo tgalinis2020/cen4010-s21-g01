@@ -19,12 +19,12 @@ class Simple implements Graph\FeatureInterface
 
     public function apply(Graph\App $graph, QueryBuilder $qb, array $params): bool
     {
-        $order = 'ASC';
-
         foreach (explode(',', $params['sort']) as $attr) {
             if ($attr === '') {
                 return false;
             }
+
+            $order = 'ASC';
 
             switch (substr($attr, 0, 1)) {
             case '-':
