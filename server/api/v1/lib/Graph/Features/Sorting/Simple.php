@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Library\Graph\Strategies\Sorting;
+namespace ThePetPark\Library\Graph\Features\Sorting;
 
 use Doctrine\DBAL\Query\QueryBuilder;
 use ThePetPark\Library\Graph;

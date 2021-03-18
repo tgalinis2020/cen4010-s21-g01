@@ -127,16 +127,16 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
         $this->response = $response;
         $this->container = $container;
         
-        $p = $settings['pagination'] ?? [];
+        $pagination = $settings['pagination'] ?? [];
 
         $this->settings = [
             'definitions' => $settings['definitions'] ?? null,
             'pagination' => [
-                'maxPageSize' => $p['maxPageSize'] ?? 20,
+                'maxPageSize' => $pagination['maxPageSize'] ?? 20,
             ],
-            'features' => [
+            'features' => $settings['features'] ?? [
                 Features\Pagination\Cursor::class,
-                Features\Filtering\Simple::class,
+                Features\Filters\Simple::class,
                 Features\Sorting\Simple::class,
             ],
         ];

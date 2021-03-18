@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use ThePetPark\Library\Graph\App as Graph;
+use ThePetPark\Library\Graph;
 
 /**
  * Slim application settings along with configuation for third-party
@@ -52,9 +52,9 @@ return (function () {
                     'maxPageSize' => 15,
                 ],
                 'strategies' => [
-                    Strategies\Pagination\Cursor::class,
-                    Strategies\Filtering\Granular::class,
-                    Strategies\Sorting\Simple::class,
+                    Graph\Features\Pagination\Cursor::class,
+                    Graph\Features\Filter\Advanced::class,
+                    Graph\Features\Sorting\Simple::class,
                 ]
             ],
         ],
