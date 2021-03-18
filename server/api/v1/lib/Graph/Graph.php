@@ -132,20 +132,21 @@ class Graph
 
     }
 
-    public function getStrategy(string $problem): StrategyInterface
+    public function getStrategy(string $strategy): StrategyInterface
     {
-        $key = $problem . '.strategy';
-        if (isset($this->settings['strategies'][$key]) === false) {
-            throw new Exception(sprintf('Unknown strategy: %s', $problem));
+        $key = $strategy . '.strategy';
+
+        if (isset($this->settings[$key]) === false) {
+            throw new Exception(sprintf('Unknown strategy: %s', $strategy));
         }
 
-        if (class_exists($this->settings['strategies'][$key]) === false) {
+        if (class_exists($this->settings[$key]) === false) {
             throw new Exception(sprintf(
-                'Cannot create strategy: %s', $this->settings['strategies'][$key]
+                'Cannot create strategy: %s', $this->settings[$key]
             ));
         }
 
-        return new $this->settings['strategies'][$key];
+        return new $this->settings[$key];
     }
 
     public function getMaxPageSize(): int
