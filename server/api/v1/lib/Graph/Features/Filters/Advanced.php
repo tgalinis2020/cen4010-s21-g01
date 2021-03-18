@@ -80,18 +80,18 @@ class Advanced implements Graph\FeatureInterface
 
             if ($attribute === 'id') {
 
-                $field = $schema->getId();
+                $attribute = $schema->getId();
 
             } elseif ($schema->hasAttribute($attribute)) {
 
-                $field = $schema->getImplAttribute($attribute);
+                $attribute = $schema->getImplAttribute($attribute);
 
             } elseif ($schema->hasRelationship($attribute)) {
 
                 $relationship = $schema->getRelationship($attribute);
                 $ref = $relationship->getRef();
                 $schema = $relationship->getSchema();
-                $field = $schema->getId();
+                $attribute = $schema->getId();
 
             } else {
 
