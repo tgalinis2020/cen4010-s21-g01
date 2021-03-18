@@ -26,8 +26,9 @@ class Simple implements StrategyInterface
         array $params
     ): bool {
 
+        $reftable = $graph->getReferenceTable();
+
         foreach (($params['filter'] ?? []) as $field => $value) {
-            $reftable = $graph->getReferenceTable();
             $ref = $reftable->getBaseRef();
             $resource = $graph->getByRef($ref);
 

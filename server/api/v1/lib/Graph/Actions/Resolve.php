@@ -67,7 +67,7 @@ class Resolve implements ActionInterface
         $resource   = $graph->get($type);
         $amount     = R::MANY; // Assume fetching a collection.
         $reftable   = $graph->getReferenceTable();
-        $ref        = $reftable->getLatestRef();
+        $ref        = $reftable->getBaseRef();
 
         $resource->initialize($qb, $ref);
 
@@ -83,7 +83,6 @@ class Resolve implements ActionInterface
                 // Create a new reference for the related resource.
                 //$ref[$relationship] = $this->newRef();
                 $relatedRef = $reftable->newRef($relationship, $ref);
-
                 $relationship = $resource->resolve(
                     $graph,
                     $qb,
@@ -93,12 +92,10 @@ class Resolve implements ActionInterface
                 );
 
                 // Select the fields from the related resource.
-                //$sel = $relationship;
                 $resource = $relationship->getSchema();
-
                 $reftable->setResource($relatedRef, $resource);
-
                 $reftable->pushRef($relatedRef);
+                $ref = $relatedRef;
 
                 if ($relationship->getType() & R::ONE) {
                     $amount = R::ONE;
@@ -111,7 +108,7 @@ class Resolve implements ActionInterface
         
         }
 
-        $resource->includeFields($qb, $reftable->getBaseRef(), $sparseFields);
+        $resource->includeFields($qb, $ref, $sparseFields);
 
         if ($amount === R::MANY) {
             $graph->getStrategy('pagination')

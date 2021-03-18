@@ -41,11 +41,13 @@ class Simple implements StrategyInterface
             $ref = $reftable->getBaseRef();
             $resource = $graph->getByRef($ref);
 
-            if ($resource->hasAttribute($attr) === false) {
+            if ($attr === 'id') {
+                $attr = $resource->getId();
+            } elseif ($resource->hasAttribute($attr) === false) {
                 return false;
             }
 
-            $qb->addOrderBy($attr, $order);
+            $qb->addOrderBy($ref . '.' . $attr, $order);
 
         }
 
