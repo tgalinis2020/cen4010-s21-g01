@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Library\Graph\Strategies\Pagination;
+namespace ThePetPark\Library\Graph\Features\Pagination;
 
 use Doctrine\DBAL\Query\QueryBuilder;
 use ThePetPark\Library\Graph\FeatureInterface;

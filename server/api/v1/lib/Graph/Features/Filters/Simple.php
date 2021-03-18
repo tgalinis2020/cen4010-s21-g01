@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Library\Graph\Strategies\Filtering;
+namespace ThePetPark\Library\Graph\Features\Filter;
 
 use Doctrine\DBAL\Query\QueryBuilder;
 use ThePetPark\Library\Graph;

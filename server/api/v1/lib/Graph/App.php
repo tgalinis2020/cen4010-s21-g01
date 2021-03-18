@@ -163,33 +163,14 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
     private function parseArray(array $definitions)
     {
         list($actions, $schemas) = $definitions;
-
-        foreach ($schemas as $schema) {
-
-            $this->addSchema(Schema::fromArray($schema));
-
-        }
-
+        
         foreach ($actions as $action) {
-
-            if ($this->container !== null) {
-
-                $this->actions[$this->nactions++] = $this->container->get($action);
-
-            } elseif (class_exists($action)) {
-                
-                $this->actions[$this->nactions++] = $action;
-    
-            } else {
-
-                throw new Exception(sprintf(
-                    'Cannot create instance of %s action',
-                    $action
-                ));
-            }
-
+            $this->actions[$this->nactions++] = $action;
         }
-
+        
+        foreach ($schemas as $schema) {
+            $this->addSchema(Schema::fromArray($schema));
+        }
     }
 
     public function applyFeatures(QueryBuilder $queryBuilder, array $parameters)
@@ -243,9 +224,16 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
         $actionClass = $this->actions[$schema->getActionKey($context, $method)];
         $ref = $this->getLatestRef();
 
-        $action = $this->container === null
-            ? new $actionClass
-            : $this->container->get($actionClass); 
+        if ($this->container !== null) {
+            $action = $this->container->get($actionClass);
+        } elseif (class_exists($actionClass)) {
+            $action = new $actionClass;
+        } else {
+            throw new Exception(sprintf(
+                'Cannot create instance of %s action',
+                $actionClass
+            ));
+        }
 
         // Initialize graph reference table properties
         $this->baseRef = $ref;
