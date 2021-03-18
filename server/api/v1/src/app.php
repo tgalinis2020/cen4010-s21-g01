@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use ThePetPark\Library\Graph\Graph;
+use ThePetPark\Library\Graph;
 
 date_default_timezone_set('UTC');
 
