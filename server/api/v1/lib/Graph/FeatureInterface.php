@@ -14,12 +14,18 @@ interface FeatureInterface
 {
     /**
      * Checks the provided parameters to see if the feature is applicable.
+     * Since features are evaluated from first to last, features with more
+     * specific requirements should be defined first.
      */
     public function check(array $parameters): bool;
 
     /**
-     * If necessary, unset any parameters that could be used by conflicting
-     * filters.
+     * If the feature executed, it should unset any parameters it parsed
+     * to avoid executing similar features.
+     * 
+     * For instance, problems could occur if both the offset/limit and cursor/size
+     * pagination strategies were supported and the "page" query parameter was
+     * not unset.
      */
     public function clean(array &$parameters);
     
