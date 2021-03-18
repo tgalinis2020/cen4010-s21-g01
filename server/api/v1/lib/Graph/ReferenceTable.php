@@ -133,7 +133,7 @@ class ReferenceTable
     public function pushRef(string $ref)
     {
         $this->baseRef = $ref;
-        $this->prefix .= '.' . $this->relationshipNames[$ref];
+        $this->tokenPrefix .= '.' . $this->relationshipNames[$ref];
     }
 
     public function getBaseRef(): string
