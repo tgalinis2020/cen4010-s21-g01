@@ -62,15 +62,11 @@ class Graph
      * @var array
      */
     private $settings = [
-        'definitions' => null,
-        'pagination' => [
-            'maxPageSize' => 12,
-        ],
-        'strategies' => [
-            'pagination'  => Strategies\Pagination\Cursor::class,
-            'filter'      => Strategies\Filtering\Simple::class,
-            'sort'        => Strategies\Sorting\Simple::class,
-        ],
+        'definitions'            => null,
+        'pagination.maxPageSize' => 12,
+        'pagination.strategy'    => Strategies\Pagination\Cursor::class,
+        'filtering.strategy'     => Strategies\Filtering\Simple::class,
+        'sorting.strategy'       => Strategies\Sorting\Simple::class,
     ];
 
     /** @var \Psr\Container\ContainerInterface */
@@ -82,7 +78,7 @@ class Graph
     public function __construct(Connection $conn, array $settings = [], $c = null)
     {
         $this->conn = $conn;
-        $this->settings = array_merge_recursive($this->settings, $settings);
+        $this->settings = array_merge($this->settings, $settings);
         $this->container = $c;
 
         if ((($f = $this->settings['definitions']) !== null) && file_exists($f)) {
