@@ -12,4 +12,3 @@ bin/
 .local/
 .cache/
 .config/
-secret.key

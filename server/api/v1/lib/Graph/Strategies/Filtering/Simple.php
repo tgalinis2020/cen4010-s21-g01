@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace ThePetPark\Library\Graph\Strategies\Filtering;
 
 use Doctrine\DBAL\Query\QueryBuilder;
-use Doctrine\DBAL\Query\Expression\CompositeExpression;
 use ThePetPark\Library\Graph\Graph;
-use ThePetPark\Library\Graph\ReferenceTable;
 use ThePetPark\Library\Graph\StrategyInterface;
 
 /**

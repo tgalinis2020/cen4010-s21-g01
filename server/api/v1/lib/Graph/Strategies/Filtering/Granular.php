@@ -6,8 +6,8 @@ namespace ThePetPark\Library\Graph\Strategies\Filtering;
 
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Query\Expression\CompositeExpression;
+use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
 use ThePetPark\Library\Graph\Graph;
-use ThePetPark\Library\Graph\ReferenceTable;
 use ThePetPark\Library\Graph\StrategyInterface;
 
 /**
@@ -15,22 +15,33 @@ use ThePetPark\Library\Graph\StrategyInterface;
  * 
  * E.g. Fetch articles that were posted before March 17th, 2021
  * 
- * GET /articles?filter[createdAt][lt]=2021-03-17
+ * GET /articles?filter[createdAt:lt]=2021-03-17
  */
 class Granular implements StrategyInterface
 {
-    public function apply(
-        Graph $graph,
-        QueryBuilder $qb,
-        CompositeExpression $conditions,
-        array $params
-    ): bool {
+    const SUPPORTED_FILTERS = [
+        'eq' => ExpressionBuilder::EQ,
+        'ne' => ExpressionBuilder::NEQ,
+        'lt' => ExpressionBuilder::LT,
+        'le' => ExpressionBuilder::LTE,
+        'gt' => ExpressionBuilder::GT,
+        'ge' => ExpressionBuilder::GTE,
+    ];
 
+    public function apply(Graph $graph, QueryBuilder $qb, array $params): bool
+    {
         $reftable = $graph->getReferenceTable();
 
-        foreach (($params['filter'] ?? []) as $field => $filters) {
+        foreach (($params['filter'] ?? []) as $fieldAndFilter => $value) {
             $ref = $reftable->getBaseRef();
-            $resource = $graph->get($reftable->getResourceType($ref));
+            $resource = $graph->getByRef($ref);
+            $tokens = explode(':', $fieldAndFilter);
+
+            if (count($tokens) > 2) {
+                return false; // Malformed filter, stop here
+            }
+
+            list($field, $filter) = array_replace([null, 'eq'], $tokens);
 
             // TOOD: parse provided field. Fields can be attributes of
             // the resource or attributes of a resource from a resolved
@@ -38,13 +49,33 @@ class Granular implements StrategyInterface
             // If this is the case, add the new reference to the ref map.
             $tokens = explode('.', $field);
             $attribute = array_pop($tokens);
+            $delim = '';
+            $token = '';
 
-            foreach ($tokens as $relationship) {
+            foreach ($tokens as $r) {
 
+                $token .= $delim . $r;
+
+                $relatedRef = $reftable->newRef($token, $ref);
+                $relationship = $resource->resolve($graph, $qb, $r, $ref, $relatedRef);
+                $relatedResource = $relationship->getSchema();
+                $reftable->setResource($relatedRef, $relatedResource);
+
+                $ref = $relatedRef;
+                $resource = $relatedResource;
+                $delim = '.';
+
+            }
+
+            if (isset(self::SUPPORTED_FILTERS[$filter])) {
+                $qb->andWhere($qb->expr()->comparison(
+                    $ref . '.' . $attribute,
+                    self::SUPPORTED_FILTERS[$filter],
+                    $qb->createNamedParameter($value)
+                ));
             }
         }
 
         return true;
-
     }
 }

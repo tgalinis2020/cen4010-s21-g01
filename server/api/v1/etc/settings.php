@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use ThePetPark\Library\Graph;
+
 /**
  * Slim application settings along with configuation for third-party
  * dependnecies.
@@ -48,8 +50,10 @@ return (function () {
                 'definitions' => __DIR__ . '/../var/cache/graph.cache',
                 'pagination' => [
                     'maxPageSize' => 15,
-                    'strategy' => 'cursor',
-                ]
+                ],
+                'strategies' => [
+                    'filter' => Graph\Strategies\Filtering\Granular::class
+                ],
             ],
         ],
     ];
