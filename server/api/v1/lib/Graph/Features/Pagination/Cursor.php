@@ -36,16 +36,12 @@ class Cursor implements FeatureInterface
             $qb->createNamedParameter($page['cursor'])
         ));
 
-        unset($params['page']['cursor']);
-
         if (isset($page['size']) && is_numeric($page['size'])) {
             $size = (int) $page['size'];
             unset($params['page']['size']);
         }
 
         $qb->setMaxResults($size);
-
-        unset($params['page']);
         
         return true;
     }

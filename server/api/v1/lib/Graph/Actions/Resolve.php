@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace ThePetPark\Library\Graph\Actions;
 
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ResponseInterface as Response;
 
 use ThePetPark\Library\Graph;
 use ThePetPark\Library\Graph\Relationship as R;
@@ -19,11 +19,8 @@ use function count;
  */
 class Resolve implements Graph\ActionInterface
 {
-    public function execute(
-        Graph\App $graph,
-        ServerRequestInterface $request
-    ): ResponseInterface {
-
+    public function execute(Graph\App $graph, Request $request): Response
+    {
         parse_str($request->getUri()->getQuery(), $params);
 
         $type = $request->getAttribute(Graph\App::PARAM_RESOURCE);
@@ -58,11 +55,9 @@ class Resolve implements Graph\ActionInterface
             }
         }
 
-        $baseRef    = $graph->getBaseRef();
         $baseSchema = $graph->getSchema($type);
+        $baseRef    = $graph->initialize($qb, $baseSchema);
         $amount     = R::MANY;
-
-        $baseSchema->initialize($qb, $baseRef);
 
         if ($resourceID !== null) {
 
@@ -74,7 +69,7 @@ class Resolve implements Graph\ActionInterface
             if ($relationship !== null) {
 
                 // Base the query on related resource.
-                $relationship = $baseSchema->resolve($graph, $qb, $baseRef, $relationship);
+                $relationship = $graph->resolve($relationship, $baseRef, $qb);
                 $baseSchema = $relationship->getSchema();
                 $baseRef = $relationship->getRef();
                 $graph->promoteRef($baseRef);
@@ -119,7 +114,7 @@ class Resolve implements Graph\ActionInterface
 
             // Reset fields but keep source table(s) and conditions.
             // Create a new query based on retrieved data.
-            $qb->resetQueryParts(['select', 'distinct']);
+            $qb->resetQueryParts(['select', 'distinct', 'orderBy']);
             $qb->setMaxResults(null);
 
             foreach (explode(',', $params['include']) as $included) {
@@ -128,10 +123,11 @@ class Resolve implements Graph\ActionInterface
                 $token = '';
                 $delim = '';
                 
-                foreach (explode('.', $included) as $r) {
-                    $token .= $delim . $r;
+                foreach (explode('.', $included) as $rel) {
+                    $token .= $delim . $rel;
+                    $relatedRef = null;
 
-                    if ($schema->hasRelationship($r) === false) {
+                    if ($schema->hasRelationship($rel) === false) {
 
                         // If provided token isn't a valid relationship,
                         // stop here. TODO: might be worth deferring error
@@ -149,15 +145,18 @@ class Resolve implements Graph\ActionInterface
                         
                     } else {
 
-                        $relationship = $schema->resolve($graph, $qb, $ref, $r);
+                        $relationship = $graph->resolve($rel, $ref, $qb);
                         $relatedRef = $relationship->getRef();
                         $schema = $relationship->getSchema();
-
+                        
                     }
                     
-                    $schema->addAttributesToQuery($qb, $relatedRef, $sparseFields);
-                    $ref = $relatedRef;
+                    // TODO: could probably combine these two
+                    $graph->addChildRef($ref, $relatedRef);
+                    $graph->addSchemaToQuery($schema, $qb, $ref);
+                    //$schema->addAttributesToQuery($qb, $relatedRef, $sparseFields);
 
+                    $ref = $relatedRef;
                     $delim = '.';
                 }
             }
@@ -174,7 +173,9 @@ class Resolve implements Graph\ActionInterface
                 ));
             }
 
-            // TODO: parse includes
+            foreach ($qb->execute()->fetchAll() as $record) {
+                $graph->scanIncluded($record);
+            }
         }
 
         // TODO: serialize raw data and relationships to a JSONAPI document
@@ -187,6 +188,5 @@ class Resolve implements Graph\ActionInterface
         return $response
             ->withHeader('Content-Type', 'text/plain')
             ->withStatus(200);
-
     }
 }

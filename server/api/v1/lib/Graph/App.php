@@ -13,6 +13,8 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Exception;
 
+use ThePetPark\Library\Graph\Relationship as R;
+
 use function file_exists;
 use function class_exists;
 use function in_array;
@@ -185,6 +187,105 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
         }
     }
 
+    /**
+     * Sets provided schema as the source of the output. This must be called only
+     * once on the source resource.
+     */
+    public function initialize(QueryBuilder $qb, Schema $schema): string
+    {
+        $qb->from($schema->getImplType(), $this->baseRef);
+
+        return $this->baseRef;
+    }
+
+    /**
+     * Adds selections to the query based on this schema's attributes.
+     * Use provided enumeration $ref to uniquely identify the selected resource.
+     * Sparse fields must be a resourceType -> list of attributes map.
+     */
+    public function addSchemaToQuery(
+        Schema $schema,
+        QueryBuilder $qb,
+        string $ref
+    ) {
+        // Always select the resource's ID.
+        $qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $ref, $this->id, 'id'));
+
+        // Add the attributes to the select statement, aliasing the fields
+        // as {resource ref}_{resource attribute}
+        foreach ($schema->getVisibleAttributes() as list($attr, $impl)) {
+            $qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $ref, $impl, $attr));
+        }
+    }
+
+    /**
+     * Adds related schema to the query.
+     * Creates a new reference in the graph's reference table.
+     * 
+     * This resource's enumerated value (self) must have already been added
+     * beforehand either by Schema::initialize or Schema::resolve.
+     */
+    public function resolve(
+        string $relationship,
+        string $ref,
+        QueryBuilder $qb
+    ): Relationship {
+
+        list($mask, $relatedType, $link) = $this->relationships[$relationship];
+
+        $schema = $this->getSchema($relatedType);
+        $relatedRef = $this->createRef($relationship, $relatedType, $ref);
+
+        // TODO: Theoretically resource ownership and aggregation types
+        //       should have no effect in relationships following a chain of
+        //       relationships. Verify this is true!
+        if (is_array($link)) {
+
+            $joinOn = $ref;
+            $joinOnField = $this->id;
+            
+            foreach ($link as $i => list($pivot, $from, $to)) {
+                $pivotEnum = $ref . '_' . $i; // pivots need their own relation enums
+                
+                $qb->innerJoin($joinOn, $pivot, $pivotEnum, $qb->expr()->eq(
+                    $joinOn . '.' . $joinOnField,
+                    $pivotEnum . '.' . $from
+                ));
+
+                $joinOn = $pivotEnum;
+                $joinOnField = $to;
+            }
+
+            // TODO: What if the chain doesn't end in the related resource's
+            //       ID but in another relationship? Unlikely for this project
+            //       but might want to consider other relationship fields in
+            //       the future.
+            $qb->innerJoin($joinOn, $schema->getImplType(), $relatedRef, $qb->expr()->eq(
+                $joinOn . '.' . $joinOnField,
+                $relatedRef . '.'. $schema->getId()
+            ));
+
+        } else {
+
+            $joinExpr = ($mask & (R::MANY|R::OWNS))
+
+                // foreign key is in related resource (resource owns another if
+                // there exists a foreign key in the related resource)
+                ? $qb->expr()->eq($ref . '.' . $this->id, $relatedRef . '.' . $link)
+
+                // foreign key is in this resource (resource is owned by related)
+                : $qb->expr()->eq(
+                    $ref        . '.' . $link,
+                    $relatedRef . '.' . $schema->getId()
+                );
+
+            $qb->innerJoin($ref, $schema->getImplType(), $relatedRef, $joinExpr);
+
+        }
+
+        return new Relationship($relatedRef, $schema, $mask);
+    }
+
     public function getMaxPageSize(): int
     {
         return $this->settings['pagination']['maxPageSize'];
@@ -277,6 +378,11 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
         return $ref;
     }
 
+    public function addChildRef(string $ref, string $childRef)
+    {
+        $this->parentRefs[$ref][] = $childRef;
+    }
+
     public function getResourceType(string $ref): string
     {
         return $this->resourceTypes[$ref];
@@ -325,5 +431,22 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
     public function getRootRef(): string
     {
         return self::REF_PREFIX . '0';
+    }
+
+    public function scanIncluded(array $raw)
+    {
+        foreach ($this->parentRefs as $ref => $parentRef) {
+            $schema = $this->getSchemaByRef($ref);
+            $prefix = $ref . '_';
+            $id = $prefix . 'id';
+            $type = $this->resourceTypes[$ref];
+
+            foreach ($schema->getAttributes() as $attribute) {
+                $value = $raw[$prefix . $attribute];
+                
+                // TODO: some refs might not have been used to select data.
+                //       this can happen when applying filters!
+            }
+        }
     }
 }

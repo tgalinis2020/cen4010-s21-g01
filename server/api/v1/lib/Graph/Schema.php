@@ -9,6 +9,7 @@ use Doctrine\DBAL\Query\QueryBuilder;
 use ThePetPark\Library\Graph\Relationship as R;
 
 use function sprintf;
+use function array_keys;
 
 /**
  * An abstract representation of the back-end data model.
@@ -134,18 +135,23 @@ class Schema
         return isset($this->attributes[$attr]) || ($attr === 'id');
     }
 
+    public function getAttributes(): array
+    {
+        return array_keys($this->attributes);
+    }
+
     public function getImplAttribute(string $attr)
     {
         return ($attr === 'id') ? $this->id : $this->attributes[$attr][2];
     }
 
-    public function getSelectedAttributes(): array
+    public function getVisibleAttributes(): array
     {
         $attrs = [];
 
-        foreach ($this->attributes as $attr) {
-            if ($attr[0] === $this->select) {
-                $attrs[] = $attr;
+        foreach ($this->attributes as list($select, $attr, $impl)) {
+            if ($select === $this->select) {
+                $attrs[] = [$attr, $impl];
             }
         }
 
@@ -172,6 +178,19 @@ class Schema
         return $this->actions[$context][$action];
     }
 
+    public function applySparseFields(array $fields)
+    {
+        // Don't apply sparse fieldset if it was already applied.
+        if ((empty($fields) === false) && ($this->select === 0)) {
+            $this->select++;
+    
+            // Apply sparse fieldset. Fields must contain valid attributes.
+            foreach ($fields as $attr) {
+                $this->attributes[$attr][0]++;
+            }
+        }
+    }
+
     /**
      * Adds selections to the query based on this schema's attributes.
      * Use provided enumeration $ref to uniquely identify the selected resource.
@@ -185,103 +204,12 @@ class Schema
         // Always select the resource's ID.
         $qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $ref, $this->id, 'id'));
 
-        $fields = $sparseFields[$this->getType()] ?? [];
-
-        // Don't apply sparse fieldset if it was already applied.
-        if ((empty($fields) === false) && ($this->select === 0)) {
-            $this->select++;
-    
-            // Apply sparse fieldset. Fields must contain valid attributes.
-            foreach ($fields as $attr) {
-                $this->attributes[$attr][0]++;
-            }
-        }
-
         // Add the attributes to the select statement, aliasing the fields
         // as {resource ref}_{resource attribute}
-        foreach ($this->attributes as list($select, $attr, $field)) {
+        foreach ($this->getAttributes() as list($select, $attr, $field)) {
             if ($select === $this->select) {
                 $qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $ref, $field, $attr));
             }
         }
-    }
-
-    /**
-     * Sets this schema as the source of the output. This must be called only
-     * once on the source resource. The provided relation enumeration uniquely
-     * identifies this resource in the query.
-     */
-    public function initialize(QueryBuilder $qb, string $self)
-    {
-        $qb->from($this->getImplType(), $self);
-    }
-
-    /**
-     * Adds related schema to the query.
-     * Creates a new reference in the graph's reference table.
-     * 
-     * This resource's enumerated value (self) must have already been added
-     * beforehand either by Schema::initialize or Schema::resolve.
-     */
-    public function resolve(
-        App $graph,
-        QueryBuilder $qb,
-        string $ref,
-        string $relationship
-    ): Relationship {
-
-        list($mask, $relatedType, $link) = $this->relationships[$relationship];
-
-        $schema = $graph->getSchema($relatedType);
-        $relatedRef = $graph->createRef($relationship, $relatedType, $ref);
-
-        // TODO: Theoretically resource ownership and aggregation types
-        //       should have no effect in relationships following a chain of
-        //       relationships. Verify this is true!
-        if (is_array($link)) {
-
-            $joinOn = $ref;
-            $joinOnField = $this->id;
-            
-            foreach ($link as $i => list($pivot, $from, $to)) {
-                $pivotEnum = $ref . '_' . $i; // pivots need their own relation enums
-                
-                $qb->innerJoin($joinOn, $pivot, $pivotEnum, $qb->expr()->eq(
-                    $joinOn . '.' . $joinOnField,
-                    $pivotEnum . '.' . $from
-                ));
-
-                $joinOn = $pivotEnum;
-                $joinOnField = $to;
-            }
-
-            // TODO: What if the chain doesn't end in the related resource's
-            //       ID but in another relationship? Unlikely for this project
-            //       but might want to consider other relationship fields in
-            //       the future.
-            $qb->innerJoin($joinOn, $schema->getImplType(), $relatedRef, $qb->expr()->eq(
-                $joinOn . '.' . $joinOnField,
-                $relatedRef . '.'. $schema->getId()
-            ));
-
-        } else {
-
-            $joinExpr = ($mask & (R::MANY|R::OWNS))
-
-                // foreign key is in related resource (resource owns another if
-                // there exists a foreign key in the related resource)
-                ? $qb->expr()->eq($ref . '.' . $this->id, $relatedRef . '.' . $link)
-
-                // foreign key is in this resource (resource is owned by related)
-                : $qb->expr()->eq(
-                    $ref        . '.' . $link,
-                    $relatedRef . '.' . $schema->getId()
-                );
-
-            $qb->innerJoin($ref, $schema->getImplType(), $relatedRef, $joinExpr);
-
-        }
-
-        return new Relationship($relatedRef, $schema, $mask);
     }
 }
