@@ -2,7 +2,7 @@
 
 Author: Thomas Galinis
 
-At first, the API's resource routes were mapped by hand.
+At first, The Pet Park's API resource routes were mapped by hand.
 After realizing how many routes to resources and their corresponding relationships
 had to be made, I was thinking that the methods of fetching data were the same.
 In an attempt to minimize copy-paste and automate the selection of API resources,
@@ -109,7 +109,7 @@ schemas:
                       to: foo_id
 ```
 
-For a complete example, see ThePetPark's graph in `/server/api/v1/etc/graph.yml`.
+For a complete example, see The Pet Park's graph in `/server/api/v1/etc/graph.yml`.
 
 Once the schema has been created, it must be compiled into a format that the
 library can read. This can be done using the `bin/graph` console utility.
@@ -124,7 +124,7 @@ usage: php bin/graph <yml-src> <cache-dest>
 ```
 
 The utility takes a YAML definitions file as the first argument and the
-destination to the compiled definitions as the second argument.
+destination for the compiled definitions as the second argument.
 
 ```console
 $ php bin/graph etc/my-graph.yml var/cache/my-graph.cache
