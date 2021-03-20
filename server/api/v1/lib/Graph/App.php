@@ -258,7 +258,7 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
             $joinOnField = $schema->getId();
             
             foreach ($link as $i => list($pivot, $from, $to)) {
-                $pivotEnum = $ref . '_' . $i; // pivots need their own relation enums
+                $pivotEnum = $ref . '_' . $relatedRef . '_' . $i; // pivots need their own relation enums
                 
                 $this->qb->innerJoin($joinOn, $pivot, $pivotEnum, $this->qb->expr()->eq(
                     $joinOn . '.' . $joinOnField,
