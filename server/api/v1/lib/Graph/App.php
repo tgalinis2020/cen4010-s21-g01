@@ -261,7 +261,7 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
                 $pivotEnum = $ref . '_' . $relatedRef . '_' . $i; // pivots need their own relation enums
                 
                 $this->qb->innerJoin($joinOn, $pivot, $pivotEnum, $this->qb->expr()->eq(
-                    $joinOn . '.' . $joinOnField,
+                    $joinOn    . '.' . $joinOnField,
                     $pivotEnum . '.' . $from
                 ));
 
@@ -278,7 +278,7 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
                 $relatedSchema->getImplType(),
                 $relatedRef,
                 $this->qb->expr()->eq(
-                    $joinOn . '.' . $joinOnField,
+                    $joinOn     . '.' . $joinOnField,
                     $relatedRef . '.'. $relatedSchema->getId()
                 )
             );
