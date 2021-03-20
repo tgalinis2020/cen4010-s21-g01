@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ThePetPark\Library\Graph\Features\Sorting;
 
-use Doctrine\DBAL\Query\QueryBuilder;
 use ThePetPark\Library\Graph;
 
 use function trim;
@@ -24,8 +23,10 @@ class Simple implements Graph\FeatureInterface
         unset($params['sort']);
     }
 
-    public function apply(Graph\App $graph, QueryBuilder $qb, array $params): bool
+    public function apply(Graph\App $graph, array $params): bool
     {
+        $qb = $graph->getQueryBuilder();
+
         foreach (explode(',', $params['sort']) as $attr) {
             if ($attr === '') {
                 return false;

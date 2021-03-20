@@ -23,27 +23,20 @@ class Resolve implements Graph\ActionInterface
     {
         parse_str($request->getUri()->getQuery(), $params);
 
-        $type = $request->getAttribute(Graph\App::PARAM_RESOURCE);
-        $resourceID = $request->getAttribute(Graph\App::PARAM_ID);
-        $relationship = $request->getAttribute(Graph\App::PARAM_RELATIONSHIP);
-
-        $conn = $graph->getConnection();
-        $qb = $conn->createQueryBuilder()->distinct();
-        $response = $graph->createResponse();
-
-        // Initialize sparse fieldsets. They are attributes to select, indexed
-        // by resource type.
-        $sparseFields = [];
-        $data = [];
-
-        foreach (($params['fields'] ?? []) as $resourceType => $fieldList) {
+        // Apply sparse fieldsets, if applicable.
+        foreach (($params['fields'] ?? []) as $resourceType => $fieldset) {
             if (($schema = $graph->getSchema($resourceType)) !== null) {
+
+                // Deselect all of the resource's attributes; only apply
+                // those that are specified in the sparse fieldset. 
+                $schema->clearFields();
+                
                 // Silently ignore invalid types
                 $sparseFields[$resourceType] = [];
 
-                foreach (explode(',', $fieldList) as $attr) {
+                foreach (explode(',', $fieldset) as $attr) {
                     if ($schema->hasAttribute($attr)) {
-                        $sparseFields[$resourceType][] = $attr;
+                        $schema->addField($attr);
                     } else {
                         // TODO: silently ignore or send a 400?
                         // TODO: might be worth deferring error handling
@@ -52,12 +45,26 @@ class Resolve implements Graph\ActionInterface
                         // an action based on the given reason.
                     }
                 }
+
             }
         }
 
-        $baseSchema = $graph->getSchema($type);
-        $baseRef    = $graph->initialize($qb, $baseSchema);
-        $amount     = R::MANY;
+        $type = $request->getAttribute(Graph\App::PARAM_RESOURCE);
+        $resourceID = $request->getAttribute(Graph\App::PARAM_ID);
+        $relationship = $request->getAttribute(Graph\App::PARAM_RELATIONSHIP);
+
+        $response = $graph->createResponse();
+
+        // Initialize sparse fieldsets. They are attributes to select, indexed
+        // by resource type.
+        $sparseFields = [];
+        $data = [];
+
+        
+
+        list($baseSchema, $baseRef) = $graph->init($type);
+        $amount = R::MANY;
+        $qb = $graph->getQueryBuilder();
 
         if ($resourceID !== null) {
 
@@ -69,12 +76,12 @@ class Resolve implements Graph\ActionInterface
             if ($relationship !== null) {
 
                 // Base the query on related resource.
-                $relationship = $graph->resolve($relationship, $baseRef, $qb);
-                $baseSchema = $relationship->getSchema();
-                $baseRef = $relationship->getRef();
-                $graph->promoteRef($baseRef);
+                //list($baseSchema, $baseRef, $mask) = $graph->resolve($relationship, $baseRef, $qb);
+                
+                // Promote relationship to the context of the query.
+                list($baseSchema, $baseRef, $mask) = $graph->promote($relationship);
 
-                if ($relationship->getType() & R::ONE) {
+                if ($mask & R::ONE) {
                     $amount = R::ONE;
                 }
 
@@ -85,7 +92,7 @@ class Resolve implements Graph\ActionInterface
         
         }
 
-        $baseSchema->addAttributesToQuery($qb, $baseRef, $sparseFields);
+        $graph->prepare($baseSchema, $baseRef);
         $graph->applyFeatures($qb, $params);
 
         if ($amount === R::ONE) {
@@ -145,16 +152,11 @@ class Resolve implements Graph\ActionInterface
                         
                     } else {
 
-                        $relationship = $graph->resolve($rel, $ref, $qb);
-                        $relatedRef = $relationship->getRef();
-                        $schema = $relationship->getSchema();
+                        list($schema, $relatedRef, $mask) = $graph->resolve($rel, $ref);
                         
                     }
                     
-                    // TODO: could probably combine these two
-                    $graph->addChildRef($ref, $relatedRef);
-                    $graph->addSchemaToQuery($schema, $qb, $ref);
-                    //$schema->addAttributesToQuery($qb, $relatedRef, $sparseFields);
+                    $graph->prepareIncluded($schema, $relatedRef, $ref);
 
                     $ref = $relatedRef;
                     $delim = '.';
@@ -173,9 +175,11 @@ class Resolve implements Graph\ActionInterface
                 ));
             }
 
+            /*
             foreach ($qb->execute()->fetchAll() as $record) {
                 $graph->scanIncluded($record);
             }
+            //*/
         }
 
         // TODO: serialize raw data and relationships to a JSONAPI document

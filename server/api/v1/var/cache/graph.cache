@@ -21,27 +21,23 @@
       array (
         'text' => 
         array (
-          0 => 0,
-          1 => 'text',
-          2 => 'text_content',
+          0 => 'text',
+          1 => 'text_content',
         ),
         'image' => 
         array (
-          0 => 0,
-          1 => 'image',
-          2 => 'image_url',
+          0 => 'image',
+          1 => 'image_url',
         ),
         'likes' => 
         array (
-          0 => 0,
-          1 => 'likes',
-          2 => 'like_count',
+          0 => 'likes',
+          1 => 'like_count',
         ),
         'createdAt' => 
         array (
-          0 => 0,
-          1 => 'createdAt',
-          2 => 'created_at',
+          0 => 'createdAt',
+          1 => 'created_at',
         ),
       ),
       2 => 
@@ -119,15 +115,13 @@
       array (
         'text' => 
         array (
-          0 => 0,
-          1 => 'text',
-          2 => 'text_content',
+          0 => 'text',
+          1 => 'text_content',
         ),
         'createdAt' => 
         array (
-          0 => 0,
-          1 => 'createdAt',
-          2 => 'created_at',
+          0 => 'createdAt',
+          1 => 'created_at',
         ),
       ),
       2 => 
@@ -185,45 +179,38 @@
       array (
         'email' => 
         array (
-          0 => 0,
+          0 => 'email',
           1 => 'email',
-          2 => 'email',
         ),
         'username' => 
         array (
-          0 => 0,
+          0 => 'username',
           1 => 'username',
-          2 => 'username',
         ),
         'firstName' => 
         array (
-          0 => 0,
-          1 => 'firstName',
-          2 => 'first_name',
+          0 => 'firstName',
+          1 => 'first_name',
         ),
         'lastName' => 
         array (
-          0 => 0,
-          1 => 'lastName',
-          2 => 'last_name',
+          0 => 'lastName',
+          1 => 'last_name',
         ),
         'avatar' => 
         array (
-          0 => 0,
-          1 => 'avatar',
-          2 => 'avatar_url',
+          0 => 'avatar',
+          1 => 'avatar_url',
         ),
         'idpCode' => 
         array (
-          0 => 0,
-          1 => 'idpCode',
-          2 => 'idp_code',
+          0 => 'idpCode',
+          1 => 'idp_code',
         ),
         'createdAt' => 
         array (
-          0 => 0,
-          1 => 'createdAt',
-          2 => 'created_at',
+          0 => 'createdAt',
+          1 => 'created_at',
         ),
       ),
       2 => 
@@ -307,9 +294,8 @@
       array (
         'text' => 
         array (
-          0 => 0,
-          1 => 'text',
-          2 => 'text_content',
+          0 => 'text',
+          1 => 'text_content',
         ),
       ),
       2 => 
@@ -361,21 +347,18 @@
       array (
         'name' => 
         array (
-          0 => 0,
-          1 => 'name',
-          2 => 'pet_name',
+          0 => 'name',
+          1 => 'pet_name',
         ),
         'description' => 
         array (
-          0 => 0,
-          1 => 'description',
-          2 => 'pet_description',
+          0 => 'description',
+          1 => 'pet_description',
         ),
         'avatar' => 
         array (
-          0 => 0,
-          1 => 'avatar',
-          2 => 'avatar_url',
+          0 => 'avatar',
+          1 => 'avatar_url',
         ),
       ),
       2 => 
@@ -445,9 +428,8 @@
       array (
         'breed' => 
         array (
-          0 => 0,
-          1 => 'breed',
-          2 => 'pet_breed',
+          0 => 'breed',
+          1 => 'pet_breed',
         ),
       ),
       2 => 
@@ -491,9 +473,8 @@
       array (
         'type' => 
         array (
-          0 => 0,
-          1 => 'type',
-          2 => 'pet_type',
+          0 => 'type',
+          1 => 'pet_type',
         ),
       ),
       2 => 

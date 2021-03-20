@@ -44,14 +44,6 @@ class Schema
     protected $type;
 
     /**
-     * Consumers can select what attributes to show via sparse fields.
-     * Default value of zero denotes that all fields should be selected.
-     * 
-     * @var int
-     */
-    protected $select;
-
-    /**
      * Resource attributes.
      * 
      * Attribute signature:
@@ -60,6 +52,11 @@ class Schema
      * If alias is not provided, it is assumed that alias == attr_name.
      */
     protected $attributes;
+
+    /**
+     * Sparse fields.
+     */
+    protected $fields = [];
 
     /**
      * Resource relationship map. Used for combining related resources.
@@ -105,7 +102,6 @@ class Schema
 
         $self = new self();
 
-        $self->select = 0;
         $self->id = $id;
         $self->type = [$type, $src];
         $self->attributes = $attributes;
@@ -137,33 +133,38 @@ class Schema
 
     public function getAttributes(): array
     {
-        return array_keys($this->attributes);
+        $attrs = [];
+
+        // Only select specified sparse fields. If none were specified,
+        // return all fields.
+        foreach ($this->fields as $attr) {
+            $attrs[] = $this->attributes[$attr];
+        }
+    
+        return empty($attrs) ? $this->attributes : $attrs;
+    }
+
+    public function clearFields()
+    {
+        $this->fields = [];
+    }
+
+    public function addField(string $field)
+    {
+        $this->fields[] = $field;
     }
 
     public function getImplAttribute(string $attr)
     {
-        return ($attr === 'id') ? $this->id : $this->attributes[$attr][2];
+        return ($attr === 'id') ? $this->id : $this->attributes[$attr][1];
     }
 
-    public function getVisibleAttributes(): array
+    public function getRelationship(string $relationship): array
     {
-        $attrs = [];
-
-        foreach ($this->attributes as list($select, $attr, $impl)) {
-            if ($select === $this->select) {
-                $attrs[] = [$attr, $impl];
-            }
-        }
-
-        return $attrs;
+        return $this->relationships[$relationship];
     }
 
-    public function getRelationship(string $relationship)
-    {
-        return $this->relationships[$relationship] ?? null;
-    }
-
-    public function hasRelationship(string $relationship)
+    public function hasRelationship(string $relationship): bool
     {
         return isset($this->relationships[$relationship]);
     }
@@ -176,40 +177,5 @@ class Schema
     public function getActionKey(int $context, string $action): int
     {
         return $this->actions[$context][$action];
-    }
-
-    public function applySparseFields(array $fields)
-    {
-        // Don't apply sparse fieldset if it was already applied.
-        if ((empty($fields) === false) && ($this->select === 0)) {
-            $this->select++;
-    
-            // Apply sparse fieldset. Fields must contain valid attributes.
-            foreach ($fields as $attr) {
-                $this->attributes[$attr][0]++;
-            }
-        }
-    }
-
-    /**
-     * Adds selections to the query based on this schema's attributes.
-     * Use provided enumeration $ref to uniquely identify the selected resource.
-     * Sparse fields must be a resourceType -> list of attributes map.
-     */
-    public function addAttributesToQuery(
-        QueryBuilder $qb,
-        string $ref,
-        array $sparseFields = []
-    ) {
-        // Always select the resource's ID.
-        $qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $ref, $this->id, 'id'));
-
-        // Add the attributes to the select statement, aliasing the fields
-        // as {resource ref}_{resource attribute}
-        foreach ($this->getAttributes() as list($select, $attr, $field)) {
-            if ($select === $this->select) {
-                $qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $ref, $field, $attr));
-            }
-        }
     }
 }

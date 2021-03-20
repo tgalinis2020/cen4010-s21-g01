@@ -1,4 +1,6 @@
-# Graph: A library for managing API resources
+# Resource Graph: A framework for managing API resources
+
+Author: Thomas Galinis
 
 At first, the API's resource routes were mapped by hand.
 After realizing how many routes to resources and their corresponding relationships
@@ -8,13 +10,11 @@ this library was born. Decided to partially follow the [JSON:API](https://jsonap
 specification to allow for expressive and efficient queries.
 
 
-Tools that do similar things probably exist, but I don't care.
-This is an acedemic endeavor, anyways. It was fun :) (and laziness -- who has time
-to define 10+ routes that perform a similar task?!)
-
-
-Might change the name of the library later since GraphQL is a thing.
-Wasn't feeling very creative initially.
+Similar tools most likely exist, but this was an academic endeavour.
+Been itching to solve this problem for a while now.
+Would like to make it more modular in the future -- right now most of the
+framework is quite monolithic and has a hard dependency on Doctrine for building
+cross-platform SQL queries. Happy to make it work, at least.
 
 
 ## Dependecies
@@ -132,3 +132,9 @@ $ php bin/graph etc/my-graph.yml var/cache/my-graph.cache
 
 When providing settings for a Graph instance in PHP, provide the absolute
 path to the compiled file in the "definitions" settings key.
+
+## TO-DO
+
+- [ ] Break up Graph\App into smaller, self-contained components.
+      If POST/PUT/PATCH/DELETE requests are made, the reference table
+      and other components are needlesly loaded.

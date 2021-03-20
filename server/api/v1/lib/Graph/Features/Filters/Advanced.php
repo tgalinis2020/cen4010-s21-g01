@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace ThePetPark\Library\Graph\Features\Filters;
 
-use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
 use ThePetPark\Library\Graph;
 
 use function array_replace;
+use function array_pop;
+use function explode;
 
 /**
  * This filtering strategy adds granular filters, such as <, <=, >, and >=.
@@ -38,8 +39,10 @@ class Advanced implements Graph\FeatureInterface
         unset($params['filter']);
     }
 
-    public function apply(Graph\App $graph, QueryBuilder $qb, array $params): bool
+    public function apply(Graph\App $graph, array $params): bool
     {
+        $qb = $graph->getQueryBuilder();
+
         foreach ($params['filter'] as $fieldAndFilter => $value) {
             $ref = $graph->getBaseRef();
             $schema = $graph->getSchemaByRef($ref);
@@ -55,10 +58,6 @@ class Advanced implements Graph\FeatureInterface
                 return false;
             }
 
-            // TOOD: parse provided field. Fields can be attributes of
-            // the resource or attributes of a resource from a resolved
-            // relationship. Might have to add joins to apply the filter.
-            // If this is the case, add the new reference to the ref map.
             $tokens = explode('.', $field);
             $attribute = array_pop($tokens);
             $delim = '';
@@ -74,9 +73,7 @@ class Advanced implements Graph\FeatureInterface
                     
                 } else {
 
-                    $relationship = $schema->resolve($graph, $qb, $ref, $r);
-                    $ref = $relationship->getRef();
-                    $schema = $relationship->getSchema();
+                    list($schema, $ref, $mask) = $graph->resolve($r, $ref);
 
                 }
 

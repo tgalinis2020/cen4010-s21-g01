@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ThePetPark\Library\Graph\Features\Filters;
 
-use Doctrine\DBAL\Query\QueryBuilder;
 use ThePetPark\Library\Graph;
 
 use function array_pop;
@@ -28,8 +27,10 @@ class Simple implements Graph\FeatureInterface
         unset($params['filter']);
     }
 
-    public function apply(Graph\App $graph, QueryBuilder $qb, array $params): bool
+    public function apply(Graph\App $graph, array $params): bool
     {
+        $qb = $graph->getQueryBuilder();
+
         foreach ($params['filter'] as $field => $value) {
             $ref = $graph->getBaseRef();
             $schema = $graph->getSchemaByRef($ref);
@@ -53,9 +54,7 @@ class Simple implements Graph\FeatureInterface
                     
                 } else {
 
-                    $relationship = $schema->resolve($graph, $qb, $ref, $r);
-                    $ref = $relationship->getRef();
-                    $schema = $relationship->getSchema();
+                    list($schema, $ref, $mask) = $graph->resolve($r, $ref);
 
                 }
 

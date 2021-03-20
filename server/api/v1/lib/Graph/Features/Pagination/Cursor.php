@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ThePetPark\Library\Graph\Features\Pagination;
 
-use Doctrine\DBAL\Query\QueryBuilder;
 use ThePetPark\Library\Graph\FeatureInterface;
 use ThePetPark\Library\Graph;
 
@@ -24,8 +23,9 @@ class Cursor implements FeatureInterface
         unset($params['page']);
     }
 
-    public function apply(Graph\App $graph, QueryBuilder $qb, array $params): bool
+    public function apply(Graph\App $graph, array $params): bool
     {
+        $qb = $graph->getQueryBuilder();
         $page = $params['page'];
         $size = $graph->getMaxPageSize();
         $ref = $graph->getBaseRef();

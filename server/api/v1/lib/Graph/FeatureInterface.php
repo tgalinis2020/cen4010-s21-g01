@@ -34,5 +34,5 @@ interface FeatureInterface
      * 
      * @return bool True if transformation was applied successfully, false otherwise.
      */
-    public function apply(App $graph, QueryBuilder $qb, array $parameters): bool;
+    public function apply(App $graph, array $parameters): bool;
 }

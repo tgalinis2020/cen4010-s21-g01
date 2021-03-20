@@ -9,7 +9,7 @@ use ThePetPark\Library\Graph;
 
 /**
  * Slim 3 Adapter for Graph application.
- * Pass it as the second parameter of the Slim::group method.
+ * Pass it as the second parameter of a call to Slim::group.
  */
 final class Adapter
 {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-use ThePetPark\Library\Graph\Graph;
+use ThePetPark\Library\Graph\App as Graph;
 use ThePetPark\Library\Graph\Actions;
 use ThePetPark\Library\Graph\Relationship as R;
 
@@ -39,14 +39,14 @@ $nactions = 1;
 $defaultActions = [];
 
 /** @var \ThePetPark\Library\Graph\ActionInterface[] */
-$defaultActions[Graph::RESOURCE]     = [];
+$defaultActions[Graph::RESOURCE_CONTEXT]     = [];
 
 /** @var \ThePetPark\Library\Graph\ActionInterface[] */
-$defaultActions[Graph::RELATIONSHIP] = [];
+$defaultActions[Graph::RELATIONSHIP_CONTEXT] = [];
 
 $contextTypes = [
-    'resource'      => Graph::RESOURCE,
-    'relationship'  => Graph::RELATIONSHIP,
+    'resource'      => Graph::RESOURCE_CONTEXT,
+    'relationship'  => Graph::RELATIONSHIP_CONTEXT,
 ];
 
 $relationshipTypes = [
@@ -106,7 +106,7 @@ try {
                 // To make listing attributes less repetitive, a dollar sign
                 // can be used as an implementation name to denote that it is
                 // the same as the attribute.
-                $attributes[$attr] = [0, $attr, $field === '$' ? $attr : $field];
+                $attributes[$attr] = [$attr, $field === '$' ? $attr : $field];
             }
 
             foreach ($def['relationships'] ?? [] as $name => $r) {
