@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Library\Graph\Features\Filters;
+namespace ThePetPark\Library\Graph\Drivers\Doctrine\Features;
 
 use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
 use ThePetPark\Library\Graph;
+use ThePetPark\Library\Graph\Schema\ReferenceTable;
 
 use function array_replace;
 use function array_pop;
@@ -18,8 +19,10 @@ use function explode;
  * 
  * GET /articles?filter[createdAt:lt]=2021-03-17
  */
-class Advanced implements Graph\FeatureInterface
+class Filters implements Graph\FeatureInterface
 {
+    use Graph\Drivers\Doctrine\FeatureTrait;
+
     const SUPPORTED_FILTERS = [
         'eq' => ExpressionBuilder::EQ,
         'ne' => ExpressionBuilder::NEQ,
@@ -34,17 +37,12 @@ class Advanced implements Graph\FeatureInterface
         return isset($params['filter']);
     }
 
-    public function clean(array &$params)
+    public function apply(array $params, ReferenceTable $refs): bool
     {
-        unset($params['filter']);
-    }
-
-    public function apply(Graph\App $graph, array $params): bool
-    {
-        $qb = $graph->getQueryBuilder();
-
+        $qb = $this->driver->getQueryBuilder();
+    
         foreach ($params['filter'] as $fieldAndFilter => $value) {
-            $ref = $graph->getBaseRef();
+            $ref = $refs->getBaseRef();
             $tokens = explode(':', $fieldAndFilter);
 
             if (count($tokens) > 2) {
@@ -65,9 +63,9 @@ class Advanced implements Graph\FeatureInterface
             foreach ($tokens as $r) {
                 $token .= $delim . $r;
 
-                $ref = $graph->hasRefForToken($token)
-                    ? $graph->getRefByToken($token)
-                    : $graph->resolve($r, $ref);
+                $ref = $refs->has($token)
+                    ? $refs->get($token)
+                    : $refs->resolve($r, $ref, $this->driver);
 
                 $delim = '.';
             }
@@ -84,9 +82,9 @@ class Advanced implements Graph\FeatureInterface
 
                 $token = $delim . $attribute;
                 
-                $ref = $graph->hasRefForToken($token)
-                    ? $graph->getRefByToken($token)
-                    : $graph->resolve($r, $ref);
+                $ref = $refs->has($token)
+                    ? $refs->get($token)
+                    : $refs->resolve($r, $ref, $this->driver);
 
                 $attribute = $ref->getSchema()->getId();
 
@@ -97,7 +95,7 @@ class Advanced implements Graph\FeatureInterface
             }
             
             $qb->andWhere($qb->expr()->comparison(
-                $ref->getRef() . '.' . $attribute,
+                $ref . '.' . $attribute,
                 self::SUPPORTED_FILTERS[$filter],
                 $qb->createNamedParameter($value)
             ));

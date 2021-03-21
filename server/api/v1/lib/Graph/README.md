@@ -6,15 +6,12 @@ At first, The Pet Park's API resource routes were mapped by hand.
 After realizing how many routes to resources and their corresponding relationships
 had to be made, I was thinking that the methods of fetching data were the same.
 In an attempt to minimize copy-paste and automate the selection of API resources,
-this library was born. Decided to partially follow the [JSON:API](https://jsonapi.org/format/)
+this library came to. Decided to partially follow the [JSON:API](https://jsonapi.org/format/)
 specification to allow for expressive and efficient queries.
 
 
-Similar tools most likely exist, but this was an academic endeavour.
-Been itching to solve this problem for a while now.
-Would like to make it more modular in the future -- right now most of the
-framework is quite monolithic and has a hard dependency on Doctrine for building
-cross-platform SQL queries. Happy to make it work, at least.
+Similar and more robust tools most likely already exist, but this was an
+academic endeavour. Been itching to solve this problem for a while now.
 
 
 ## Dependecies
@@ -24,8 +21,8 @@ cross-platform SQL queries. Happy to make it work, at least.
   Might consider supporting JSON in the future. In the end, the definitions
   are serialized into a structured PHP array.
 
-- `doctrine/bal:^2.5` This library makes heavy use of Doctrine's QueryBuilder
-  to dynamiclly generate queries based on the URL and Graph definitions.
+- `doctrine/dbal:^2.5` The main driver for this library is implemented using
+  Doctrine's DBAL QueryBuilder component.
 
 
 ## How-To
@@ -40,13 +37,13 @@ For starters, you'll need to create a Graph definitions file.
 actions:
     # For regular use-cases, use resource actions.
     resources:
-        GET: Path\To\Graph\Actions\ResourceResolver
+        GET: Path\To\Graph\Actions\DefaultResourceResolver
     
     # Relationship actions -- relevant for relationship queries.
     # i.e. the "relationship" keyword is present between a resource's ID
     # and relationship.
     relationships:
-        GET: Path\To\My\RelationshipResolver
+        GET: Path\To\My\DefaultRelationshipResolver
 
 # Resource mappings are defined here. This is not a complete example.
 schemas:
@@ -90,6 +87,13 @@ schemas:
                 # exists in this resource's table.
                 using: user_id
 
+            tags:
+                hasMany: tags
+                using:
+                    - relation: post_tags
+                      from: post_id
+                      to: tag_id
+
             foos:
                 hasMany: foos
 
@@ -110,6 +114,8 @@ schemas:
 ```
 
 For a complete example, see The Pet Park's graph in `/server/api/v1/etc/graph.yml`.
+Note: attributes can only have one dimension. If you want to get a post's
+tags, you have to include it using `/posts?include=tags`.
 
 Once the schema has been created, it must be compiled into a format that the
 library can read. This can be done using the `bin/graph` console utility.
@@ -135,6 +141,6 @@ path to the compiled file in the "definitions" settings key.
 
 ## TO-DO
 
-- [ ] Break up Graph\App into smaller, self-contained components.
+- [x] Break up Graph\App into smaller, self-contained components.
       If POST/PUT/PATCH/DELETE requests are made, the reference table
       and other components are needlesly loaded.

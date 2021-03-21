@@ -38,14 +38,14 @@ return [
     }),
 
     Graph\Adapters\Slim\Adapter::class => factory(function (ContainerInterface $c) {
-        
-        // TODO: use default constructor when Graph components have been
-        // successfully decoupled.
-        $graph = Graph\App::create(
+        $settings = $c->get('settings')['graph'];
+
+        $driver = new Graph\Drivers\Doctrine\Driver(
             $c->get(DBAL\Connection::class),
-            $c->get('response'),
-            $c->get('settings')['graph']
+            $settings['driver']    
         );
+
+        $graph = new Graph\App($settings['definitions'], $driver, $c->get('response'));
 
         return new Graph\Adapters\Slim\Adapter($graph);
     }),

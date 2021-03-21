@@ -2,31 +2,28 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Library\Graph\Features\Sorting;
+namespace ThePetPark\Library\Graph\Drivers\Doctrine\Features;
 
 use ThePetPark\Library\Graph;
+use ThePetPark\Library\Graph\Drivers\Doctrine\Driver;
+use ThePetPark\Library\Graph\Schema\ReferenceTable;
 
 use function trim;
 
 /**
  * The simple sorting strategy sorts main data by the resource's attributes.
  */
-class Simple implements Graph\FeatureInterface
+class Sorting implements Graph\FeatureInterface
 {
+    use Graph\Drivers\Doctrine\FeatureTrait;
+
     public function check(array $params): bool
     {
         return isset($params['sort']);
     }
 
-    public function clean(array &$params)
+    public function apply(array $params, ReferenceTable $refs): bool
     {
-        unset($params['sort']);
-    }
-
-    public function apply(Graph\App $graph, array $params): bool
-    {
-        $qb = $graph->getQueryBuilder();
-
         foreach (explode(',', $params['sort']) as $attr) {
             if ($attr === '') {
                 return false;
@@ -42,7 +39,7 @@ class Simple implements Graph\FeatureInterface
                 $attr = substr($attr, 1);
             }
 
-            $ref = $graph->getBaseRef();
+            $ref = $refs->getBaseRef();
             $schema = $ref->getSchema();
 
             if ($schema->hasAttribute($attr)) {
@@ -51,7 +48,8 @@ class Simple implements Graph\FeatureInterface
                 return false;
             }
 
-            $qb->addOrderBy($ref->getRef() . '.' . $attr, $order);
+            $this->driver->getQueryBuilder()
+                ->addOrderBy($ref . '.' . $attr, $order);
         }
 
         return true;

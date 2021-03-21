@@ -8,6 +8,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
 use ThePetPark\Library\Graph;
+use ThePetPark\Library\Graph\Schema\ReferenceTable;
 use ThePetPark\Library\Graph\Schema\Relationship as R;
 
 use function explode;
@@ -23,16 +24,24 @@ class Resolve implements Graph\ActionInterface
     {
         parse_str($request->getUri()->getQuery(), $params);
 
+        $schemas = $graph->getSchemas();
+        $driver = $graph->getDriver();
+        $response = $graph->createResponse();
+        $refs = new ReferenceTable($schemas);
+        $data = [];
+        $amount = R::MANY;
+
         // Apply sparse fieldsets, if applicable.
-        foreach (($params['fields'] ?? []) as $resourceType => $fieldset) {
-            if (($schema = $graph->getSchema($resourceType)) !== null) {
+        foreach (($params['fields'] ?? []) as $type => $fieldset) {
+            if ($schemas->has($type)) {
+                $schema = $schemas->get($type);
 
                 // Deselect all of the resource's attributes; only apply
                 // those that are specified in the sparse fieldset. 
                 $schema->clearFields();
                 
                 // Silently ignore invalid types
-                $sparseFields[$resourceType] = [];
+                $sparseFields[$type] = [];
 
                 foreach (explode(',', $fieldset) as $attr) {
                     if ($schema->hasAttribute($attr)) {
@@ -45,43 +54,28 @@ class Resolve implements Graph\ActionInterface
                         // an action based on the given reason.
                     }
                 }
-
             }
         }
 
         $type = $request->getAttribute(Graph\App::PARAM_RESOURCE);
         $resourceID = $request->getAttribute(Graph\App::PARAM_ID);
         $relationship = $request->getAttribute(Graph\App::PARAM_RELATIONSHIP);
-        $response = $graph->createResponse();
-        $qb = $graph->getQueryBuilder();
-        $data = [];
-        $amount = R::MANY;
 
-        $base = $graph->init($type);
-
-        $qb->select()->distinct()
-            ->from($base->getSchema()->getImplType(), $base->getRef());
-        
+        $base = $refs->init($type, $driver);        
+        $driver->apply($params, $refs);
 
         if ($resourceID !== null) {
 
-            //$driver->select($resourceID);
-            $qb->andWhere($qb->expr()->eq(
-                $base->getRef() . '.' . $base->getSchema()->getId(),
-                $qb->createNamedParameter($resourceID)
-            ));
+            $driver->select($base, $resourceID);
 
             if ($relationship !== null) {
-
-                // Base the query on related resource.
-                //list($baseSchema, $baseRef, $mask) = $graph->resolve($relationship, $baseRef, $qb);
                 
                 // Promote relationship to the context of the query.
-                $base = $graph->resolve($relationship, $base/*, $driver*/);
+                $base = $refs->resolve($relationship, $base, $driver);
                 
                 // baseRef now points to the relationship's reference.
                 // Set it as the new context of the query.
-                $graph->setBaseRef($base);
+                $refs->setBaseRef($base);
 
                 if ($base->getType() & R::ONE) {
                     $amount = R::ONE;
@@ -94,42 +88,27 @@ class Resolve implements Graph\ActionInterface
         
         }
 
-        $graph->prepare($base);
-
-        foreach ($graph->getFeatures() as $feature) {
-            $feat = new $feature;
-
-            if ($feat->check($params)) {
-                $feat->apply($graph, $params);
-                $feat->clean($params);
-            }
-        }
-
-        if ($amount === R::ONE) {
-            $qb->setMaxResults(1);
-        }
+        $driver->prepare($base);
         
-        $mainSQL = $qb->getSQL();
+        $mainSQL = (string) $driver; // Invoke Doctrine\Driver::__toString
 
-        //$data[$ref] = $qb->execute()->fetchAll(FetchMode::ASSOCIATIVE);
-        //$data[$ref] = $reftable->getData($driver);
-        $data[$base->getRef()] = [['id' =>   0], ['id' => 100]];
-        
-        $resolved = $data[$base->getRef()];
-        $rowCount = count($resolved);
-
+        // TODO: serialize data to response document
+        /*
+        $data = $refs->scan($driver);
+        $rowCount = count($data);
+        /*/
+        $data = [['id' => '0'], ['id' => '100']];
+        $rowCount = count($data);
+        //*/
         if ($rowCount > 0 && isset($params['include'])) {
 
             // Reset fields but keep source table(s) and conditions.
             // Create a new query based on retrieved data.
-            $qb->resetQueryParts(['select', 'distinct', 'orderBy']);
-            $qb->setMaxResults(null);
-            //$driver->reset();
+            $driver->reset();
 
             foreach (explode(',', $params['include']) as $included) {
                 $ref = $base;
-                $token = '';
-                $delim = '';
+                $token = $delim = '';
                 
                 foreach (explode('.', $included) as $relationship) {
                     $token .= $delim . $relationship;
@@ -146,42 +125,56 @@ class Resolve implements Graph\ActionInterface
     
                     // A resource may have already been resolved (joined in
                     // the query) if it was used in a filter.
-                    $relatedRef = $graph->hasRefForToken($token)
-                        ? $graph->getRefByToken($token)
-                        : $graph->resolve($relationship, $ref/*, $driver*/);
+                    $relatedRef = $refs->has($token)
+                        ? $refs->get($token)
+                        : $refs->resolve($relationship, $ref, $driver);
             
-                    $graph->prepareIncluded($relatedRef, $ref);
-                    //$reftable->setParentRef($relatedRef, $ref);
-                    //$driver->prepareIncluded($relatedRef, $ref);
+                    $refs->setParentRef($relatedRef, $ref);
+                    $driver->prepare($relatedRef, $ref);
 
                     $ref = $relatedRef;
                     $delim = '.';
                 }
             }
-            
-            //$reftable->getIncluded($driver);
 
             // No need to constrain the second query any further if there's
             // only one result.
             if ($rowCount > 1) {
-                $idField = $base->getRef() . '.' . $base->getSchema()->getId();
-
-                // Only include data relevant to the previously fetched data.
-                $qb->andWhere($qb->expr()->andX(
-                    $qb->expr()->gte($idField, $resolved[0]['id']),
-                    $qb->expr()->lte($idField, $resolved[$rowCount - 1]['id'])
-                ));
+                // GOTCHA! If sorting was applied to the query, the first and
+                // last rows in the data array may not contain the first and
+                // last IDs, respectively. Can't compare IDs here either since
+                // they may not always be autoincrementing integers -- UUIDv1
+                // is a popular ID scheme as well.
+                //
+                // In order for IDs to be useful in the first place, they can't
+                // be randomly generated. It should be possible to do a linear
+                // search through the returned data to pluck out the min and max.
+                //
+                // TODO: create an ID resolver that can pick out the min and max
+                // IDs when sorting by a field other than ID. Otherwise it's OK
+                // to use the first and last rows.
+                $firstID = $data[0]['id'];
+                $lastID = $data[$rowCount - 1]['id'];
+                /*
+                if ($sortApplied) {
+                    list($firstID, $lastID) = $idResolver->resolve($data);
+                }
+                */
+                $driver->setRange($base, $firstID, $lastID);
             }
+
+            //list($included, $relationships) = $reftable->scanIncluded($driver);
+
+            // TODO: include data to response document
         }
 
         // TODO: serialize raw data and relationships to a JSONAPI document
 
-        // See if the expected query is generated.
-        $includesSQL = isset($params['include'])
-            ? $qb->getSQL()
-            : '(not applicable)';
-
-        $response->getBody()->write("Query 1:\n$mainSQL\n\nQuery 2:\n$includesSQL");
+        $response->getBody()->write(sprintf(
+            "Query 1:\n%s\n\nQuery 2:\n%s",
+            $mainSQL,
+            isset($params['include']) ? (string) $driver : '(not applicable)'
+        ));
 
         return $response
             ->withHeader('Content-Type', 'text/plain')

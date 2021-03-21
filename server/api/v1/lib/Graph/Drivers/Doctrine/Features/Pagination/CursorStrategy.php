@@ -2,37 +2,36 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Library\Graph\Features\Pagination;
+namespace ThePetPark\Library\Graph\Drivers\Doctrine\Features\Pagination;
 
-use ThePetPark\Library\Graph\FeatureInterface;
 use ThePetPark\Library\Graph;
+use ThePetPark\Library\Graph\Schema\ReferenceTable;
+
+use function is_numeric;
 
 /**
  * This pagination strategy is synonymous with applying a greater-than filter
  * on the provided ID in the cursor. Simple and efficient!
  */
-class Cursor implements FeatureInterface
+class CursorStrategy implements Graph\FeatureInterface
 {
+    use Graph\Drivers\Doctrine\FeatureTrait;
+
     public function check(array $params): bool
     {
         return isset($params['page'], $params['page']['cursor']);
     }
 
-    public function clean(array &$params)
+    public function apply(array $params, ReferenceTable $refs): bool
     {
-        unset($params['page']);
-    }
-
-    public function apply(Graph\App $graph, array $params): bool
-    {
-        $qb = $graph->getQueryBuilder();
         $page = $params['page'];
-        $size = $graph->getMaxPageSize();
-        $ref = $graph->getBaseRef();
+        $size = $this->driver->getDefaultPageSize();
+        $ref = $refs->getBaseRef();
         $schema = $ref->getSchema();
+        $qb = $this->getQueryBuilder();
 
         $qb->andWhere($qb->expr()->gt(
-            $ref->getRef() . '.' . $schema->getId(),
+            $ref . '.' . $schema->getId(),
             $qb->createNamedParameter($page['cursor'])
         ));
 

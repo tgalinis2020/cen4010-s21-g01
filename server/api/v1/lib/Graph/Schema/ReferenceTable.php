@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ThePetPark\Library\Graph\Schema;
 
 use Psr\Container\ContainerInterface;
+use ThePetPark\Library\Graph\AbstractDriver;
 use ThePetPark\Library\Graph\Schema;
 
 use function substr;
@@ -12,8 +13,6 @@ use function strrchr;
 
 class ReferenceTable implements ContainerInterface
 {
-    const REF_PREFIX = 't';
-
     /**
      * Reference number of most recently enumerated value.
      * 
@@ -24,7 +23,7 @@ class ReferenceTable implements ContainerInterface
     /**
      * Token-to-reference map.
      * 
-     * @var Schema\Reference[]
+     * @var \ThePetPark\Library\Graph\Schema\Relationship[]
      */
     protected $references = [];
 
@@ -37,24 +36,19 @@ class ReferenceTable implements ContainerInterface
     protected $parentRefs = [];
 
     /**
-     * Maps a reference to the type of resource its pointing to.
+     * Source of all data. Must be a Schema reference, not a relationship.
      * 
-     * @var string[]
+     * @var \ThePetPark\Library\Graph\Schema\Reference
      */
-    //protected $resourceTypes = [];
+    protected $sourceRef;
 
     /**
-     * The source of everything. Its value will be used as a prefix for all
-     * references added to this table.
+     * The source of data to select from.
      * 
-     * @var string
-     */
-    protected $tokenPrefix;
-
-    /**
-     * The source of data.
+     * Normally it is the source reference but it will change if requesting a
+     * derived resource.
      * 
-     * @var Schema\Reference
+     * @var \ThePetPark\Library\Graph\Schema\Reference
      */
     protected $baseRef;
 
@@ -70,12 +64,13 @@ class ReferenceTable implements ContainerInterface
     /**
      * Initialize the reference table using provided token.
      */
-    public function init(string $type)
+    public function init(string $type, AbstractDriver $driver)
     {
         $ref = new Schema\Reference($this->refcount++, $this->schemas->get($type));
         
-        $this->tokenPrefix = $type;
-        $this->references[$type] = $this->baseRef = $ref;
+        $this->sourceRef = $this->baseRef = $ref;
+
+        $driver->init($ref);
 
         return $ref;
     }
@@ -90,83 +85,52 @@ class ReferenceTable implements ContainerInterface
         return isset($this->references[$token]);
     }
 
-    // BEGIN(Reftable methods)
     /**
-     * Creating new references results in a new reference ID.
+     * Adds related schema to the driver's query and generates a new unique
+     * reference for the relationship.
      */
-    public function createRef(string $token, Schema\Reference $parent): Schema\Relationship
-    {
+    public function resolve(
+        string $token,
+        Schema\Reference $source,
+        AbstractDriver $driver
+    ): Schema\Relationship {
         $id = $this->refcount++;
-        $token = $this->tokenPrefix . '.' . $token;
 
-        $name = substr(strrchr($token, '.'), 1) ?: '';
-        list($mask, $resourceType, $link) = $parent->getSchema()
-            ->getRelationship($name);
+        $name = substr(strrchr($token, '.') ?: '', 1) ?: $token;
+        
+        list($mask, $type, $link) = $source->getSchema()->getRelationship($name);
 
-        $ref = new Schema\Relationship(
+        $related = new Schema\Relationship(
             $id,
             $name,
             $link,
             $mask,
-            $this->schemas->get($resourceType)
+            $this->schemas->get($type)
         );
 
-        $this->references[$token] = $ref;
-        $this->parentRefs[$id] = $parent;
-        //$this->resourceTypes[$id] = $resourceType;
-        
-        // Keep track of child-to-parent relationships; required for propagating
-        // data to the parent resource's rel map.
+        $this->references[$token] = $related;
+        $this->parentRefs[$id] = $source;
 
-        // If a parent is provided, a relationship name *should* be
-        // available. Relationship tokens are delimited with a period.
-        //$this->relationshipNames[$id] = $relationshipName;
+        $driver->resolve($source, $related);
 
-        /*$this->raw[$id] = [];
-        $this->data[$id] = [];
-        $this->relationships[$id] = [];*/
-
-        return $ref;
-    }
-
-    public function getResourceType(string $ref): string
-    {
-        return $this->resourceTypes[$ref];
-    }
-
-    public function getRelationshipName(string $ref): string
-    {
-        return $this->relationshipNames[$ref];
-    }
-
-    public function hasRefForToken(string $token): bool
-    {
-        return isset($this->references[$token]);
-    }
-
-    public function getRefByToken(string $token): Schema\Reference
-    {
-        return $this->references[$token];
-    }
-
-    public function getSchemaById(string $id)
-    {
-        return $this->references[$id]->getSchema()->getType();
+        return $related;
     }
 
     /**
      * If selecting data derived from a resource's relationship, the
      * reference to the relationship should be promoted to the base reference.
      * 
-     * Unset the relationship's row in parentRefs to avoid propegating
+     * Unset the relationship's row in parentRefs to avoid propagating
      * relationship data to a resource that isn't selected.
      */
     public function setBaseRef(Schema\Relationship $ref)
     {
         $this->baseRef = $ref;
-        $this->tokenPrefix .= '.' . $ref->getName();
+    }
 
-        unset($this->parentRefs[$ref]);
+    public function setParentRef(Schema\Relationship $ref, Schema\Reference $parent)
+    {
+        $this->parentRefs[$ref->getRef()] = $parent;
     }
 
     public function getBaseRef(): Schema\Reference
@@ -174,47 +138,41 @@ class ReferenceTable implements ContainerInterface
         return $this->baseRef;
     }
 
-    public function scan(array $raw)
+    public function scan(AbstractDriver $driver): array
     {
-        $ref = $this->baseRef;
-        $refID = $ref->getRef();
-        $prefix = $refID. '_';
+        $prefix = $this->baseRef . '_';
         $data = [];
 
-        foreach ($raw as $record) {
+        foreach ($driver->fetchAll() as $record) {
             $resourceID = $record[$prefix . 'id'];
+            $data[$resourceID] = [];
 
-            // Ignore duplicates. There may be many of them!
-            if (isset($data[$refID][$resourceID]) === false) {
-                $data[$refID][$resourceID] = [];
-
-                foreach ($ref->getSchema()->getAttributes() as $attr) {
-                    $data[$refID][$attr] = $record[$prefix . $attr];
-                }
+            foreach ($this->baseRef->getSchema()->getAttributes() as $attr) {
+                $data[$resourceID][$attr] = $record[$prefix . $attr];
             }
         }
 
         return $data;
     }
 
-    public function scanIncluded(array $raw)
+    public function scanIncluded(AbstractDriver $driver): array
     {
         $data = [];
         $relationships = [];
 
         // Initialize data and relationship collections using the list of
         // child-to-parent references.
-        foreach ($this->parentRefs as $refID => $parentRef) {
-            $data[$refID] = [];
+        foreach ($this->parentRefs as $childRefID => $parentRef) {
+            $data[$childRefID] = [];
 
-            if (isset($relationships[$parentRef]) === false) {
-                $relationships[$parentRef] = [];
+            if (isset($relationships[$parentRef->getRef()]) === false) {
+                $relationships[$parentRef->getRef()] = [];
             }
 
-            $relationships[$parentRef][$refID] = [];
+            $relationships[$parentRef->getRef()][$childRefID] = [];
         }
     
-        foreach ($raw as $record) {
+        foreach ($driver->fetchAll() as $record) {
             foreach ($this->parentRefs as $refID => $parentRef) {
                 $ref = $this->references[$refID];
                 $prefix = $ref->getRef() . '_';
@@ -223,7 +181,7 @@ class ReferenceTable implements ContainerInterface
                 // Ignore duplicates. There may be many of them!
                 if (isset($data[$refID][$resourceID]) === false) {
                     $data[$refID][$resourceID] = [];
-                    $relationships[$parentRef][$refID][] = $resourceID;
+                    $relationships[$parentRef->getRef()][$refID][] = $resourceID;
 
                     foreach ($ref->getSchema()->getAttributes() as $attr) {
                         $data[$refID][$attr] = $record[$prefix . $attr];

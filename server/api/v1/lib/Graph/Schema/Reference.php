@@ -4,34 +4,38 @@ declare(strict_types=1);
 
 namespace ThePetPark\Library\Graph\Schema;
 
-use ThePetPark\Library\Graph;
+use ThePetPark\Library\Graph\Schema;
 
 class Reference
 {
-    /** @var \ThePetPark\Library\Graph\Schema */
-    protected $schema;
+    /** @var string */
+    protected $prefix;
 
     /** @var int */
     protected $ref;
 
-    public function __construct(int $id, Graph\Schema $schema)
+    /** @var \ThePetPark\Library\Graph\Schema */
+    protected $schema;
+
+    public function __construct(int $id, Schema $schema, string $prefix = 'r')
     {
         $this->ref = $id;
         $this->schema = $schema;
+        $this->prefix = $prefix;
     }
 
-    public function getRef(): string
+    public function getRef(): int
     {
-        return 'r' . $this->ref;
+        return $this->ref;
     }
 
-    public function getSchema(): Graph\Schema
+    public function getSchema(): Schema
     {
         return $this->schema;
     }
 
     public function __toString(): string
     {
-        return $this->getRef();
+        return $this->prefix . $this->ref;
     }
 }

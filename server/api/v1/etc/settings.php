@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use ThePetPark\Library\Graph;
+use ThePetPark\Library\Graph\Drivers\Doctrine\Features;
 
 /**
  * Slim application settings along with configuation for third-party
@@ -48,14 +48,20 @@ return (function () {
 
             'graph' => [
                 'definitions' => __DIR__ . '/../var/cache/graph.cache',
-                'pagination' => [
-                    'pageSize' => 15,
+
+                'driver' => [
+                    'settings' => [
+                        'defaultPageSize' => 15,
+                    ],
+
+                    'features' => [
+                        Features\Pagination\CursorStrategy::class,
+                        Features\Pagination\PageStrategy::class,
+                        Features\Pagination\OffsetLimitStrategy::class,
+                        Features\Filters::class,
+                        Features\Sorting::class,
+                    ],
                 ],
-                'features' => [
-                    Graph\Features\Pagination\Cursor::class,
-                    Graph\Features\Filters\Advanced::class,
-                    Graph\Features\Sorting\Simple::class,
-                ]
             ],
         ],
     ];
