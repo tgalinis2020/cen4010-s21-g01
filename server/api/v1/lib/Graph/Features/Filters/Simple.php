@@ -33,63 +33,47 @@ class Simple implements Graph\FeatureInterface
 
         foreach ($params['filter'] as $field => $value) {
             $ref = $graph->getBaseRef();
-            $schema = $graph->getSchemaByRef($ref);
-
-            // TOOD: parse provided field. Fields can be attributes of
-            // the resource or attributes of a resource from a resolved
-            // relationship. Might have to add joins to apply the filter.
-            // If this is the case, add the new reference to the ref map.
             $tokens = explode('.', $field);
-            $attr = array_pop($tokens);
+            $attribute = array_pop($tokens);
             $delim = '';
             $token = '';
 
             foreach ($tokens as $r) {
                 $token .= $delim . $r;
 
-                if ($graph->hasRefForToken($token)) {
-
-                    $ref = $graph->getRefByToken($token);
-                    $schema = $graph->getSchemaByRef($ref);
-                    
-                } else {
-
-                    list($schema, $ref, $mask) = $graph->resolve($r, $ref);
-
-                }
+                $ref = $graph->hasRefForToken($token)
+                    ? $graph->getRefByToken($token)
+                    : $graph->resolve($r, $ref);
 
                 $delim = '.';
             }
 
-            if ($schema->hasAttribute($attr)) {
+            if ($attribute === 'id') {
 
-                $attr = $schema->getImplAttribute($attr);
+                $attribute = $ref->getSchema()->getId();
 
-            } elseif ($schema->hasRelationship($attr)) {
+            } elseif ($ref->getSchema()->hasAttribute($attribute)) {
 
-                $token .= $delim . $attr;
+                $attribute = $ref->getSchema()->getImplAttribute($attribute);
 
-                if ($graph->hasRefForToken($attr)) {
+            } elseif ($ref->getSchema()->hasRelationship($attribute)) {
 
-                    $ref = $graph->getRefByToken($token);
-                    $schema = $graph->getSchemaByRef($ref);
-                    
-                } else {
-                    
-                    list($schema, $ref, $mask) = $graph->resolve($attr, $ref);
-                        
-                }
+                $token = $delim . $attribute;
                 
-                $attr = $schema->getId();
+                $ref = $graph->hasRefForToken($token)
+                    ? $graph->getRefByToken($token)
+                    : $graph->resolve($r, $ref);
+
+                $attribute = $ref->getSchema()->getId();
 
             } else {
 
                 return false; // Malformed expression, attribute does not exist
             
             }
-
+            
             $qb->andWhere($qb->expr()->eq(
-                $ref . '.' . $attr,
+                $ref . '.' . $attribute,
                 $qb->createNamedParameter($value)
             ));
         }

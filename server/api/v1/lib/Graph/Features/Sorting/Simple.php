@@ -43,7 +43,7 @@ class Simple implements Graph\FeatureInterface
             }
 
             $ref = $graph->getBaseRef();
-            $schema = $graph->getSchemaByRef($ref);
+            $schema = $ref->getSchema();
 
             if ($schema->hasAttribute($attr)) {
                 $attr = $schema->getImplAttribute($attr);
@@ -51,7 +51,7 @@ class Simple implements Graph\FeatureInterface
                 return false;
             }
 
-            $qb->addOrderBy($ref . '.' . $attr, $order);
+            $qb->addOrderBy($ref->getRef() . '.' . $attr, $order);
         }
 
         return true;

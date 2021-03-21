@@ -29,10 +29,10 @@ class Cursor implements FeatureInterface
         $page = $params['page'];
         $size = $graph->getMaxPageSize();
         $ref = $graph->getBaseRef();
-        $resource = $graph->getSchemaByRef($ref);
+        $schema = $ref->getSchema();
 
         $qb->andWhere($qb->expr()->gt(
-            $ref . '.' . $resource->getId(),
+            $ref->getRef() . '.' . $schema->getId(),
             $qb->createNamedParameter($page['cursor'])
         ));
 

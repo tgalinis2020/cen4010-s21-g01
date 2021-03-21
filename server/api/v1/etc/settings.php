@@ -49,7 +49,7 @@ return (function () {
             'graph' => [
                 'definitions' => __DIR__ . '/../var/cache/graph.cache',
                 'pagination' => [
-                    'maxPageSize' => 15,
+                    'pageSize' => 15,
                 ],
                 'features' => [
                     Graph\Features\Pagination\Cursor::class,

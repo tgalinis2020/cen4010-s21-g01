@@ -4,13 +4,6 @@ declare(strict_types=1);
 
 namespace ThePetPark\Library\Graph;
 
-use Doctrine\DBAL\Query\QueryBuilder;
-
-use ThePetPark\Library\Graph\Relationship as R;
-
-use function sprintf;
-use function array_keys;
-
 /**
  * An abstract representation of the back-end data model.
  * In order to create queries, schemas and the data model need to be one-to-one;
@@ -107,6 +100,10 @@ class Schema
         $self->attributes = $attributes;
         $self->relationships = $relationships;
         $self->actions = $actions;
+        
+        foreach ($attributes as list($attr, $_)) {
+            $self->fields[] = $attr;
+        }
 
         return $self; 
     }
@@ -135,13 +132,12 @@ class Schema
     {
         $attrs = [];
 
-        // Only select specified sparse fields. If none were specified,
-        // return all fields.
+        // If sparse fieldsets were given, not all attributes may be selected.
         foreach ($this->fields as $attr) {
             $attrs[] = $this->attributes[$attr];
         }
     
-        return empty($attrs) ? $this->attributes : $attrs;
+        return $attrs;
     }
 
     public function clearFields()

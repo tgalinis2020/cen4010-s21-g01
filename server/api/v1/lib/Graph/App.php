@@ -13,7 +13,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Exception;
 
-use ThePetPark\Library\Graph\Relationship as R;
+use ThePetPark\Library\Graph\Schema\Relationship as R;
 
 use function file_exists;
 use function class_exists;
@@ -28,9 +28,12 @@ use function in_array;
  * TODO:    This is a monolithic mess! Break up into smaller, interchangeable
  *          components if time allows for it.
  * 
+ * TODO:    In the process of abstracting reftable methods away from app;
+ *          for now, app extends reftable.
+ * 
  * @author Thomas Galinis <tgalinis2020@fau.edu>
  */
-class App implements RequestHandlerInterface, ResponseFactoryInterface
+class App extends Schema\ReferenceTable implements RequestHandlerInterface, ResponseFactoryInterface
 {
     const ACTION_NOT_IMPL = 0;
 
@@ -52,8 +55,8 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
     /** @var \Doctrine\DBAL\Query\QueryBuilder */
     protected $qb;
 
-    /** @var Schema[] */
-    protected $schemas = [];
+    /** @var Schema\Container */
+    protected $schemas;
 
     /** @var string[] */
     protected $actions = [];
@@ -70,74 +73,47 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
     /** @var \Psr\Http\Message\ResponseInterface */
     protected $response;
 
-    /**
-     * Reference number of most recently enumerated value.
-     * 
-     * @var int
-     */
-    protected $refcount = 0;
-
-    /**
-     * Token-to-reference map.
-     * 
-     * @var array
-     */
-    protected $references = [];
-
-    /**
-     * Reference-to-relationship name map. A name in this array corresponds to
-     * the name of the relationship in the parent of index reference.
-     * 
-     * @var array
-     */
-    protected $relationshipNames = [];
-
-    /**
-     * Reference-to-parent reference map. Required for propagating relationship
-     * data to the parent resource.
-     * 
-     * @var array
-     */
-    protected $parentRefs = [];
-
-    /**
-     * Maps a reference to the type of resource its pointing to.
-     * 
-     * @var array
-     */
-    protected $resourceTypes = [];
-
-    /**
-     * The source of every resource. Its value will be used as a prefix for all
-     * references added to the reference table.
-     * 
-     * @var string
-     */
-    protected $tokenPrefix;
-
-    /**
-     * Reference to the source of data.
-     * 
-     * @var string
-     */
-    protected $baseRef;
-
-    public function __construct(
+    public static function create(
         Connection $conn,
         ResponseInterface $response,
         array $settings = [],
         $container = null
     ) {
-        $this->qb = $conn->createQueryBuilder();
-        $this->response = $response;
-        $this->container = $container;
+        $_actions = [];
+        $_schemas = [];
+        $_nactions = 0;
+
+        if ((($f = $settings['definitions']) !== null) && file_exists($f)) {
+            list($actions, $schemas) = (require $f);
         
+            foreach ($actions as $action) {
+                $_actions[$_nactions++] = $action;
+            }
+            
+            foreach ($schemas as $schema) { 
+                $s = Schema::fromArray($schema);
+                $_schemas[$s->getType()] = $s;
+            }
+        } else {
+            throw new Exception(
+                'Compiled definitions file is required to initialize the Graph. '
+                . 'Create a YAML definitions file and use bin/graph to compile them.'
+            );
+        }
+
+        $self = new self(new Schema\Container($_schemas));
+
+        $self->qb = $conn->createQueryBuilder();
+        $self->response = $response;
+        $self->container = $container;
+        $self->nactions = $_nactions;
+        $self->actions = $_actions;
         $pagination = $settings['pagination'] ?? [];
 
-        $this->settings = [
+        $self->settings = [
             'definitions' => $settings['definitions'] ?? null,
             'pagination' => [
-                'maxPageSize' => $pagination['maxPageSize'] ?? 20,
+                'pageSize' => $pagination['pageSize'] ?? 20,
             ],
             'features' => $settings['features'] ?? [
                 Features\Pagination\Cursor::class,
@@ -146,19 +122,17 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
             ],
         ];
 
-        if ((($f = $this->settings['definitions']) !== null) && file_exists($f)) {
-            $this->parseArray(require $f);
-        } else {
-            throw new Exception(
-                'Compiled definitions file is required to initialize the Graph. '
-                . 'Create a YAML definitions file and use bin/graph to compile them.'
-            );
-        }
+        return $self;
     }
 
     public function getQueryBuilder(): QueryBuilder
     {
         return $this->qb;
+    }
+
+    public function getFeatures(): array
+    {
+        return $this->settings['features'];
     }
 
     /**
@@ -170,7 +144,7 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
      * must be a fully qualified name of a class that implements the
      * ActionInterface.
      */
-    private function parseArray(array $definitions)
+    /*private function parseArray(array $definitions)
     {
         list($actions, $schemas) = $definitions;
         
@@ -181,84 +155,61 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
         foreach ($schemas as $schema) {
             $this->addSchema(Schema::fromArray($schema));
         }
-    }
-
-    public function applyFeatures(QueryBuilder $queryBuilder, array &$parameters)
-    {
-        foreach ($this->settings['features'] as $feature) {
-            $feat = new $feature;
-
-            if ($feat->check($parameters)) {
-                $feat->apply($this, $queryBuilder, $parameters);
-                $feat->clean($parameters);
-            }
-        }
-    }
-
-    /**
-     * Sets provided schema as the source of the output. This must be called only
-     * once on the source resource.
-     */
-    public function init(string $resourceType): array
-    {
-        $schema = $this->getSchema($resourceType);
-
-        $this->qb->select()->distinct()
-            ->from($schema->getImplType(), $this->baseRef);
-
-        return [$schema, $this->baseRef];
-    }
+    }*/
 
     /**
      * Adds selections to the query based on this schema's attributes.
      * Use provided enumeration $ref to uniquely identify the selected resource.
-     * 
-     * Should only be called once.
      */
-    public function prepare(Schema $schema, string $ref)
+    public function prepare(Schema\Reference $source)
     {
+        $schema = $source->getSchema();
+
         // Always select the resource's ID.
-        $this->qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $ref, $schema->getId(), 'id'));
+        $this->qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s',
+            $source->getRef(),
+            $schema->getId(),
+            'id'
+        ));
 
         // Add the attributes to the select statement, aliasing the fields
         // as {resource ref}_{resource attribute}
         foreach ($schema->getAttributes() as list($attr, $impl)) {
-            $this->qb->addSelect(sprintf('%1$s.%2$s %1$s_%3$s', $ref, $impl, $attr));
+            $this->qb->addSelect(sprintf(
+                '%1$s.%2$s %1$s_%3$s',
+                $source->getRef(),
+                $impl,
+                $attr
+            ));
         }
     }
 
-    public function prepareIncluded(Schema $schema, string $ref, string $parentRef)
+    public function prepareIncluded(Schema\Relationship $relationship, Schema\Reference $parent)
     {
-        $this->parentRefs[$ref] = $parentRef;
-        $this->prepare($schema, $ref);
+        $this->parentRefs[$relationship->getRef()] = $parent;
+        $this->prepare($relationship);
     }
 
     /**
      * Adds related schema to the query.
      * Creates a new reference in the graph's reference table.
-     * 
-     * This resource's enumerated value (self) must have already been added
-     * beforehand either by Schema::initialize or Schema::resolve.
      */
-    public function resolve(string $relationship, string $ref): array
-    {
-        $schema = $this->getSchemaByRef($ref);
+    public function resolve(string $relationship, Schema\Reference $source): Schema\Relationship
+    {        
+        $related = $this->createRef($relationship, $source); // Reftable
+        $link = $related->getLink();
 
-        list($mask, $relatedType, $link) = $schema->getRelationship($relationship);
-
-        $relatedSchema = $this->getSchema($relatedType);
-        $relatedRef = $this->createRef($relationship, $relatedType, $ref);
-
+        // BEGIN(DRIVER CODE)
         // TODO: Theoretically resource ownership and aggregation types
         //       should have no effect in relationships following a chain of
         //       relationships. Verify this is true!
         if (is_array($link)) {
 
-            $joinOn = $ref;
-            $joinOnField = $schema->getId();
+            $joinOn = $source->getRef();
+            $joinOnField = $source->getSchema()->getId();
             
             foreach ($link as $i => list($pivot, $from, $to)) {
-                $pivotEnum = $ref . '_' . $relatedRef . '_' . $i; // pivots need their own relation enums
+                $pivotEnum = $source->getRef() . '_' . $related->getRef() . '_' . $i; // pivots need their own relation enums
                 
                 $this->qb->innerJoin($joinOn, $pivot, $pivotEnum, $this->qb->expr()->eq(
                     $joinOn    . '.' . $joinOnField,
@@ -275,132 +226,51 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
             //       the future.
             $this->qb->innerJoin(
                 $joinOn,
-                $relatedSchema->getImplType(),
-                $relatedRef,
+                $related->getSchema()->getImplType(),
+                $related->getRef(),
                 $this->qb->expr()->eq(
-                    $joinOn     . '.' . $joinOnField,
-                    $relatedRef . '.'. $relatedSchema->getId()
+                    $joinOn            . '.' . $joinOnField,
+                    $related->getRef() . '.'. $related->getSchema()->getId()
                 )
             );
 
         } else {
 
-            $sourceField  = $ref        . '.';
-            $relatedField = $relatedRef . '.';
+            $sourceField  = $source->getRef()  . '.';
+            $relatedField = $related->getRef() . '.';
 
-            if ($mask & (R::MANY|R::OWNS)) {
+            if ($related->getType() & (R::MANY|R::OWNS)) {
                 // foreign key is in related resource (resource owns another if
                 // there exists a foreign key in the related resource)
-                $sourceField  .= $schema->getId();
+                $sourceField  .= $source->getSchema()->getId();
                 $relatedField .= $link;
             } else {
                 // foreign key is in this resource (resource is owned by related)
                 $sourceField  .= $link;
-                $relatedField .= $relatedSchema->getId();
+                $relatedField .= $related->getSchema()->getId();
             }
 
             $this->qb->innerJoin(
-                $ref,
-                $relatedSchema->getImplType(),
-                $relatedRef,
+                $source->getRef(),
+                $related->getSchema()->getImplType(),
+                $related->getRef(),
                 $this->qb->expr()->eq($sourceField, $relatedField)
             );
 
         }
+        // END(DRIVER CODE)
 
-        return [$relatedSchema, $relatedRef, $mask];
+        return $related;
     }
 
     public function getMaxPageSize(): int
     {
-        return $this->settings['pagination']['maxPageSize'];
+        return $this->settings['pagination']['pageSize'];
     }
 
     public function getSchema(string $resource)
     {
-        return $this->schemas[$resource] ?? null;
-    }
-
-    public function addSchema(Schema $schema)
-    {
-        $this->schemas[$schema->getType()] = $schema;
-    }
-
-    public function createRef(string $token, string $resourceType, string $parentRef)
-    {
-        $ref = self::REF_PREFIX . (++$this->refcount);
-        $token = $this->tokenPrefix . '.' . $token;
-
-        $this->references[$token] = $ref;
-        $this->resourceTypes[$ref] = $resourceType;
-        
-        // Keep track of child-to-parent relationships; required for propagating
-        // data to the parent resource's rel map.
-        $this->parentRefs[$ref] = $parentRef;
-
-        // If a parent is provided, a relationship name *should* be
-        // available. Relationship tokens are delimited with a period.
-        $this->relationshipNames[$ref] = substr(strrchr($token, '.'), 1) ?: '';
-
-        $this->raw[$ref] = [];
-        $this->data[$ref] = [];
-        $this->relationships[$ref] = [];
-
-        return $ref;
-    }
-
-    public function getResourceType(string $ref): string
-    {
-        return $this->resourceTypes[$ref];
-    }
-
-    public function getRelationshipName(string $ref): string
-    {
-        return $this->relationshipNames[$ref];
-    }
-
-    public function hasRefForToken(string $token): bool
-    {
-        return isset($this->references[$token]);
-    }
-
-    public function getRefByToken(string $token): string
-    {
-        return $this->references[$token];
-    }
-    
-    public function getSchemaByRef(string $ref)
-    {
-        return $this->schemas[$this->getResourceType($ref)];
-    }
-
-    /**
-     * If selecting data derived from a resource's relationship, the
-     * reference to the relationship should be promoted to the base reference.
-     */
-    public function promote(string $relationship)
-    {
-        list($schema, $ref, $mask) = $this->resolve($relationship, $this->baseRef);
-
-        $this->baseRef = $ref;
-        $this->tokenPrefix .= '.' . $this->relationshipNames[$ref];
-
-        return [$schema, $ref, $mask];
-    }
-
-    public function getBaseRef(): string
-    {
-        return $this->baseRef;
-    }
-
-    public function getLatestRef(): string
-    {
-        return self::REF_PREFIX . $this->refcount;
-    }
-
-    public function getRootRef(): string
-    {
-        return self::REF_PREFIX . '0';
+        return $this->schemas->get($resource);
     }
     
     public function createResponse(int $code = 200, string $reasonPhrase = ''): ResponseInterface
@@ -410,27 +280,10 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
             ->withStatus($code, $reasonPhrase);
     }
 
-    public function scanIncluded(array $raw)
-    {
-        foreach ($this->parentRefs as $ref => $parentRef) {
-            $schema = $this->getSchemaByRef($ref);
-            $prefix = $ref . '_';
-            $id = $prefix . 'id';
-            $type = $this->resourceTypes[$ref];
-
-            foreach ($schema->getAttributes() as $attribute) {
-                $value = $raw[$prefix . $attribute];
-                
-                // TODO: some refs might not have been used to select data.
-                //       this can happen when applying filters!
-            }
-        }
-    }
-
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $source  = $request->getAttribute(self::PARAM_RESOURCE);
-        $schema  = $this->getSchema($source);
+        $source = $request->getAttribute(self::PARAM_RESOURCE);
+        $schema = $this->schemas->get($source);
         
         if ($schema === null) {
             // TODO: consider making handers that can handle this event.
@@ -445,7 +298,6 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
         
         $context = $request->getAttribute(self::PARAM_CONTEXT);
         $actionClass = $this->actions[$schema->getActionKey($context, $method)];
-        $ref = $this->getLatestRef();
 
         if ($this->container !== null) {
             $action = $this->container->get($actionClass);
@@ -457,14 +309,6 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
                 $actionClass
             ));
         }
-
-        // Initialize graph reference table properties
-        $this->baseRef = $ref;
-        $this->tokenPrefix = $source;
-        $this->resourceTypes[$ref] = $source;
-        $this->raw[$ref] = [];
-        $this->data[$ref] = [];
-        $this->relationships[$ref] = [];
         
         return $action->execute($this, $request);
     }

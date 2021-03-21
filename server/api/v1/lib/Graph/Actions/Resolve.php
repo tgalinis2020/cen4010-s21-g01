@@ -8,7 +8,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
 use ThePetPark\Library\Graph;
-use ThePetPark\Library\Graph\Relationship as R;
+use ThePetPark\Library\Graph\Schema\Relationship as R;
 
 use function explode;
 use function count;
@@ -57,13 +57,17 @@ class Resolve implements Graph\ActionInterface
         $data = [];
         $amount = R::MANY;
 
-        list($baseSchema, $baseRef) = $graph->init($type);
+        $base = $graph->init($type);
+
+        $qb->select()->distinct()
+            ->from($base->getSchema()->getImplType(), $base->getRef());
         
 
         if ($resourceID !== null) {
 
+            //$driver->select($resourceID);
             $qb->andWhere($qb->expr()->eq(
-                $baseRef . '.' . $baseSchema->getId(),
+                $base->getRef() . '.' . $base->getSchema()->getId(),
                 $qb->createNamedParameter($resourceID)
             ));
 
@@ -73,9 +77,13 @@ class Resolve implements Graph\ActionInterface
                 //list($baseSchema, $baseRef, $mask) = $graph->resolve($relationship, $baseRef, $qb);
                 
                 // Promote relationship to the context of the query.
-                list($baseSchema, $baseRef, $mask) = $graph->promote($relationship);
+                $base = $graph->resolve($relationship, $base/*, $driver*/);
+                
+                // baseRef now points to the relationship's reference.
+                // Set it as the new context of the query.
+                $graph->setBaseRef($base);
 
-                if ($mask & R::ONE) {
+                if ($base->getType() & R::ONE) {
                     $amount = R::ONE;
                 }
 
@@ -86,8 +94,16 @@ class Resolve implements Graph\ActionInterface
         
         }
 
-        $graph->prepare($baseSchema, $baseRef);
-        $graph->applyFeatures($qb, $params);
+        $graph->prepare($base);
+
+        foreach ($graph->getFeatures() as $feature) {
+            $feat = new $feature;
+
+            if ($feat->check($params)) {
+                $feat->apply($graph, $params);
+                $feat->clean($params);
+            }
+        }
 
         if ($amount === R::ONE) {
             $qb->setMaxResults(1);
@@ -95,20 +111,11 @@ class Resolve implements Graph\ActionInterface
         
         $mainSQL = $qb->getSQL();
 
-
         //$data[$ref] = $qb->execute()->fetchAll(FetchMode::ASSOCIATIVE);
-        $data[$baseRef] = [
-            ['id' =>   0],
-            ['id' => 100],
-        ];
-
-        // TODO: remove prefix from results
+        //$data[$ref] = $reftable->getData($driver);
+        $data[$base->getRef()] = [['id' =>   0], ['id' => 100]];
         
-        // TODO: propagate relationships to parent, if applicable
-        // (might be able to do this while removing prefixes)
-
-        
-        $resolved = $data[$baseRef];
+        $resolved = $data[$base->getRef()];
         $rowCount = count($resolved);
 
         if ($rowCount > 0 && isset($params['include'])) {
@@ -117,18 +124,18 @@ class Resolve implements Graph\ActionInterface
             // Create a new query based on retrieved data.
             $qb->resetQueryParts(['select', 'distinct', 'orderBy']);
             $qb->setMaxResults(null);
+            //$driver->reset();
 
             foreach (explode(',', $params['include']) as $included) {
-                $ref = $baseRef;
-                $schema = $baseSchema;
+                $ref = $base;
                 $token = '';
                 $delim = '';
                 
-                foreach (explode('.', $included) as $rel) {
-                    $token .= $delim . $rel;
+                foreach (explode('.', $included) as $relationship) {
+                    $token .= $delim . $relationship;
                     $relatedRef = null;
 
-                    if ($schema->hasRelationship($rel) === false) {
+                    if ($ref->getSchema()->hasRelationship($relationship) === false) {
 
                         // If provided token isn't a valid relationship,
                         // stop here. TODO: might be worth deferring error
@@ -136,31 +143,28 @@ class Resolve implements Graph\ActionInterface
                         return $response->withStatus(400);
                     
                     }
-                    
+    
                     // A resource may have already been resolved (joined in
                     // the query) if it was used in a filter.
-                    if ($graph->hasRefForToken($token)) {
-
-                        $relatedRef = $graph->getRefByToken($token);
-                        $schema = $graph->getSchemaByRef($relatedRef);
-                        
-                    } else {
-
-                        list($schema, $relatedRef, $mask) = $graph->resolve($rel, $ref);
-                        
-                    }
-                    
-                    $graph->prepareIncluded($schema, $relatedRef, $ref);
+                    $relatedRef = $graph->hasRefForToken($token)
+                        ? $graph->getRefByToken($token)
+                        : $graph->resolve($relationship, $ref/*, $driver*/);
+            
+                    $graph->prepareIncluded($relatedRef, $ref);
+                    //$reftable->setParentRef($relatedRef, $ref);
+                    //$driver->prepareIncluded($relatedRef, $ref);
 
                     $ref = $relatedRef;
                     $delim = '.';
                 }
             }
+            
+            //$reftable->getIncluded($driver);
 
             // No need to constrain the second query any further if there's
             // only one result.
             if ($rowCount > 1) {
-                $idField = $baseRef . '.' . $baseSchema->getId();
+                $idField = $base->getRef() . '.' . $base->getSchema()->getId();
 
                 // Only include data relevant to the previously fetched data.
                 $qb->andWhere($qb->expr()->andX(
@@ -168,12 +172,6 @@ class Resolve implements Graph\ActionInterface
                     $qb->expr()->lte($idField, $resolved[$rowCount - 1]['id'])
                 ));
             }
-
-            /*
-            foreach ($qb->execute()->fetchAll() as $record) {
-                $graph->scanIncluded($record);
-            }
-            //*/
         }
 
         // TODO: serialize raw data and relationships to a JSONAPI document

@@ -45,7 +45,6 @@ class Advanced implements Graph\FeatureInterface
 
         foreach ($params['filter'] as $fieldAndFilter => $value) {
             $ref = $graph->getBaseRef();
-            $schema = $graph->getSchemaByRef($ref);
             $tokens = explode(':', $fieldAndFilter);
 
             if (count($tokens) > 2) {
@@ -66,44 +65,30 @@ class Advanced implements Graph\FeatureInterface
             foreach ($tokens as $r) {
                 $token .= $delim . $r;
 
-                if ($graph->hasRefForToken($token)) {
-
-                    $ref = $graph->getRefByToken($token);
-                    $schema = $graph->getSchemaByRef($ref);
-                    
-                } else {
-
-                    list($schema, $ref, $mask) = $graph->resolve($r, $ref);
-
-                }
+                $ref = $graph->hasRefForToken($token)
+                    ? $graph->getRefByToken($token)
+                    : $graph->resolve($r, $ref);
 
                 $delim = '.';
             }
 
             if ($attribute === 'id') {
 
-                $attribute = $schema->getId();
+                $attribute = $ref->getSchema()->getId();
 
-            } elseif ($schema->hasAttribute($attribute)) {
+            } elseif ($ref->getSchema()->hasAttribute($attribute)) {
 
-                $attribute = $schema->getImplAttribute($attribute);
+                $attribute = $ref->getSchema()->getImplAttribute($attribute);
 
-            } elseif ($schema->hasRelationship($attribute)) {
+            } elseif ($ref->getSchema()->hasRelationship($attribute)) {
 
                 $token = $delim . $attribute;
                 
-                if ($graph->hasRefForToken($token)) {
+                $ref = $graph->hasRefForToken($token)
+                    ? $graph->getRefByToken($token)
+                    : $graph->resolve($r, $ref);
 
-                    $ref = $graph->getRefByToken($token);
-                    $schema = $graph->getSchemaByRef($ref);
-                    
-                } else {
-
-                    list($schema, $ref, $mask) = $graph->resolve($r, $ref);
-
-                }
-
-                $attribute = $schema->getId();
+                $attribute = $ref->getSchema()->getId();
 
             } else {
 
@@ -112,7 +97,7 @@ class Advanced implements Graph\FeatureInterface
             }
             
             $qb->andWhere($qb->expr()->comparison(
-                $ref . '.' . $attribute,
+                $ref->getRef() . '.' . $attribute,
                 self::SUPPORTED_FILTERS[$filter],
                 $qb->createNamedParameter($value)
             ));

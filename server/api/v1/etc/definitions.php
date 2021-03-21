@@ -38,7 +38,10 @@ return [
     }),
 
     Graph\Adapters\Slim\Adapter::class => factory(function (ContainerInterface $c) {
-        $graph = new Graph\App(
+        
+        // TODO: use default constructor when Graph components have been
+        // successfully decoupled.
+        $graph = Graph\App::create(
             $c->get(DBAL\Connection::class),
             $c->get('response'),
             $c->get('settings')['graph']
