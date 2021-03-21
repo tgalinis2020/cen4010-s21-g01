@@ -67,9 +67,19 @@ class Simple implements Graph\FeatureInterface
 
             } elseif ($schema->hasRelationship($attr)) {
 
-                $relationship = $schema->getRelationship($attr);
-                $ref = $relationship->getRef();
-                $schema = $relationship->getSchema();
+                $token .= $delim . $attr;
+
+                if ($graph->hasRefForToken($attr)) {
+
+                    $ref = $graph->getRefByToken($token);
+                    $schema = $graph->getSchemaByRef($ref);
+                    
+                } else {
+                    
+                    list($schema, $ref, $mask) = $graph->resolve($attr, $ref);
+                        
+                }
+                
                 $attr = $schema->getId();
 
             } else {

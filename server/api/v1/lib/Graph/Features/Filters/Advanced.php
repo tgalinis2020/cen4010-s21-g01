@@ -90,9 +90,19 @@ class Advanced implements Graph\FeatureInterface
 
             } elseif ($schema->hasRelationship($attribute)) {
 
-                $relationship = $schema->getRelationship($attribute);
-                $ref = $relationship->getRef();
-                $schema = $relationship->getSchema();
+                $token = $delim . $attribute;
+                
+                if ($graph->hasRefForToken($token)) {
+
+                    $ref = $graph->getRefByToken($token);
+                    $schema = $graph->getSchemaByRef($ref);
+                    
+                } else {
+
+                    list($schema, $ref, $mask) = $graph->resolve($r, $ref);
+
+                }
+
                 $attribute = $schema->getId();
 
             } else {

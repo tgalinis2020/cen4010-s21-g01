@@ -52,19 +52,13 @@ class Resolve implements Graph\ActionInterface
         $type = $request->getAttribute(Graph\App::PARAM_RESOURCE);
         $resourceID = $request->getAttribute(Graph\App::PARAM_ID);
         $relationship = $request->getAttribute(Graph\App::PARAM_RELATIONSHIP);
-
         $response = $graph->createResponse();
-
-        // Initialize sparse fieldsets. They are attributes to select, indexed
-        // by resource type.
-        $sparseFields = [];
+        $qb = $graph->getQueryBuilder();
         $data = [];
-
-        
+        $amount = R::MANY;
 
         list($baseSchema, $baseRef) = $graph->init($type);
-        $amount = R::MANY;
-        $qb = $graph->getQueryBuilder();
+        
 
         if ($resourceID !== null) {
 
@@ -185,7 +179,9 @@ class Resolve implements Graph\ActionInterface
         // TODO: serialize raw data and relationships to a JSONAPI document
 
         // See if the expected query is generated.
-        $includesSQL = isset($params['include']) ? $qb->getSQL() : '(not applicable)';
+        $includesSQL = isset($params['include'])
+            ? $qb->getSQL()
+            : '(not applicable)';
 
         $response->getBody()->write("Query 1:\n$mainSQL\n\nQuery 2:\n$includesSQL");
 
