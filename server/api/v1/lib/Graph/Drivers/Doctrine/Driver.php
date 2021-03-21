@@ -111,7 +111,7 @@ class Driver extends AbstractDriver
         $link = $related->getLink();
 
         if (is_array($link)) {
-            $joinOn = $source;
+            $joinOn = (string) $source;
             $joinOnField = $source->getSchema()->getId();
             
             foreach ($link as $i => list($pivot, $from, $to)) {
@@ -134,7 +134,7 @@ class Driver extends AbstractDriver
             $this->qb->innerJoin(
                 $joinOn,
                 $related->getSchema()->getImplType(),
-                $related,
+                (string) $related,
                 $this->qb->expr()->eq(
                     $joinOn  . '.' . $joinOnField,
                     $related . '.'. $related->getSchema()->getId()
