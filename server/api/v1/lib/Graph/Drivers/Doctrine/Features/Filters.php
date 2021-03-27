@@ -32,13 +32,12 @@ class Filters implements Graph\FeatureInterface
         'ge' => ExpressionBuilder::GTE,
     ];
 
-    public function check(array $params): bool
-    {
-        return isset($params['filter']);
-    }
-
     public function apply(array $params, ReferenceTable $refs): bool
     {
+        if (isset($params['filter']) === false) {
+            return false;
+        }
+
         $qb = $this->driver->getQueryBuilder();
     
         foreach ($params['filter'] as $fieldAndFilter => $value) {
@@ -84,7 +83,7 @@ class Filters implements Graph\FeatureInterface
                 
                 $ref = $refs->has($token)
                     ? $refs->get($token)
-                    : $refs->resolve($r, $ref, $this->driver);
+                    : $refs->resolve($attribute, $ref, $this->driver);
 
                 $attribute = $ref->getSchema()->getId();
 

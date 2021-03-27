@@ -105,6 +105,14 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
     {
         return $this->schemas;
     }
+
+    // Since we're using sequential integers for this project, this is fine.
+    // TODO: create a new component to compare specific ID types, such as
+    // UUIDv1.
+    public function cmp(string $a, string $b): int
+    {
+        return ((int) $a) - ((int) $b);
+    }
     
     public function createResponse(int $code = 200, string $reasonPhrase = ''): ResponseInterface
     {

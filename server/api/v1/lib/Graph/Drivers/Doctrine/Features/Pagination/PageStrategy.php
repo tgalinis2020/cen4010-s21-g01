@@ -16,13 +16,12 @@ class PageStrategy implements Graph\FeatureInterface
 {
     use Graph\Drivers\Doctrine\FeatureTrait;
 
-    public function check(array $params): bool
-    {
-        return isset($params['page'], $params['page']['number']);
-    }
-
     public function apply(array $params, ReferenceTable $refs): bool
     {
+        if (isset($params['page'], $params['page']['number']) === false) {
+            return false;
+        }
+    
         $size = $this->driver->getDefaultPageSize();
         $qb = $this->getQueryBuilder();
         $p = $params['page'];

@@ -17,13 +17,12 @@ class CursorStrategy implements Graph\FeatureInterface
 {
     use Graph\Drivers\Doctrine\FeatureTrait;
 
-    public function check(array $params): bool
-    {
-        return isset($params['page'], $params['page']['cursor']);
-    }
-
     public function apply(array $params, ReferenceTable $refs): bool
     {
+        if (isset($params['page'], $params['page']['cursor']/*, $params['page']['before'], $params['page']['after']*/) === false) {
+            return false;
+        }
+
         $page = $params['page'];
         $size = $this->driver->getDefaultPageSize();
         $ref = $refs->getBaseRef();

@@ -33,7 +33,7 @@ CREATE TABLE user_passwords (
     passwd VARCHAR(255) NOT NULL,
 
     CONSTRAINT passwd_pk PRIMARY KEY (id),
-    CONSTRAINT passwd_users_fk FOREIGN KEY (id) REFERENCES users (id),
+    CONSTRAINT passwd_users_fk FOREIGN KEY (id) REFERENCES users (id)
 );
 
 -- Users specify a pet type and breed when they create a pet.
@@ -63,20 +63,12 @@ CREATE TABLE pets (
     type_id  INTEGER UNSIGNED NOT NULL,
     breed_id INTEGER UNSIGNED,
     user_id INTEGER UNSIGNED NOT NULL,
+    created_at DATETIME NOT NULL,
 
     CONSTRAINT pets_pk PRIMARY KEY (id),
     CONSTRAINT pets_type_fk FOREIGN KEY (type_id) REFERENCES pet_types (id),
     CONSTRAINT pets_breed_fk FOREIGN KEY (breed_id) REFERENCES pet_breeds (id),  
     CONSTRAINT pets_users_fk FOREIGN KEY (user_id) REFERENCES users (id)
-);
-
-CREATE TABLE user_favorite_posts (
-    user_id INTEGER UNSIGNED NOT NULL,
-    post_id INTEGER UNSIGNED NOT NULL,
-
-    CONSTRAINT user_favorite_posts_pk PRIMARY KEY (user_id, post_id),
-    CONSTRAINT favoirte_user_fk FOREIGN KEY (user_id) REFERENCES user (id),
-    CONSTRAINT favoirte_post_fk FOREIGN KEY (post_id) REFERENCES posts (id)
 );
 
 -- User's home feed will be populated by posts from the pets they follow.
@@ -92,40 +84,59 @@ CREATE TABLE subscriptions (
 -- Even though expansion of the app is unlikely after this class is over,
 -- it may be worth abstracting the likes from posts in case other things can
 -- be liked in the future.
-CREATE TABLE likeables (
-    id INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
-    like_count INTEGER UNSIGNED NOT NULL DEFAULT 0,
+-- CREATE TABLE likeables (
+--     id INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
+--     like_count INTEGER UNSIGNED NOT NULL DEFAULT 0,
 
-    CONSTRAINT likeable_pk PRIMARY KEY (id)
-);
+--     CONSTRAINT likeable_pk PRIMARY KEY (id)
+-- );
 
 CREATE TABLE posts (
     id INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
     image_url VARCHAR(512) NOT NULL,
     text_content TEXT,
-    likeable_id INTEGER UNSIGNED NOT NULL,
+
+    -- It would be much nicer to have a post_likes table and associate each user
+    -- with the post; that way you can see who liked a post.
+    -- The number of likes could then be derived using COUNT(*).
+    -- Due to limitations with the chosen framework, likes needs to be a field.
+    like_count INTEGER UNSIGNED NOT NULL DEFAULT 0,
+
+    created_at DATETIME NOT NULL,
+    user_id INTEGER UNSIGNED NOT NULL,
+    -- likeable_id INTEGER UNSIGNED NOT NULL,
 
     CONSTRAINT posts_pk PRIMARY KEY (id),
-    CONSTRAINT posts_likeables_fk FOREIGN KEY (likeable_id) REFERENCES likeables (id)
+    -- CONSTRAINT posts_likeables_fk FOREIGN KEY (likeable_id) REFERENCES likeables (id),
+    CONSTRAINT author_fk FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+CREATE TABLE comments (
+    id INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
+    text_content TEXT NOT NULL,
+    created_at DATETIME NOT NULL,
+    user_id INTEGER UNSIGNED NOT NULL,
+
+    CONSTRAINT comments_pk PRIMARY KEY (id),
+    CONSTRAINT comments_author_fk FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
 CREATE TABLE post_comments (
-    user_id INTEGER UNSIGNED NOT NULL,
+    comment_id INTEGER UNSIGNED NOT NULL,
     post_id INTEGER UNSIGNED NOT NULL,
-    text_content TEXT NOT NULL,
 
-    CONSTRAINT post_comments_pk PRIMARY KEY (user_id, post_id),
-    CONSTRAINT post_comments_posts_fk FOREIGN KEY (post_id) REFERENCES posts (id),
-    CONSTRAINT post_comments_users_fk FOREIGN KEY (user_id) REFERENCES users (id)
+    CONSTRAINT post_comments_pk PRIMARY KEY (comment_id),
+    CONSTRAINT post_comments_comment_fk FOREIGN KEY (comment_id) REFERENCES comments (id),
+    CONSTRAINT post_comments_posts_fk FOREIGN KEY (post_id) REFERENCES posts (id)
 );
 
 -- Tags can be used to search for posts.
 CREATE TABLE tags (
     id INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
-    tag_text VARCHAR(64) NOT NULL,
+    text_content VARCHAR(64) NOT NULL,
 
     CONSTRAINT tags_pk PRIMARY KEY (id),
-    CONSTRAINT tags_uk UNIQUE (tag_text)
+    CONSTRAINT tags_uk UNIQUE (text_content)
 );
 
 CREATE TABLE post_tags (
@@ -145,3 +156,43 @@ CREATE TABLE post_pets (
     CONSTRAINT post_pets_post_fk FOREIGN KEY (post_id) REFERENCES posts (id),
     CONSTRAINT post_pets_pet_fk FOREIGN KEY (pet_id) REFERENCES pets (id)
 );
+
+CREATE TABLE user_favorite_posts (
+    user_id INTEGER UNSIGNED NOT NULL,
+    post_id INTEGER UNSIGNED NOT NULL,
+
+    CONSTRAINT user_favorite_posts_pk PRIMARY KEY (user_id, post_id),
+    CONSTRAINT favoirte_user_fk FOREIGN KEY (user_id) REFERENCES users (id),
+    CONSTRAINT favoirte_post_fk FOREIGN KEY (post_id) REFERENCES posts (id)
+);
+
+-- Some dummy values used for testing
+INSERT INTO users (email, username, first_name, last_name, created_at)
+VALUES      ('john_doe@example.com', 'jdoe123', 'John', 'Doe', NOW()),
+            ('jane_smith@example.com', 'jsmith456', 'Jane', 'Smith', NOW()),
+            ('bob@example.com', 'bob0', 'Bob', 'Bob', NOW());
+
+INSERT INTO posts (image_url, user_id, created_at, text_content)
+VALUES      ('/img0.png', 1, NOW(), 'Look at this cute cat!'),
+            ('/img1.png', 2, NOW(), 'Birb.');
+
+INSERT INTO tags (text_content)
+VALUES      ('birb'),
+            ('cute'),
+            ('cat');
+
+INSERT INTO post_tags (post_id, tag_id)
+VALUES      (1, 2),
+            (1, 3),
+            (2, 1),
+            (2, 2);
+
+INSERT INTO comments (user_id, created_at, text_content)
+VALUES      (2, NOW(), 'That is a very cute cat. Thank you for sharing!'),
+            (3, NOW(), 'Lookit da kitty!!!'),
+            (1, NOW(), 'Borb.');
+
+INSERT INTO post_comments (comment_id, post_id)
+VALUES      (1, 1),
+            (2, 1),
+            (3, 2);

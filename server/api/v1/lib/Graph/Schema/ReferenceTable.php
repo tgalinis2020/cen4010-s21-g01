@@ -21,6 +21,13 @@ class ReferenceTable implements ContainerInterface
     protected $refcount = 0;
 
     /**
+     * Token-to-reference ID map
+     * 
+     * @var array
+     */
+    protected $map = [];
+
+    /**
      * Token-to-reference map.
      * 
      * @var \ThePetPark\Library\Graph\Schema\Relationship[]
@@ -36,19 +43,12 @@ class ReferenceTable implements ContainerInterface
     protected $parentRefs = [];
 
     /**
-     * Source of all data. Must be a Schema reference, not a relationship.
-     * 
-     * @var \ThePetPark\Library\Graph\Schema\Reference
-     */
-    protected $sourceRef;
-
-    /**
      * The source of data to select from.
      * 
-     * Normally it is the source reference but it will change if requesting a
+     * Normally it is the root reference ID but it will change if requesting a
      * derived resource.
      * 
-     * @var \ThePetPark\Library\Graph\Schema\Reference
+     * @var int
      */
     protected $baseRef;
 
@@ -66,9 +66,10 @@ class ReferenceTable implements ContainerInterface
      */
     public function init(string $type, AbstractDriver $driver)
     {
-        $ref = new Schema\Reference($this->refcount++, $this->schemas->get($type));
+        $ref = new Schema\Reference($this->refcount, $this->schemas->get($type));
         
-        $this->sourceRef = $this->baseRef = $ref;
+        $this->baseRef = $this->refcount;
+        $this->references[$this->refcount++] = $ref;
 
         $driver->init($ref);
 
@@ -77,12 +78,12 @@ class ReferenceTable implements ContainerInterface
 
     public function get(string $token): Schema\Reference
     {
-        return $this->references[$token];
+        return $this->references[$this->map[$token]];
     }
 
     public function has(string $token): bool
     {
-        return isset($this->references[$token]);
+        return isset($this->map[$token]);
     }
 
     /**
@@ -108,7 +109,8 @@ class ReferenceTable implements ContainerInterface
             $this->schemas->get($type)
         );
 
-        $this->references[$token] = $related;
+        $this->map[$token] = $id;
+        $this->references[$id] = $related;
         $this->parentRefs[$id] = $source;
 
         $driver->resolve($source, $related);
@@ -125,7 +127,7 @@ class ReferenceTable implements ContainerInterface
      */
     public function setBaseRef(Schema\Relationship $ref)
     {
-        $this->baseRef = $ref;
+        $this->baseRef = $ref->getRef();
     }
 
     public function setParentRef(Schema\Relationship $ref, Schema\Reference $parent)
@@ -135,19 +137,31 @@ class ReferenceTable implements ContainerInterface
 
     public function getBaseRef(): Schema\Reference
     {
-        return $this->baseRef;
+        return $this->references[$this->baseRef];
+    }
+
+    /** @return \ThePetPark\Library\Graph\Schema\Reference[] */
+    public function getParentRefs(): array
+    {
+        return $this->parentRefs;
+    }
+
+    public function getRefById(int $id): Schema\Relationship
+    {
+        return $this->references[$id];
     }
 
     public function scan(AbstractDriver $driver): array
     {
-        $prefix = $this->baseRef . '_';
+        $ref = $this->references[$this->baseRef];
+        $prefix = $ref . '_';
         $data = [];
 
         foreach ($driver->fetchAll() as $record) {
             $resourceID = $record[$prefix . 'id'];
             $data[$resourceID] = [];
 
-            foreach ($this->baseRef->getSchema()->getAttributes() as $attr) {
+            foreach ($ref->getSchema()->getAttributes() as $attr) {
                 $data[$resourceID][$attr] = $record[$prefix . $attr];
             }
         }

@@ -11,14 +11,7 @@ use ThePetPark\Library\Graph\Schema\ReferenceTable;
  * to a request. Breaks big actions into smaller, interchangeable components.
  */
 interface FeatureInterface
-{
-    /**
-     * Checks the provided parameters to see if the feature is applicable.
-     * Since features are evaluated from first to last, features with more
-     * specific requirements should be defined first.
-     */
-    public function check(array $parameters): bool;
-    
+{    
     /**
      * Apply a transformation to the query.
      * 

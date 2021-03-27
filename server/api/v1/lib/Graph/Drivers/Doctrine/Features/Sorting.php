@@ -17,13 +17,12 @@ class Sorting implements Graph\FeatureInterface
 {
     use Graph\Drivers\Doctrine\FeatureTrait;
 
-    public function check(array $params): bool
-    {
-        return isset($params['sort']);
-    }
-
     public function apply(array $params, ReferenceTable $refs): bool
     {
+        if (isset($params['sort']) === false) {
+            return false;
+        }
+
         foreach (explode(',', $params['sort']) as $attr) {
             if ($attr === '') {
                 return false;

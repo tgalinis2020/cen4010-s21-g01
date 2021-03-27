@@ -6,7 +6,7 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 use ThePetPark\Library\Graph\App as Graph;
 use ThePetPark\Library\Graph\Actions;
-use ThePetPark\Library\Graph\Relationship as R;
+use ThePetPark\Library\Graph\Schema\Relationship as R;
 
 if ($argc < 3) {
     printf('usage: php %s <yml-src> <cache-dest>', $argv[0]);

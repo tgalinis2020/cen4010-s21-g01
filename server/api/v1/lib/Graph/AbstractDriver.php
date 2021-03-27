@@ -35,7 +35,7 @@ abstract class AbstractDriver
     /**
      * Apply any features provided by this driver.
      */
-    abstract public function apply(array &$parameter, ReferenceTable $refs);
+    abstract public function apply(array $parameter, ReferenceTable $refs);
 
     /**
      * Select a specific resource from a the resource collection pointed to by
@@ -74,5 +74,5 @@ abstract class AbstractDriver
      * the main data again. Reset the fields to select but keep the applied
      * conditions.
      */
-    abstract public function reset();
+    abstract public function reset(Schema\Reference $source);
 }

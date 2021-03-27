@@ -7,8 +7,6 @@ actions:
 
 schemas:
   posts:
-    id: id # if table's primary key column isn't 'id', speciffy field here
-    
     actions:
       resource:
         POST: ThePetPark\Http\Actions\Posts\Create
@@ -42,11 +40,12 @@ schemas:
 
       comments:
         hasMany: comments
-        using: post_id
+        using:
+          - relation: post_comments
+            from: post_id
+            to: comment_id
     
   comments:
-    src: post_comments
-    
     attributes:
       text: text_content
       createdAt: created_at
@@ -56,7 +55,7 @@ schemas:
         belongsTo: users
         using: user_id
       
-      posts:
+      post:
         belongsTo: posts
         using:
           - relation: post_comments

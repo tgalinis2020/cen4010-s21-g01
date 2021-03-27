@@ -12,6 +12,12 @@ use ThePetPark\Library\Graph\AbstractDriver;
 use ThePetPark\Library\Graph\Schema\ReferenceTable;
 use ThePetPark\Library\Graph\Schema\Relationship as R;
 
+/**
+ * TODO:    This driver is geared towards SQL-based solutions.
+ *          Might be worth thinking about abstracting actions away from
+ *          the Graph and delegate that to Drivers!
+ *          Drivers should be the Action container.
+ */
 class Driver extends AbstractDriver
 {
     /** @var \Doctrine\DBAL\Query\QueryBuilder */
@@ -40,9 +46,7 @@ class Driver extends AbstractDriver
     }
 
     /**
-     * TODO: drivers need settings passed in via constructor
-     *  
-     * @return int
+     * @return int The default page size used in pagination strategies.
      */
     public function getDefaultPageSize(): int
     {
@@ -55,21 +59,27 @@ class Driver extends AbstractDriver
             ->from($source->getSchema()->getImplType(), (string) $source);
     }
 
-    public function apply(array &$params, ReferenceTable $refs)
+    public function apply(array $params, ReferenceTable $refs)
     {
         foreach ($this->features as $feat) {
-            if ($feat->check($params)) {
-                $feat->apply($params, $refs);
-            }
+            $feat->apply($params, $refs);
         }
     }
 
-    public function reset()
+    public function reset(Schema\Reference $source)
     {
         $this->qb
             ->resetQueryParts(['select', 'distinct', 'orderBy'])
             ->setFirstResult(0)
             ->setMaxResults(null);
+
+        // Always select the resource's ID.
+        $this->qb->addSelect(sprintf(
+            '%1$s.%2$s %1$s_%3$s',
+            $source,
+            $source->getSchema()->getId(),
+            'id'
+        ));
     }
 
     public function select(Schema\Reference $source, string $resourceID)
@@ -79,7 +89,7 @@ class Driver extends AbstractDriver
             $this->qb->createNamedParameter($resourceID)
         ));
 
-        $this->qb->setMaxResults(1);
+        //$this->qb->setMaxResults(1);
     }
 
     public function prepare(Schema\Reference $source)

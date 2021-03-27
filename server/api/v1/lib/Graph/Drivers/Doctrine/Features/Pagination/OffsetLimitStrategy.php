@@ -15,13 +15,12 @@ class OffsetLimitStrategy implements Graph\FeatureInterface
 {
     use Graph\Drivers\Doctrine\FeatureTrait;
 
-    public function check(array $params): bool
-    {
-        return isset($params['page'], $params['page']['offset']);
-    }
-
     public function apply(array $params, ReferenceTable $refs): bool
     {
+        if (isset($params['page'], $params['page']['offset']) === false) {
+            return false;
+        }
+
         $page = $params['page'];
         $size = $this->driver->getDefaultPageSize();
         $qb = $this->getQueryBuilder();

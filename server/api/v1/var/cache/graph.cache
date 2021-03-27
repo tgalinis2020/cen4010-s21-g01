@@ -80,7 +80,15 @@
         array (
           0 => 6,
           1 => 'comments',
-          2 => 'post_id',
+          2 => 
+          array (
+            0 => 
+            array (
+              0 => 'post_comments',
+              1 => 'post_id',
+              2 => 'comment_id',
+            ),
+          ),
         ),
       ),
       3 => 
@@ -108,7 +116,7 @@
       0 => 
       array (
         0 => 'comments',
-        1 => 'post_comments',
+        1 => 'comments',
         2 => 'id',
       ),
       1 => 
@@ -132,7 +140,7 @@
           1 => 'users',
           2 => 'user_id',
         ),
-        'posts' => 
+        'post' => 
         array (
           0 => 9,
           1 => 'posts',
