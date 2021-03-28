@@ -27,25 +27,22 @@ final class Session
 
     public function __invoke(Request $req, Response $res, callable $next)
     {
-        $token = $_COOKIE[self::TOKEN] ?? null;
-
-        if ($token == null) {
+        if (isset($_COOKIE[self::TOKEN]) === false) {
             return $next($req, $res);
         }
 
         try {
 
-            $data = $this->decoder->decode($token);
-
-            return $next($req->withAttribute(self::TOKEN, $data), $res);
+            $data = $this->decoder->decode($_COOKIE[self::TOKEN]);
+            $req = $req->withAttribute(self::TOKEN, $data);
 
         } catch (Exception $e) {
 
             // Token expired, unset it.
             setcookie(self::TOKEN);
 
-            return $next($req, $res);
-
-        }
+        } 
+            
+        return $next($req, $res);
     }
 }

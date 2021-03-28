@@ -14,6 +14,6 @@ class NotImplemented implements Graph\ActionInterface
         Graph\App $graph,
         ServerRequestInterface $request
     ): ResponseInterface {
-        return $graph->createResponse(501);
+        return $graph->createResponse(501, 'Not Implemented');
     }
 }

@@ -53,7 +53,7 @@ abstract class AbstractDriver
      * Performs the necessary tasks to link the source reference with the given
      * relationship reference.
      */
-    abstract public function resolve(Schema\Reference $source, Schema\Relationship $relationship);
+    abstract public function resolve(Schema\Relationship $relationship, Schema\Reference $source);
 
     /**
      * Constrains the source's included data.

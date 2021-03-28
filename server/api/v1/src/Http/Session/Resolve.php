@@ -7,6 +7,8 @@ namespace ThePetPark\Http\Session;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
+use ThePetPark\Middleware\Session;
+
 use function json_encode;
 
 /**
@@ -21,7 +23,7 @@ final class Resolve
 {
     public function __invoke(Request $req, Response $res): Response
     {
-        $session = $req->getAttribute('session');
+        $session = $req->getAttribute(Session::TOKEN);
 
         if ($session === null) {
             return $res->withStatus(404);

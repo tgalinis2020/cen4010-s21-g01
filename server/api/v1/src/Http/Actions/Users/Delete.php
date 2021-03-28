@@ -15,9 +15,7 @@ class Delete implements Graph\ActionInterface
     public function execute(Graph\App $graph, Request $req): Response
     {
         $res = $graph->createResponse();
-        $conn = $graph->getConnection();
-        $body = json_decode($req->getBody(), true);
-        
+        $document = json_decode($req->getBody(), true);
 
         return $res->withStatus(501);
     }

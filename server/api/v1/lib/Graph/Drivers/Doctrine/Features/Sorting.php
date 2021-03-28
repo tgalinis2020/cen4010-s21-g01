@@ -5,13 +5,19 @@ declare(strict_types=1);
 namespace ThePetPark\Library\Graph\Drivers\Doctrine\Features;
 
 use ThePetPark\Library\Graph;
-use ThePetPark\Library\Graph\Drivers\Doctrine\Driver;
 use ThePetPark\Library\Graph\Schema\ReferenceTable;
 
 use function trim;
+use function substr;
+use function explode;
+use function array_pop;
 
 /**
- * The simple sorting strategy sorts main data by the resource's attributes.
+ * Sort main using the fields listed in the "sort" query parameter.
+ * 
+ * TODO:    The steps to resolving relationships is very similar to
+ *          how its done when applying filters. Maybe it's possible to
+ *          put shared logic into a driver method.
  */
 class Sorting implements Graph\FeatureInterface
 {
@@ -23,32 +29,67 @@ class Sorting implements Graph\FeatureInterface
             return false;
         }
 
-        foreach (explode(',', $params['sort']) as $attr) {
-            if ($attr === '') {
-                return false;
-            }
-
+        foreach (explode(',', $params['sort']) as $fullyQualifiedField) {
+            $ref = $refs->getBaseRef();
             $order = 'ASC';
-            $attr = trim($attr);
+            $fullyQualifiedField = trim($fullyQualifiedField);
 
-            switch (substr($attr, 0, 1)) {
+            switch (substr($fullyQualifiedField, 0, 1)) {
             case '-':
                 $order = 'DESC';
             case '+':
-                $attr = substr($attr, 1);
+                $fullyQualifiedField = substr($fullyQualifiedField, 1);
             }
 
-            $ref = $refs->getBaseRef();
-            $schema = $ref->getSchema();
+            $tokens = explode('.', $fullyQualifiedField);
+            $field = array_pop($tokens);
+            $delim = '';
+            $token = '';
 
-            if ($schema->hasAttribute($attr)) {
-                $attr = $schema->getImplAttribute($attr);
-            } else {
-                return false;
+            foreach ($tokens as $relationship) {
+                $token .= $delim . $relationship;
+
+                // TODO:    Filters are evaulated before resolving any resources.
+                //          Might not even be worth checking if a reference
+                //          exists for the provided token.
+                if ($refs->has($token)) {
+                    $ref = $refs->get($token);
+                } else {
+                    $related = $refs->resolve($relationship, $ref);
+                    $this->driver->resolve($related, $ref);
+                    $ref = $related;
+                }
+
+                $ref = $related;
+                $delim = '.';
+            }
+
+            if ($field === 'id') {
+
+                $field = $ref->getSchema()->getId();
+
+            } elseif ($ref->getSchema()->hasAttribute($field)) {
+
+                $field = $ref->getSchema()->getImplAttribute($field);
+
+            } elseif ($ref->getSchema()->hasRelationship($field)) {
+
+                $token = $delim . $field;
+                
+                if ($refs->has($token)) {
+                    $ref = $refs->get($token);
+                } else {
+                    $related = $refs->resolve($field, $ref);
+                    $this->driver->resolve($related, $ref);
+                    $ref = $related;
+                }
+
+                $field = $ref->getSchema()->getId();
+
             }
 
             $this->driver->getQueryBuilder()
-                ->addOrderBy($ref . '.' . $attr, $order);
+                ->addOrderBy($ref . '.' . $field, $order);
         }
 
         return true;

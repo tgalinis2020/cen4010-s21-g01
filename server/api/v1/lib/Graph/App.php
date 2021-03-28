@@ -17,10 +17,7 @@ use function in_array;
 use function sprintf;
 
 /**
- * Resource schema container.
- * 
- * Uses DBAL's QueryBuilder to create queries based on the structure of the
- * request.
+ * Provides the means to automate data retrieval.
  * 
  * @author Thomas Galinis <tgalinis2020@fau.edu>
  */
@@ -61,11 +58,12 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
     protected $response;
 
     public function __construct(
-        string $pathToDefinitions,
+        array $settings,
         AbstractDriver $driver,
         ResponseInterface $response,
         $container = null
     ) {
+        $pathToDefinitions = $settings['definitions'] ?? '';
         $actions = [];
         $schemas = [];
         $nactions = 0;
@@ -89,6 +87,7 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
         }
 
         $this->schemas      = new Schema\Container($schemas);
+        $this->baseUrl      = $settings['baseUrl'] ?? '';
         $this->driver       = $driver;
         $this->response     = $response;
         $this->container    = $container;
@@ -106,9 +105,16 @@ class App implements RequestHandlerInterface, ResponseFactoryInterface
         return $this->schemas;
     }
 
-    // Since we're using sequential integers for this project, this is fine.
-    // TODO: create a new component to compare specific ID types, such as
-    // UUIDv1.
+    public function getBaseUrl(): string
+    {
+        return $this->baseUrl;
+    }
+
+    // Since we're using sequential integers for this project, this is fine for
+    // now.
+    //
+    // TODO:    Create a new component to compare specific ID types, such as
+    //          UUIDv1.
     public function cmp(string $a, string $b): int
     {
         return ((int) $a) - ((int) $b);

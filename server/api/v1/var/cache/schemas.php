@@ -5,7 +5,12 @@
     1 => 'ThePetPark\\Library\\Graph\\Actions\\Resolve',
     2 => 'ThePetPark\\Http\\Actions\\Posts\\Create',
     3 => 'ThePetPark\\Http\\Actions\\Posts\\Update',
-    4 => 'ThePetPark\\Http\\Actions\\Posts\\Delete',
+    4 => 'ThePetPark\\Http\\Actions\\Comments\\Create',
+    5 => 'ThePetPark\\Http\\Actions\\Comments\\Update',
+    6 => 'ThePetPark\\Http\\Actions\\Users\\Create',
+    7 => 'ThePetPark\\Http\\Actions\\Users\\Update',
+    8 => 'ThePetPark\\Http\\Actions\\Pets\\Create',
+    9 => 'ThePetPark\\Http\\Actions\\Pets\\Update',
   ),
   1 => 
   array (
@@ -19,6 +24,11 @@
       ),
       1 => 
       array (
+        'title' => 
+        array (
+          0 => 'title',
+          1 => 'title',
+        ),
         'text' => 
         array (
           0 => 'text',
@@ -99,7 +109,7 @@
           'POST' => 2,
           'PUT' => 0,
           'PATCH' => 3,
-          'DELETE' => 4,
+          'DELETE' => 0,
         ),
         1 => 
         array (
@@ -160,9 +170,9 @@
         0 => 
         array (
           'GET' => 1,
-          'POST' => 0,
+          'POST' => 4,
           'PUT' => 0,
-          'PATCH' => 0,
+          'PATCH' => 5,
           'DELETE' => 0,
         ),
         1 => 
@@ -275,9 +285,9 @@
         0 => 
         array (
           'GET' => 1,
-          'POST' => 0,
+          'POST' => 6,
           'PUT' => 0,
-          'PATCH' => 0,
+          'PATCH' => 7,
           'DELETE' => 0,
         ),
         1 => 
@@ -409,9 +419,9 @@
         0 => 
         array (
           'GET' => 1,
-          'POST' => 0,
+          'POST' => 8,
           'PUT' => 0,
-          'PATCH' => 0,
+          'PATCH' => 9,
           'DELETE' => 0,
         ),
         1 => 

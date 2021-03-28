@@ -1,3 +1,4 @@
+DROP DATABASE IF EXISTS cen4010_s21_g01;
 CREATE DATABASE IF NOT EXISTS cen4010_s21_g01;
 
 USE cen4010_s21_g01;
@@ -94,6 +95,7 @@ CREATE TABLE subscriptions (
 CREATE TABLE posts (
     id INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
     image_url VARCHAR(512) NOT NULL,
+    title VARCHAR(255) NOT NULL,
     text_content TEXT,
 
     -- It would be much nicer to have a post_likes table and associate each user
@@ -104,7 +106,6 @@ CREATE TABLE posts (
 
     created_at DATETIME NOT NULL,
     user_id INTEGER UNSIGNED NOT NULL,
-    -- likeable_id INTEGER UNSIGNED NOT NULL,
 
     CONSTRAINT posts_pk PRIMARY KEY (id),
     -- CONSTRAINT posts_likeables_fk FOREIGN KEY (likeable_id) REFERENCES likeables (id),
@@ -172,9 +173,9 @@ VALUES      ('john_doe@example.com', 'jdoe123', 'John', 'Doe', NOW()),
             ('jane_smith@example.com', 'jsmith456', 'Jane', 'Smith', NOW()),
             ('bob@example.com', 'bob0', 'Bob', 'Bob', NOW());
 
-INSERT INTO posts (image_url, user_id, created_at, text_content)
-VALUES      ('/img0.png', 1, NOW(), 'Look at this cute cat!'),
-            ('/img1.png', 2, NOW(), 'Birb.');
+INSERT INTO posts (image_url, user_id, created_at, title, text_content)
+VALUES      ('/uploads/img0.png', 1, NOW(), 'Cat!', 'Look at this cute cat!'),
+            ('/uploads/img1.png', 2, NOW(), 'Birb!', 'Birb.');
 
 INSERT INTO tags (text_content)
 VALUES      ('birb'),

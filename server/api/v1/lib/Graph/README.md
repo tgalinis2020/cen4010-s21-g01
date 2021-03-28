@@ -12,6 +12,18 @@ specification to allow for expressive and efficient queries.
 
 Similar and more robust tools most likely already exist, but this was an
 academic endeavour. Been itching to solve this problem for a while now.
+There are a couple of limitations, however:
+
+* Resource attributes must be part of the source table.
+
+* Consequently, can't derive attributes from other tables or functions.
+  For instance, can't have an attribute called "tags" for the "posts" resource,
+  but it can be included from a relationship if tags are a resource.
+  Also can't have an attribute called "likes" be equal to `COUNT(*)` from some relation.
+
+* Attributes can only be one-dimensional.
+
+* Attributes can only be strings, even if their types are numeric.
 
 
 ## Dependecies

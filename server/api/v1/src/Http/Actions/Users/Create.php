@@ -6,6 +6,7 @@ namespace ThePetPark\Http\Actions\Users;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Doctrine\DBAL\Connection;
 use ThePetPark\Library\Graph;
 use ThePetPark\Idp;
 
@@ -15,15 +16,30 @@ use function json_decode;
 use function array_diff;
 use function array_keys;
 use function date;
+use function password_hash;
+use function htmlentities;
 
 class Create implements Graph\ActionInterface
 {
+    /** @var \Doctrine\DBAL\Connection */
+    protected $conn;
+
+    public function __construct(Connection $conn)
+    {
+        $this->conn = $conn;
+    }
+
     public function execute(Graph\App $graph, Request $req): Response
     {
         $res = $graph->createResponse();
-        $body = json_decode($req->getBody(), true);
-        $conn = $graph->getConnection();
-        $acct = $body['data'];
+        $document = json_decode($req->getBody(), true);
+        
+        if (isset($document['data'], $document['data']['attributes']) === false) {
+            return $res->withStatus(400);
+        }
+        
+        $data = $document['data'];
+        $acct = $data['attributes'];
         $required = ['email', 'username', 'firstName', 'lastName', 'password'];
         $keys = array_keys($acct);
         $diff = array_diff($keys, $required);
@@ -35,16 +51,16 @@ class Create implements Graph\ActionInterface
 
         try {
 
-            $qb = $conn->createQueryBuilder();
+            $qb = $this->conn->createQueryBuilder();
 
             $qb->insert('users')
                 ->values([
                     'email'      => $qb->createNamedParameter($acct['email']),
-                    'username'   => $qb->createNamedParameter($acct['username']),
-                    'first_name' => $qb->createNamedParameter($acct['firstName']),
-                    'last_name'  => $qb->createNamedParameter($acct['lastName']),
-                    'created_at' => date('c'),
-                    'idp_code'   => Idp::THEPETPARK,
+                    'username'   => $qb->createNamedParameter(htmlentities($acct['username'], ENT_QUOTES)),
+                    'first_name' => $qb->createNamedParameter(htmlentities($acct['firstName'], ENT_QUOTES)),
+                    'last_name'  => $qb->createNamedParameter(htmlentities($acct['lastName'], ENT_QUOTES)),
+                    'created_at' => $qb->createNamedParameter(date('c')),
+                    'idp_code'   => $qb->createNamedParameter(Idp::THEPETPARK),
                 ])
                 ->execute();
 

@@ -15,14 +15,14 @@ final class Delete
 {
     public function __invoke(Request $req, Response $res): Response
     {
-        if (!isset($_COOKIE[Session::TOKEN])) {
+        if (isset($_COOKIE[Session::TOKEN]) === false) {
             return $res->withStatus(401); // No token found, return a 401.
         }
 
         // A cookie with no expiry will be immediately unset.
         setcookie(Session::TOKEN);
 
-        return $res->withStatus(200);
+        return $res->withStatus(204);
     }
 }
 

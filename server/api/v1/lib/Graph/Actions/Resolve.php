@@ -13,8 +13,6 @@ use ThePetPark\Library\Graph\Schema\Relationship as R;
 
 use function explode;
 use function count;
-use function array_key_first;
-use function array_key_last;
 use function key;
 use function next;
 use function current;
@@ -31,7 +29,7 @@ class Resolve implements Graph\ActionInterface
 
         $schemas = $graph->getSchemas();
         $driver = $graph->getDriver();
-        $baseUrl = ''; // TODO: need base URL
+        $baseUrl = $graph->getBaseUrl();
         $response = $graph->createResponse();
         $refs = new ReferenceTable($schemas);
         $data = [];
@@ -67,7 +65,8 @@ class Resolve implements Graph\ActionInterface
         $resourceID = $request->getAttribute(Graph\App::PARAM_ID);
         $relationship = $request->getAttribute(Graph\App::PARAM_RELATIONSHIP);
 
-        $base = $refs->init($type, $driver);        
+        $base = $refs->init($type);
+        $driver->init($base);  
         $driver->apply($params, $refs);
 
         if ($resourceID !== null) {
@@ -81,11 +80,21 @@ class Resolve implements Graph\ActionInterface
                 }
                 
                 // Promote relationship to the context of the query.
-                $base = $refs->resolve($relationship, $base, $driver);
+                // Note that applied filters may have already resolved
+                // related resources.
+                if ($refs->has($relationship)) {
+                    $related = $refs->get($relationship);
+                    $refs->setParentRef($related, $base);
+                } else {
+                    $related = $refs->resolve($relationship, $base);
+                    $refs->setParentRef($related, $base);
+                    $driver->resolve($related, $base);
+                }
                 
                 // baseRef now points to the relationship's reference.
                 // Set it as the new context of the query.
-                $refs->setBaseRef($base);
+                $refs->setBaseRef($related);
+                $base = $related;
 
                 if ($base->getType() & R::ONE) {
                     $amount = R::ONE;
@@ -100,44 +109,43 @@ class Resolve implements Graph\ActionInterface
 
         $driver->prepare($base);
         
-        $mainSQL = (string) $driver; // Invoke Doctrine\Driver::__toString
-
-        // TODO: serialize data to response document
         /*
-        $data = $refs->scan($driver);
-        $rowCount = count($data);
-        /*/
+        $mainSQL = (string) $driver; // Invoke Doctrine\Driver::__toString
         $data = [['id' => '0'], ['id' => '100']];
         $rowCount = count($data);
         //*/
-
 
         // BEGIN(data retrieval and serialization)
         $links = [];
         
         if ($relationship === null) {
             if ($resourceID === null) {
-                $links['self'] = sprintf('%s/%s', $baseUrl, $type);
+                $links['self'] = $baseUrl . '/' . $type;
             } else {
-                $links['self'] = sprintf('%s/%s/%s', $baseUrl, $type, $resourceID);
+                $links['self'] = $baseUrl . '/' . $type . '/' . $resourceID;
             }
         } else {
-            $links['self']    = sprintf('%s/%s/%s/%s', $baseUrl, $type, $resourceID, $relationship);
-            $links['related'] = sprintf('%s/%s/%s', $baseUrl, $type, $resourceID);
+            $links['self']     = $baseUrl . '/' . $type . '/' . $resourceID . '/' . $relationship;
+            $links['related']  = $baseUrl . '/' . $type . '/' . $resourceID;
         }
 
         $document = ['jsonapi' => '1.0', 'links' => $links, 'data' => null];
         $data     = [];
         $items    = []; 
-        $type     = $base->getSchema()->getType();
-        $attrs    = $base->getSchema()->getAttributes();
-        $prefix   = $refs->getBaseRef() . '_';
+        $schema   = $base->getSchema();
+        $type     = $schema->getType();
+        $attrs    = $schema->getAttributes();
+        $prefix   = $base . '_';
         $items    = [];
 
-        //*
+        /*
+        $mainSQL = (string) $driver; // Invoke Doctrine\Driver::__toString
+        $data = [['id' => '0'], ['id' => '100']];
+        $rowCount = count($data);
+        /*/
         foreach ($driver->fetchAll() as $rec) {
             $resourceID = $rec[$prefix . 'id'];
-            $item = ['id' => $resourceID, 'type' => $type, 'attributes' => []];
+            $item = ['type' => $type, 'id' => $resourceID, 'attributes' => []];
 
             foreach ($attrs as list($attr, $impl)) {
                 $item['attributes'][$attr] = $rec[$prefix . $attr];
@@ -145,10 +153,10 @@ class Resolve implements Graph\ActionInterface
 
             $items[$resourceID] = $item;
         }
-        //*/
-
+        
         $data[$base->getRef()] = $items;
         $rowCount = count($items);
+        //*/
         // END(data retrieval and serialization)
 
         if ($rowCount > 0 && isset($params['include'])) {
@@ -176,12 +184,15 @@ class Resolve implements Graph\ActionInterface
     
                     // A resource may have already been resolved (joined in
                     // the query) if it was used in a filter.
-                    $relatedRef = $refs->has($token)
-                        ? $refs->get($token)
-                        : $refs->resolve($relationship, $ref, $driver);
-            
+                    if ($refs->has($token)) {
+                        $relatedRef = $refs->get($token);
+                    } else {
+                        $relatedRef = $refs->resolve($relationship, $ref);
+                        $driver->resolve($relatedRef, $ref);
+                    }
+                    
                     $refs->setParentRef($relatedRef, $ref);
-                    $driver->prepare($relatedRef, $ref);
+                    $driver->prepare($relatedRef);
 
                     $ref = $relatedRef;
                     $delim = '.';
@@ -229,6 +240,7 @@ class Resolve implements Graph\ActionInterface
             //          might not incur that much overhead and allows for more
             //          flexibility with how included data is fetched.
             //          Also, a check for duplicates would not be necessary!
+            //*
             $records = $driver->fetchAll();
 
             foreach ($refs->getParentRefs() as $refID => $parent) {
@@ -267,10 +279,9 @@ class Resolve implements Graph\ActionInterface
 
                         if (isset($data[$parent->getRef()][$parentID]['relationships'][$ref->getName()]) == false) {
                             $data[$parent->getRef()][$parentID]['relationships'][$ref->getName()] = [
-                                // TODO: need base URL
                                 'links' => [
                                     'self' => sprintf(
-                                        '%s/%s/relationships/%s',
+                                        '%s/%s/%s/relationships/%s',
                                         $baseUrl,
                                         $parent->getSchema()->getType(),
                                         $parentID,
@@ -278,7 +289,7 @@ class Resolve implements Graph\ActionInterface
                                     ),
 
                                     'related' => sprintf(
-                                        '%s/%s/%s',
+                                        '%s/%s/%s/%s',
                                         $baseUrl,
                                         $parent->getSchema()->getType(),
                                         $parentID,
@@ -305,27 +316,25 @@ class Resolve implements Graph\ActionInterface
             // Point to included data, which should start immediately after the
             // first reference.
             $document['included'] = [];
+            reset($data);
             $included = next($data); // main data is the first element, skip it
 
             while ($included !== false) {
                 $ref = $refs->getRefById(key($data));
 
-                if ($ref->getType() & R::ONE) {
-                    $document['included'][] = current($included);
-                } else {
-                    foreach ($included as $resource) {
-                        $document['included'][] = $resource;
-                    }
+                foreach ($included as $resource) {
+                    $document['included'][] = $resource;
                 }
 
                 $included = next($data);
             }
+            //*/
         }
 
         $data = reset($data);
         
         if ($amount & R::ONE) {
-            $document['data'] = current($data);
+            $document['data'] = current($data) ?: null;
         } else {
             // TODO:    Add top-level pagination links.
             //          This depends on the pagination feature!
@@ -348,6 +357,7 @@ class Resolve implements Graph\ActionInterface
                 $document['data'][] = $resource;
             }
         }
+
         
 
         // TODO:    The JSON:API spec does mention to return an error document

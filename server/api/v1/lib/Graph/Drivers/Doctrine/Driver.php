@@ -116,7 +116,7 @@ class Driver extends AbstractDriver
         }
     }
     
-    public function resolve(Schema\Reference $source, Schema\Relationship $related)
+    public function resolve(Schema\Relationship $related, Schema\Reference $source)
     {
         $link = $related->getLink();
 

@@ -6,29 +6,41 @@ namespace ThePetPark\Http\Actions\Posts;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Doctrine\DBAL\Connection;
 use ThePetPark\Middleware\Session;
 use ThePetPark\Library\Graph;
 
 use function json_decode;
 use function array_diff;
 use function array_keys;
+use function count;
+use function date;
+use function htmlentities;
+use function strtolower;
 
 class Create implements Graph\ActionInterface
 {
+    /** @var \Doctrine\DBAL\Connection */
+    protected $conn;
+
+    public function __construct(Connection $conn)
+    {
+        $this->conn = $conn;
+    }
+
     public function execute(Graph\App $graph, Request $req): Response
     {
         $res = $graph->createResponse();
-        $conn = $graph->getConnection();
-        $user = $req->getAttribute(Session::TOKEN);
+        $session = $req->getAttribute(Session::TOKEN);
 
         // Only authenticated users can create posts.
-        if ($user === null) {
+        if ($session === null) {
             return $res->withStatus(401);
         }
 
         $data = json_decode($req->getBody(), true);
 
-        $required = ['text', 'image', 'tags', 'pets'];
+        $required = ['title', 'image', 'tags', 'pets'];
         $keys = array_keys($data['data'] ?? []);
         $diff = array_diff($keys, $required);
 
@@ -38,32 +50,53 @@ class Create implements Graph\ActionInterface
         }
 
         $data = $data['data'];
+        $attributes = $data['attributes'];
+        $attributes['title'] = htmlentities($attributes['title'], ENT_QUOTES);
+        $attributes['image'] = htmlentities($attributes['image'], ENT_QUOTES);
+        $createdAt = date('c');
 
-        // Posts are likeable: create the likable entry first.
-        $conn->createQueryBuilder()
-            ->insert('likeables')
-            ->setValue('like_count', '?')
-            ->setParameter(0, 0)
-            ->execute();
+        $qb = $this->conn->createQueryBuilder();
 
-        $likeableID = $this->conn->lastInsertId();
+        $qb->insert('posts')
+            ->setValue('title', $qb->createNamedParameter($attributes['title']))
+            ->setValue('image_url', $qb->createNamedParameter($attributes['image']))
+            ->setValue('user_id', $qb->createNamedParameter($session['id']))
+            ->setValue('created_at', $qb->createNamedParameter($createdAt));
 
-        $conn->createQueryBuilder()
-            ->insert('posts')
-            ->setValue('text_content', '?')
-            ->setValue('image_url', '?')
-            ->setValue('likeable_id', '?')
-            ->setParameter(0, $data['text_content'])
-            ->setParameter(1, $data['image_url'])
-            ->setParameter(2, $likeableID)
-            ->execute();
+        if (isset($attributes['text'])) {
+            $attributes['text'] = htmlentities($attributes['text'], ENT_QUOTES);
+
+            $qb->setValue('text_content', $qb->createNamedParameter($attributes['text']));
+        }
+
+        $qb->execute();
 
         $postID = $this->conn->lastInsertId();
 
         // Return the newly created post's ID.
         // Will be required by the client app to make associations with
         // tags and pets.
-        $res->getBody()->write(json_encode(['data' => ['id' => $postID]]));
+        $document = [
+            'jsonapi' => '1.0',
+            'data' => [
+                'type' => 'posts',
+                'id' => $postID,
+                'attributes' => [
+                    'title' => $attributes['title'],
+                    'image' => $attributes['image'],
+                    'text' => $attributes['text'] ?? null,
+                    'createdAt' => $createdAt,
+                ],
+                'relationships' => [
+                    'author' => [
+                        'type' => 'users',
+                        'id' => $session['id'],
+                    ]
+                ]
+            ]
+        ];
+
+        $res->getBody()->write(json_encode($document));
         
         return $res->withStatus(201);
     }

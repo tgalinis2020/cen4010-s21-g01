@@ -1,6 +1,6 @@
 {
     "scripts": {
-        "graph": "php bin/graph etc/graph.yml var/cache/graph.cache"
+        "graph": "php bin/graph etc/graph.yml var/cache/schemas.php"
     },
 
     "require": {

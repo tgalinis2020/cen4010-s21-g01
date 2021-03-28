@@ -8,7 +8,8 @@ use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
 use ThePetPark\Library\Graph;
 use ThePetPark\Library\Graph\Schema\ReferenceTable;
 
-use function array_replace;
+use function is_array;
+use function in_array;
 use function array_pop;
 use function explode;
 
@@ -17,7 +18,7 @@ use function explode;
  * 
  * E.g. Fetch articles that were posted before March 17th, 2021
  * 
- * GET /articles?filter[createdAt:lt]=2021-03-17
+ * GET /articles?filter[createdAt][lt]=2021-03-17
  */
 class Filters implements Graph\FeatureInterface
 {
@@ -30,6 +31,10 @@ class Filters implements Graph\FeatureInterface
         'le' => ExpressionBuilder::LTE,
         'gt' => ExpressionBuilder::GT,
         'ge' => ExpressionBuilder::GTE,
+        'lk' => 'LIKE',
+        'nl' => 'NOT LIKE',
+        'in' => 'IN',
+        'ni' => 'NOT IN',
     ];
 
     public function apply(array $params, ReferenceTable $refs): bool
@@ -40,64 +45,92 @@ class Filters implements Graph\FeatureInterface
 
         $qb = $this->driver->getQueryBuilder();
     
-        foreach ($params['filter'] as $fieldAndFilter => $value) {
+        foreach ($params['filter'] as $fullyQualifiedField => $filterAndValue) {
             $ref = $refs->getBaseRef();
-            $tokens = explode(':', $fieldAndFilter);
 
-            if (count($tokens) > 2) {
-                return false; // Malformed filter, stop here
+            // If there is no filter explicitly given, default to "eq"
+            if (is_array($filterAndValue) === false) {
+                $filterAndValue = ['eq' => $filterAndValue];
             }
 
-            list($field, $filter) = array_replace([null, 'eq'], $tokens);
-
-            if (isset(self::SUPPORTED_FILTERS[$filter]) === false) {
-                return false;
-            }
-
-            $tokens = explode('.', $field);
-            $attribute = array_pop($tokens);
+            $tokens = explode('.', $fullyQualifiedField);
+            $field = array_pop($tokens);
             $delim = '';
             $token = '';
 
-            foreach ($tokens as $r) {
-                $token .= $delim . $r;
+            foreach ($tokens as $relationship) {
+                $token .= $delim . $relationship;
 
-                $ref = $refs->has($token)
-                    ? $refs->get($token)
-                    : $refs->resolve($r, $ref, $this->driver);
+                // TODO:    Filters are evaulated before resolving any resources.
+                //          Might not even be worth checking if a reference
+                //          exists for the provided token.
+                if ($refs->has($token)) {
+                    $ref = $refs->get($token);
+                } else {
+                    $related = $refs->resolve($field, $ref);
+                    $this->driver->resolve($related, $ref);
+                    $ref = $related;
+                }
 
+                $ref = $related;
                 $delim = '.';
             }
 
-            if ($attribute === 'id') {
+            /** @var string $filter */
+            foreach ($filterAndValue as $filter => $value) {
+                if (isset(self::SUPPORTED_FILTERS[$filter])) {
+                    if ($field === 'id') {
 
-                $attribute = $ref->getSchema()->getId();
+                        $field = $ref->getSchema()->getId();
 
-            } elseif ($ref->getSchema()->hasAttribute($attribute)) {
+                    } elseif ($ref->getSchema()->hasAttribute($field)) {
 
-                $attribute = $ref->getSchema()->getImplAttribute($attribute);
+                        $field = $ref->getSchema()->getImplAttribute($field);
 
-            } elseif ($ref->getSchema()->hasRelationship($attribute)) {
+                    } elseif ($ref->getSchema()->hasRelationship($field)) {
 
-                $token = $delim . $attribute;
-                
-                $ref = $refs->has($token)
-                    ? $refs->get($token)
-                    : $refs->resolve($attribute, $ref, $this->driver);
+                        $token = $delim . $field;
+                        
+                        if ($refs->has($token)) {
+                            $ref = $refs->get($token);
+                        } else {
+                            $related = $refs->resolve($field, $ref);
+                            $this->driver->resolve($related, $ref);
+                            $ref = $related;
+                        }
 
-                $attribute = $ref->getSchema()->getId();
+                        $field = $ref->getSchema()->getId();
 
-            } else {
+                    } else {
 
-                return false; // Malformed expression, attribute does not exist
-            
+                        $field = null;
+
+                    }
+
+                    if ($field !== null) {
+                        // TODO:    This is kind of ugly :(
+                        //          The IN and NOT IN operataions are unique:
+                        //          they accept a variable amount of arguments.
+                        if (in_array($filter, ['in', 'ni'])) {
+                            $vals = [];
+
+                            foreach (explode(',', $value) as $val) {
+                                $vals[] = $qb->createNamedParameter($val);
+                            }
+
+                            $value = '(' . implode(', ', $vals) . ')';
+                        } else {
+                            $value = $qb->createNamedParameter($value);
+                        }
+
+                        $qb->andWhere($qb->expr()->comparison(
+                            $ref . '.' . $field,
+                            self::SUPPORTED_FILTERS[$filter],
+                            $value
+                        ));
+                    }
+                }
             }
-            
-            $qb->andWhere($qb->expr()->comparison(
-                $ref . '.' . $attribute,
-                self::SUPPORTED_FILTERS[$filter],
-                $qb->createNamedParameter($value)
-            ));
         }
 
         return true;

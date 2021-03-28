@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace ThePetPark\Library\Graph\Schema;
 
 use Psr\Container\ContainerInterface;
-use ThePetPark\Library\Graph\AbstractDriver;
 use ThePetPark\Library\Graph\Schema;
 
 use function substr;
@@ -21,14 +20,16 @@ class ReferenceTable implements ContainerInterface
     protected $refcount = 0;
 
     /**
-     * Token-to-reference ID map
+     * Token-to-reference ID map.
      * 
      * @var array
      */
     protected $map = [];
 
     /**
-     * Token-to-reference map.
+     * Reference ID-to-reference map.
+     * Root reference must be a Schema\Reference.
+     * All other references are of type Schema\Relationship.
      * 
      * @var \ThePetPark\Library\Graph\Schema\Relationship[]
      */
@@ -64,19 +65,24 @@ class ReferenceTable implements ContainerInterface
     /**
      * Initialize the reference table using provided token.
      */
-    public function init(string $type, AbstractDriver $driver)
+    public function init(string $type)
     {
-        $ref = new Schema\Reference($this->refcount, $this->schemas->get($type));
-        
         $this->baseRef = $this->refcount;
+        
+        $ref = new Schema\Reference($this->baseRef, $this->schemas->get($type));
+        
         $this->references[$this->refcount++] = $ref;
-
-        $driver->init($ref);
 
         return $ref;
     }
 
-    public function get(string $token): Schema\Reference
+    /**
+     * Note: although the root Schema\Reference is present in the references
+     * collection, it is not present in the token-to-reference map.
+     * 
+     * Therefore, this function can only return relationships.
+     */
+    public function get(string $token): Schema\Relationship
     {
         return $this->references[$this->map[$token]];
     }
@@ -90,11 +96,8 @@ class ReferenceTable implements ContainerInterface
      * Adds related schema to the driver's query and generates a new unique
      * reference for the relationship.
      */
-    public function resolve(
-        string $token,
-        Schema\Reference $source,
-        AbstractDriver $driver
-    ): Schema\Relationship {
+    public function resolve(string $token, Schema\Reference $source): Schema\Relationship
+    {
         $id = $this->refcount++;
 
         $name = substr(strrchr($token, '.') ?: '', 1) ?: $token;
@@ -111,9 +114,6 @@ class ReferenceTable implements ContainerInterface
 
         $this->map[$token] = $id;
         $this->references[$id] = $related;
-        $this->parentRefs[$id] = $source;
-
-        $driver->resolve($source, $related);
 
         return $related;
     }
@@ -149,61 +149,5 @@ class ReferenceTable implements ContainerInterface
     public function getRefById(int $id): Schema\Relationship
     {
         return $this->references[$id];
-    }
-
-    public function scan(AbstractDriver $driver): array
-    {
-        $ref = $this->references[$this->baseRef];
-        $prefix = $ref . '_';
-        $data = [];
-
-        foreach ($driver->fetchAll() as $record) {
-            $resourceID = $record[$prefix . 'id'];
-            $data[$resourceID] = [];
-
-            foreach ($ref->getSchema()->getAttributes() as $attr) {
-                $data[$resourceID][$attr] = $record[$prefix . $attr];
-            }
-        }
-
-        return $data;
-    }
-
-    public function scanIncluded(AbstractDriver $driver): array
-    {
-        $data = [];
-        $relationships = [];
-
-        // Initialize data and relationship collections using the list of
-        // child-to-parent references.
-        foreach ($this->parentRefs as $childRefID => $parentRef) {
-            $data[$childRefID] = [];
-
-            if (isset($relationships[$parentRef->getRef()]) === false) {
-                $relationships[$parentRef->getRef()] = [];
-            }
-
-            $relationships[$parentRef->getRef()][$childRefID] = [];
-        }
-    
-        foreach ($driver->fetchAll() as $record) {
-            foreach ($this->parentRefs as $refID => $parentRef) {
-                $ref = $this->references[$refID];
-                $prefix = $ref->getRef() . '_';
-                $resourceID = $record[$prefix . 'id'];
-
-                // Ignore duplicates. There may be many of them!
-                if (isset($data[$refID][$resourceID]) === false) {
-                    $data[$refID][$resourceID] = [];
-                    $relationships[$parentRef->getRef()][$refID][] = $resourceID;
-
-                    foreach ($ref->getSchema()->getAttributes() as $attr) {
-                        $data[$refID][$attr] = $record[$prefix . $attr];
-                    }
-                }
-            }
-        }
-
-        return [$data, $relationships];
     }
 }

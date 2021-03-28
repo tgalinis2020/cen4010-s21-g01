@@ -9,7 +9,9 @@ use ThePetPark\Services;
 use ThePetPark\Middleware;
 use ThePetPark\Library\Graph;
 
+use function DI\create;
 use function DI\factory;
+use function DI\get;
 
 return [
 
@@ -42,37 +44,52 @@ return [
 
         $driver = new Graph\Drivers\Doctrine\Driver(
             $c->get(DBAL\Connection::class),
-            $settings['driver']    
+            $settings['driver']
         );
 
-        $graph = new Graph\App($settings['definitions'], $driver, $c->get('response'));
+        $graph = new Graph\App($settings, $driver, $c->get('response'), $c);
 
         return new Graph\Adapters\Slim\Adapter($graph);
     }),
 
-    Middleware\Session::class => factory(function (ContainerInterface $c) {
-        return new Middleware\Session(
-            $c->get(Services\JWT\Decoder::class)
-        );
-    }),
+    Middleware\Session::class => create(Middleware\Session::class)
+        ->constructor(get(Services\JWT\Decoder::class)),
 
     Http\UploadFile::class => factory(function (ContainerInterface $c) {
-        return new Http\UploadFile();
-    }),
-
-    Http\Session\Resolve::class => factory(function (ContainerInterface $c) {
-        return new Http\Session\Resolve();
-    }),
-
-    Http\Session\Create::class => factory(function (ContainerInterface $c) {
-        return new Http\Session\Create(
-            $c->get(Connection::class),
-            $c->get(Services\JWT\Encoder::class)
+        return new Http\UploadFile(
+            $c->get('settings')['uploadDirectory']
         );
     }),
 
-    Http\Session\Delete::class => factory(function (ContainerInterface $c) {
-        return new Http\Session\Delete();
-    }),
+    Http\Session\Resolve::class => create(Http\Session\Resolve::class),
+
+    Http\Session\Create::class => create(Http\Session\Create::class)
+        ->constructor(get(Connection::class), get(Services\JWT\Encoder::class)),
+
+    Http\Session\Delete::class => create(Http\Session\Delete::class),
+
+    Http\Actions\Users\Create::class => create(Http\Actions\Users\Create::class)
+        ->constructor(get(Connection::class)),
+
+    Http\Actions\Users\Update::class => create(Http\Actions\Users\Update::class)
+        ->constructor(get(Connection::class)),
+
+    Http\Actions\Posts\Create::class => create(Http\Actions\Posts\Create::class)
+        ->constructor(get(Connection::class)),
+
+    Http\Actions\Posts\Update::class => create(Http\Actions\Posts\Update::class)
+        ->constructor(get(Connection::class)),
+
+    Http\Actions\Comments\Create::class => create(Http\Actions\Comments\Create::class)
+        ->constructor(get(Connection::class)),
+
+    Http\Actions\Comments\Update::class => create(Http\Actions\Comments\Update::class)
+        ->constructor(get(Connection::class)),
+
+    Http\Actions\Pets\Create::class => create(Http\Actions\Pets\Create::class)
+        ->constructor(get(Connection::class)),
+
+    Http\Actions\Pets\Update::class => create(Http\Actions\Pets\Update::class)
+        ->constructor(get(Connection::class)),
 
 ];

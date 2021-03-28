@@ -6,16 +6,18 @@ use ThePetPark\Library\Graph;
 
 date_default_timezone_set('UTC');
 
-require __DIR__ . '/../vendor/autoload.php';
-
 return (function () {
-    $builder = new DI\ContainerBuilder();
+    $root = dirname(__DIR__);
+    
+    require $root . '/vendor/autoload.php';
 
-    $builder->addDefinitions(__DIR__ . '/../etc/settings.php');
-    $builder->addDefinitions(__DIR__ . '/../etc/slim.php');
-    $builder->addDefinitions(__DIR__ . '/../etc/definitions.php');
-
-    $app = new Slim\App($builder->build());
+    $app = new Slim\App((new DI\ContainerBuilder())
+        ->enableCompilation($root . '/var/cache')
+        ->addDefinitions($root . '/etc/settings.php')
+        ->addDefinitions($root . '/etc/slim.php')
+        ->addDefinitions($root . '/etc/definitions.php')
+        ->build()
+    );
 
     // The Session middleware reads the session cookie and attaches the user's
     // session details to the request.

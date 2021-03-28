@@ -6,6 +6,7 @@ namespace ThePetPark\Http\Actions\Comments;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Doctrine\DBAL\Connection;
 use ThePetPark\Middleware\Session;
 use ThePetPark\Library\Graph;
 
@@ -15,33 +16,84 @@ use function array_keys;
 
 class Create implements Graph\ActionInterface
 {
+    /** @var \Doctrine\DBAL\Connection */
+    protected $conn;
+
+    public function __construct(Connection $conn)
+    {
+        $this->conn = $conn;
+    }
+
     public function execute(Graph\App $graph, Request $req): Response
     {
         $res = $graph->createResponse();
-        $conn = $graph->getConnection();
         $session = $req->getAttribute(Session::TOKEN);
 
         if ($session === null) {
             return $res->withStatus(401);
         }
 
-        $data = json_decode($req->getBody(), true);
+        $document = json_decode($req->getBody(), true);
 
-        $comment = $data['data'];
+        if (isset($document['data'], $document['data']['attributes'],
+                $document['data']['relationships']) === false
+        ) {
+            return $res->withStatus(400);
+        }
 
-        $conn->createQueryBuilder()
-            ->insert('post_comments')
-            ->setValue('text_content', '?')
-            ->setValue('user_id', '?')
-            ->setParameter(0, $comment['text'])
-            ->setParameter(1, $session['id'])
+        $data = $document['data'];
+        $attributes = $data['attributes'];
+        $relationships = $data['relationships'];
+
+        // This is some galaxy-brain validation.
+        //
+        // TODO:    Refactor if time allows for it!
+        if (isset($attributes['text'], $relationships['post'],
+                $relationships['post']['data'],
+                $relationships['post']['data']['type'],
+                $relationships['post']['data']['id']) === false
+            || $relationships['post']['data']['type'] !== 'posts'
+        ) {
+            return $res->withStatus(400);
+        }
+
+        $postID = $relationships['post']['data']['id'];
+
+        $qb = $this->conn->createQueryBuilder();
+
+        $attributes['createdAt'] = date('c');
+
+        $qb->insert('comments')
+            ->values([
+                'text_content' => $qb->createNamedParameter($attributes['text']),
+                'user_id'      => $qb->createNamedParameter($session['id']), 
+                'created_at'   => $qb->createNamedParameter($attributes['createdAt']),
+            ])
             ->execute();
         
-        $commentID = $conn->lastInsertId();
+        $commentID = $this->conn->lastInsertId();
 
-        // Although it is unlikely a client would need the newly created comment
-        // ID, it is returned for the sake of consistency.
-        $res->getBody()->write(json_encode(['data' => ['id' => $commentID]]));
+        $qb = $this->conn->createQueryBuilder();
+
+        $qb->insert('post_comments')
+            ->values([
+                'post_id'    => $qb->createNamedParameter($postID),
+                'comment_id' => $qb->createNamedParameter($commentID),
+            ])
+            ->execute();
+
+        $document = [
+            'jsonapi' => '1.0',
+            'data' => [
+                'id' => $commentID,
+                'attributes' => [
+                    'text' => $attributes['text'],
+                    'createdAt' => $attributes['createdAt'],
+                ]
+            ],
+        ];
+
+        $res->getBody()->write(json_encode($document));
 
         return $res->withStatus(201);
     }
