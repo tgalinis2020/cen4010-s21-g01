@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/../../vendor/autoload.php';
+require dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 use ThePetPark\Library\Graph\App as Graph;
 use ThePetPark\Library\Graph\Actions;
@@ -159,7 +159,7 @@ try {
 
             $typeSchemaMap[$resource] = $nschemas;
 
-            $schemas[++$nschemas] = [
+            $schemas[$nschemas++] = [
                 [$resource, $source, $id], // table/primary key info
                 $attributes,
                 $relationships,

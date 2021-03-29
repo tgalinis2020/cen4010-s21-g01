@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace ThePetPark\Library\Graph\Schema;
 
 use Psr\Container\ContainerInterface;
+use ThePetPark\Library\Graph\AbstractDriver;
 use ThePetPark\Library\Graph\Schema;
+use ThePetPark\Library\Graph\ReferenceTableHooksInterface;
 
 use function substr;
 use function strrchr;
@@ -56,24 +58,24 @@ class ReferenceTable implements ContainerInterface
     /** @var \ThePetPark\Library\Graph\Schema\Container */
     protected $schemas;
 
-    /** @param \ThePetPark\Library\Graph\Schema\Container $schemas */
-    public function __construct(Schema\Container $schemas)
-    {
-        $this->schemas = $schemas;
-    }
+    /** @var \ThePetPark\Library\Graph\AbstractDriver */
+    protected $driver;
 
-    /**
-     * Initialize the reference table using provided token.
-     */
-    public function init(string $type)
-    {
+    /** @param \ThePetPark\Library\Graph\Schema\Container $schemas */
+    public function __construct(
+        Schema\Container $schemas,
+        string $base,
+        AbstractDriver $driver
+    ) {
+        $this->driver = $driver;
+        $this->schemas = $schemas;
         $this->baseRef = $this->refcount;
         
-        $ref = new Schema\Reference($this->baseRef, $this->schemas->get($type));
+        $ref = new Schema\Reference($this->baseRef, $schemas->get($base));
         
         $this->references[$this->refcount++] = $ref;
 
-        return $ref;
+        $driver->setSource($ref);
     }
 
     /**
@@ -115,6 +117,8 @@ class ReferenceTable implements ContainerInterface
         $this->map[$token] = $id;
         $this->references[$id] = $related;
 
+        $this->driver->resolve($related, $source);
+
         return $related;
     }
 
@@ -125,14 +129,16 @@ class ReferenceTable implements ContainerInterface
      * Unset the relationship's row in parentRefs to avoid propagating
      * relationship data to a resource that isn't selected.
      */
-    public function setBaseRef(Schema\Relationship $ref)
+    public function setBaseRef(Schema\Reference $ref)
     {
         $this->baseRef = $ref->getRef();
+        $this->driver->prepare($ref);
     }
 
     public function setParentRef(Schema\Relationship $ref, Schema\Reference $parent)
     {
         $this->parentRefs[$ref->getRef()] = $parent;
+        $this->driver->prepare($ref);
     }
 
     public function getBaseRef(): Schema\Reference

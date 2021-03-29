@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace ThePetPark\Library\Graph\Drivers\Doctrine\Features;
 
+use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
-use ThePetPark\Library\Graph;
+use ThePetPark\Library\Graph\FeatureInterface;
+use ThePetPark\Library\Graph\Schema;
 use ThePetPark\Library\Graph\Schema\ReferenceTable;
 
 use function is_array;
@@ -20,10 +22,8 @@ use function explode;
  * 
  * GET /articles?filter[createdAt][lt]=2021-03-17
  */
-class Filters implements Graph\FeatureInterface
+class Filtering implements FeatureInterface
 {
-    use Graph\Drivers\Doctrine\FeatureTrait;
-
     const SUPPORTED_FILTERS = [
         'eq' => ExpressionBuilder::EQ,
         'ne' => ExpressionBuilder::NEQ,
@@ -37,14 +37,21 @@ class Filters implements Graph\FeatureInterface
         'ni' => 'NOT IN',
     ];
 
-    public function apply(array $params, ReferenceTable $refs): bool
-    {
-        if (isset($params['filter']) === false) {
-            return false;
-        }
+    /** @var \Doctrine\DBAL\Query\QueryBuilder*/
+    protected $qb;
 
-        $qb = $this->driver->getQueryBuilder();
-    
+    public function __construct(QueryBuilder $qb)
+    {
+        $this->qb = $qb;
+    }
+
+    public function provides(): string
+    {
+        return 'filter';
+    }
+
+    public function apply(array $params, Schema\Container $schemas, ReferenceTable $refs): bool
+    {
         foreach ($params['filter'] as $fullyQualifiedField => $filterAndValue) {
             $ref = $refs->getBaseRef();
 
@@ -61,18 +68,10 @@ class Filters implements Graph\FeatureInterface
             foreach ($tokens as $relationship) {
                 $token .= $delim . $relationship;
 
-                // TODO:    Filters are evaulated before resolving any resources.
-                //          Might not even be worth checking if a reference
-                //          exists for the provided token.
-                if ($refs->has($token)) {
-                    $ref = $refs->get($token);
-                } else {
-                    $related = $refs->resolve($field, $ref);
-                    $this->driver->resolve($related, $ref);
-                    $ref = $related;
-                }
+                $ref = $refs->has($token)
+                   ? $refs->get($token)
+                   : $refs->resolve($relationship, $ref);
 
-                $ref = $related;
                 $delim = '.';
             }
 
@@ -89,15 +88,9 @@ class Filters implements Graph\FeatureInterface
 
                     } elseif ($ref->getSchema()->hasRelationship($field)) {
 
-                        $token = $delim . $field;
-                        
-                        if ($refs->has($token)) {
-                            $ref = $refs->get($token);
-                        } else {
-                            $related = $refs->resolve($field, $ref);
-                            $this->driver->resolve($related, $ref);
-                            $ref = $related;
-                        }
+                        $ref = $refs->has($fullyQualifiedField)
+                           ? $refs->get($fullyQualifiedField)
+                           : $refs->resolve($field, $ref);
 
                         $field = $ref->getSchema()->getId();
 
@@ -115,15 +108,15 @@ class Filters implements Graph\FeatureInterface
                             $vals = [];
 
                             foreach (explode(',', $value) as $val) {
-                                $vals[] = $qb->createNamedParameter($val);
+                                $vals[] = $this->qb->createNamedParameter($val);
                             }
 
                             $value = '(' . implode(', ', $vals) . ')';
                         } else {
-                            $value = $qb->createNamedParameter($value);
+                            $value = $this->qb->createNamedParameter($value);
                         }
 
-                        $qb->andWhere($qb->expr()->comparison(
+                        $this->qb->andWhere($this->qb->expr()->comparison(
                             $ref . '.' . $field,
                             self::SUPPORTED_FILTERS[$filter],
                             $value

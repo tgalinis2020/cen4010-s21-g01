@@ -7,7 +7,7 @@ namespace ThePetPark\Http\Session;
 use Doctrine\DBAL\FetchMode;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
-use Doctrine\DBAL\Query\QueryBuilder;
+use Doctrine\DBAL\Connection;
 use ThePetPark\Services\JWT\Encoder;
 use ThePetPark\Middleware\Session;
 
@@ -21,29 +21,31 @@ use function password_verify;
  */
 final class Create
 {
-    /** @var \Doctrine\DBAL\Query\QueryBuilder */
-    private $qb;
+    /** @var \Doctrine\DBAL\Connection */
+    private $conn;
 
     /** @var \ThePetPark\Services\JWT\Encoder */
     private $encoder;
 
-    public function __construct(QueryBuilder $qb, Encoder $jwtEncoder)
+    public function __construct(Connection $conn, Encoder $jwtEncoder)
     {
-        $this->qb = $qb;
+        $this->conn = $conn;
         $this->encoder = $jwtEncoder;
     }
 
     public function __invoke(Request $req, Response $res): Response
     {
-        $document = json_decode($req->getBody(), true);
+        $document = json_decode((string) $req->getBody(), true);
         
-        if (isset($document['data']) === false) {
+        $data = $document['data'] ?? null;
+
+        if ($data === null) {
             return $res->withStatus(400);
         }
 
-        $data = $document['data'];
-        $username = $this->qb->createNamedParameter($data['username']);
-        $acct = $this->qb
+        $qb = $this->conn->createQueryBuilder();
+        $username = $qb->createNamedParameter($data['username']);
+        $acct = $qb
             ->select([
                 'u.id',
                 'u.idp_code    idpCode',
@@ -54,10 +56,10 @@ final class Create
                 'p.passwd      password',
             ])
             ->from('users', 'u')
-            ->join('u', 'user_passwords', 'p', $this->qb->expr()->eq('p.id', 'u.id'))
-            ->where($this->qb->expr()->orX(
-                $this->qb->expr()->eq('u.username', $username),
-                $this->qb->expr()->eq('u.email', $username)
+            ->join('u', 'user_passwords', 'p', $qb->expr()->eq('p.id', 'u.id'))
+            ->where($qb->expr()->orX(
+                $qb->expr()->eq('u.username', $username),
+                $qb->expr()->eq('u.email', $username)
             ))
             ->execute()
             ->fetch(FetchMode::ASSOCIATIVE);

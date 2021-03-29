@@ -40,14 +40,20 @@ class Schema
      * Resource attributes.
      * 
      * Attribute signature:
-     * attr_name: string => [selectable: int, attr_name: string, backend_alias: string]
+     * attr_name: string => [attr_name: string, backend_alias: string]
      * 
      * If alias is not provided, it is assumed that alias == attr_name.
+     * 
+     * TODO:    To support more advanced features (such as default values when
+     *          creating resources), attributes need more information.
+     *          Might be worth making it into a class, like Relationships.
      */
     protected $attributes;
 
     /**
      * Sparse fields.
+     * 
+     * @var string[]
      */
     protected $fields = [];
 
@@ -125,10 +131,15 @@ class Schema
 
     public function hasAttribute(string $attr): bool
     {
-        return isset($this->attributes[$attr]) || ($attr === 'id');
+        return isset($this->attributes[$attr]);
     }
 
     public function getAttributes(): array
+    {
+        return $this->fields;
+    }
+
+    public function getImplAttributes(): array
     {
         $attrs = [];
 

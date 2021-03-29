@@ -73,6 +73,7 @@ CREATE TABLE pets (
 );
 
 -- User's home feed will be populated by posts from the pets they follow.
+-- Many users -> Many pets
 CREATE TABLE subscriptions (
     pet_id INTEGER UNSIGNED NOT NULL,
     user_id INTEGER UNSIGNED NOT NULL,
@@ -82,34 +83,26 @@ CREATE TABLE subscriptions (
     CONSTRAINT subscriptions_user_fk FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
--- Even though expansion of the app is unlikely after this class is over,
--- it may be worth abstracting the likes from posts in case other things can
--- be liked in the future.
--- CREATE TABLE likeables (
---     id INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
---     like_count INTEGER UNSIGNED NOT NULL DEFAULT 0,
-
---     CONSTRAINT likeable_pk PRIMARY KEY (id)
--- );
-
 CREATE TABLE posts (
     id INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
     image_url VARCHAR(512) NOT NULL,
     title VARCHAR(255) NOT NULL,
     text_content TEXT,
-
-    -- It would be much nicer to have a post_likes table and associate each user
-    -- with the post; that way you can see who liked a post.
-    -- The number of likes could then be derived using COUNT(*).
-    -- Due to limitations with the chosen framework, likes needs to be a field.
-    like_count INTEGER UNSIGNED NOT NULL DEFAULT 0,
-
     created_at DATETIME NOT NULL,
     user_id INTEGER UNSIGNED NOT NULL,
 
     CONSTRAINT posts_pk PRIMARY KEY (id),
-    -- CONSTRAINT posts_likeables_fk FOREIGN KEY (likeable_id) REFERENCES likeables (id),
     CONSTRAINT author_fk FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+-- One post -> Many likes
+CREATE TABLE post_likes (
+    post_id INTEGER UNSIGNED NOT NULL,
+    user_id INTEGER UNSIGNED NOT NULL,
+
+    CONSTRAINT post_likes_pk PRIMARY KEY (post_id, user_id),
+    CONSTRAINT post_likes_posts_fk FOREIGN KEY (post_id) REFERENCES posts (id),
+    CONSTRAINT post_likes_users_fk FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
 CREATE TABLE comments (
@@ -122,6 +115,10 @@ CREATE TABLE comments (
     CONSTRAINT comments_author_fk FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
+-- One post -> Many comments
+-- It's possible to make this a to-one foreign key directly in the comments
+-- table, but putting the association here makes it possible to associate
+-- comments with other comments in the future (if there is time :)).
 CREATE TABLE post_comments (
     comment_id INTEGER UNSIGNED NOT NULL,
     post_id INTEGER UNSIGNED NOT NULL,
@@ -140,6 +137,7 @@ CREATE TABLE tags (
     CONSTRAINT tags_uk UNIQUE (text_content)
 );
 
+-- Many post -> many tags
 CREATE TABLE post_tags (
     post_id INTEGER UNSIGNED NOT NULL,
     tag_id INTEGER UNSIGNED NOT NULL,
@@ -149,6 +147,7 @@ CREATE TABLE post_tags (
     CONSTRAINT post_tags_tag_fk FOREIGN KEY (tag_id) REFERENCES tags (id)
 );
 
+-- Many posts -> Many pets
 CREATE TABLE post_pets (
     post_id INTEGER UNSIGNED NOT NULL,
     pet_id INTEGER UNSIGNED NOT NULL,
@@ -158,6 +157,7 @@ CREATE TABLE post_pets (
     CONSTRAINT post_pets_pet_fk FOREIGN KEY (pet_id) REFERENCES pets (id)
 );
 
+-- Many users -> Many posts
 CREATE TABLE user_favorite_posts (
     user_id INTEGER UNSIGNED NOT NULL,
     post_id INTEGER UNSIGNED NOT NULL,

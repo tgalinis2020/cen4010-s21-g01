@@ -11,31 +11,33 @@ abstract class AbstractDriver
     /** @var \ThePetPark\Library\Graph\FeatureInterface[] */
     protected $features;
 
-    /**
-     * @param string[] $features Array of fully qualified feature class names.
-     */
-    public function __construct(array $features)
-    {
-        foreach ($features as $featureCls) {
-            $this->features[] = new $featureCls($this);
-        }
-    }
-
     /** @return \ThePetPark\Library\Graph\FeatureInterface[] */
-    public function getFeatures(): array
+    public function getFeatures(array $params): array
     {
-        return $this->features;
+        $features = [];
+
+        foreach ($this->features as $feat) {
+            if (isset($params[$feat->provides()])) {
+                $features[] = $feat;
+            }
+        }
+
+        return $features;
+    }
+    
+    public function apply(array $params, Schema\Container $schemas, ReferenceTable $refs)
+    {
+        foreach ($this->features as $feat) {
+            if (isset($params[$feat->provides()])) {
+                $feat->apply($params, $schemas, $refs);
+            }
+        }
     }
 
     /**
      * Set the provided reference as the source of the query.
      */
-    abstract public function init(Schema\Reference $source);
-
-    /**
-     * Apply any features provided by this driver.
-     */
-    abstract public function apply(array $parameter, ReferenceTable $refs);
+    abstract public function setSource(Schema\Reference $source);
 
     /**
      * Select a specific resource from a the resource collection pointed to by
@@ -67,7 +69,7 @@ abstract class AbstractDriver
      * 
      * {reference enum}_{source schema attribute}
      */
-    abstract public function fetchAll(): array;
+    abstract public function execute(): array;
 
     /**
      * If fetching included data, reset the query such that it doesn't select

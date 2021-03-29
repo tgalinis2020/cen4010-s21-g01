@@ -25,7 +25,7 @@ class Encoder
         $this->alg = $alg;
     }
 
-    public function encode(string $payload): string
+    public function encode(array $payload): string
     {
         return JWT::encode($payload, $this->secret, $this->alg);
     }

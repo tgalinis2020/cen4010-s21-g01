@@ -1,123 +1,27 @@
 <?php return array (
   0 => 
   array (
-    'GET' => 
-    array (
-      '/session' => 'route0',
-    ),
     'POST' => 
     array (
+      '/upload' => 'route0',
+      '/session' => 'route2',
+    ),
+    'GET' => 
+    array (
       '/session' => 'route1',
-      '/upload' => 'route3',
     ),
     'DELETE' => 
     array (
-      '/session' => 'route2',
+      '/session' => 'route3',
     ),
   ),
   1 => 
   array (
-    'GET' => 
-    array (
-      0 => 
-      array (
-        'regex' => '~^(?|/([^/]+)|/([^/]+)/([0-9]+)|/([^/]+)/([0-9]+)/([^/]+)|/([^/]+)/([0-9]+)/([^/]+)/([^/]+))$~',
-        'routeMap' => 
-        array (
-          2 => 
-          array (
-            0 => 'route4',
-            1 => 
-            array (
-              'graph_tok0' => 'graph_tok0',
-            ),
-          ),
-          3 => 
-          array (
-            0 => 'route4',
-            1 => 
-            array (
-              'graph_tok0' => 'graph_tok0',
-              'graph_tok1' => 'graph_tok1',
-            ),
-          ),
-          4 => 
-          array (
-            0 => 'route4',
-            1 => 
-            array (
-              'graph_tok0' => 'graph_tok0',
-              'graph_tok1' => 'graph_tok1',
-              'graph_tok2' => 'graph_tok2',
-            ),
-          ),
-          5 => 
-          array (
-            0 => 'route4',
-            1 => 
-            array (
-              'graph_tok0' => 'graph_tok0',
-              'graph_tok1' => 'graph_tok1',
-              'graph_tok2' => 'graph_tok2',
-              'graph_tok3' => 'graph_tok3',
-            ),
-          ),
-        ),
-      ),
-    ),
-    'POST' => 
-    array (
-      0 => 
-      array (
-        'regex' => '~^(?|/([^/]+)|/([^/]+)/([0-9]+)|/([^/]+)/([0-9]+)/([^/]+)|/([^/]+)/([0-9]+)/([^/]+)/([^/]+))$~',
-        'routeMap' => 
-        array (
-          2 => 
-          array (
-            0 => 'route4',
-            1 => 
-            array (
-              'graph_tok0' => 'graph_tok0',
-            ),
-          ),
-          3 => 
-          array (
-            0 => 'route4',
-            1 => 
-            array (
-              'graph_tok0' => 'graph_tok0',
-              'graph_tok1' => 'graph_tok1',
-            ),
-          ),
-          4 => 
-          array (
-            0 => 'route4',
-            1 => 
-            array (
-              'graph_tok0' => 'graph_tok0',
-              'graph_tok1' => 'graph_tok1',
-              'graph_tok2' => 'graph_tok2',
-            ),
-          ),
-          5 => 
-          array (
-            0 => 'route4',
-            1 => 
-            array (
-              'graph_tok0' => 'graph_tok0',
-              'graph_tok1' => 'graph_tok1',
-              'graph_tok2' => 'graph_tok2',
-              'graph_tok3' => 'graph_tok3',
-            ),
-          ),
-        ),
-      ),
-    ),
     'PUT' => 
     array (
       0 => 
       array (
-        'regex' => '~^(?|/([^/]+)|/([^/]+)/([0-9]+)|/([^/]+)/([0-9]+)/([^/]+)|/([^/]+)/([0-9]+)/([^/]+)/([^/]+))$~',
+        'regex' => '~^(?|/passwords/([^/]+))$~',
         'routeMap' => 
         array (
           2 => 
@@ -125,37 +29,7 @@
             0 => 'route4',
             1 => 
             array (
-              'graph_tok0' => 'graph_tok0',
-            ),
-          ),
-          3 => 
-          array (
-            0 => 'route4',
-            1 => 
-            array (
-              'graph_tok0' => 'graph_tok0',
-              'graph_tok1' => 'graph_tok1',
-            ),
-          ),
-          4 => 
-          array (
-            0 => 'route4',
-            1 => 
-            array (
-              'graph_tok0' => 'graph_tok0',
-              'graph_tok1' => 'graph_tok1',
-              'graph_tok2' => 'graph_tok2',
-            ),
-          ),
-          5 => 
-          array (
-            0 => 'route4',
-            1 => 
-            array (
-              'graph_tok0' => 'graph_tok0',
-              'graph_tok1' => 'graph_tok1',
-              'graph_tok2' => 'graph_tok2',
-              'graph_tok3' => 'graph_tok3',
+              'id' => 'id',
             ),
           ),
         ),
@@ -165,45 +39,99 @@
     array (
       0 => 
       array (
-        'regex' => '~^(?|/([^/]+)|/([^/]+)/([0-9]+)|/([^/]+)/([0-9]+)/([^/]+)|/([^/]+)/([0-9]+)/([^/]+)/([^/]+))$~',
+        'regex' => '~^(?|/passwords/([^/]+)|/([A-Za-z-]+)/([0-9]+)|/([A-Za-z-]+)/([0-9]+)/relationships/([A-Za-z-]+))$~',
         'routeMap' => 
         array (
           2 => 
           array (
-            0 => 'route4',
+            0 => 'route5',
             1 => 
             array (
-              'graph_tok0' => 'graph_tok0',
+              'id' => 'id',
             ),
           ),
           3 => 
           array (
-            0 => 'route4',
+            0 => 'route9',
             1 => 
             array (
-              'graph_tok0' => 'graph_tok0',
-              'graph_tok1' => 'graph_tok1',
+              'resource' => 'resource',
+              'id' => 'id',
             ),
           ),
           4 => 
           array (
-            0 => 'route4',
+            0 => 'route13',
             1 => 
             array (
-              'graph_tok0' => 'graph_tok0',
-              'graph_tok1' => 'graph_tok1',
-              'graph_tok2' => 'graph_tok2',
+              'resource' => 'resource',
+              'id' => 'id',
+              'relationship' => 'relationship',
             ),
           ),
-          5 => 
+        ),
+      ),
+    ),
+    'GET' => 
+    array (
+      0 => 
+      array (
+        'regex' => '~^(?|/([A-Za-z-]+)|/([A-Za-z-]+)/([0-9]+)|/([A-Za-z-]+)/([0-9]+)/((?!relationships)[A-Za-z-]+))$~',
+        'routeMap' => 
+        array (
+          2 => 
           array (
-            0 => 'route4',
+            0 => 'route6',
             1 => 
             array (
-              'graph_tok0' => 'graph_tok0',
-              'graph_tok1' => 'graph_tok1',
-              'graph_tok2' => 'graph_tok2',
-              'graph_tok3' => 'graph_tok3',
+              'resource' => 'resource',
+            ),
+          ),
+          3 => 
+          array (
+            0 => 'route8',
+            1 => 
+            array (
+              'resource' => 'resource',
+              'id' => 'id',
+            ),
+          ),
+          4 => 
+          array (
+            0 => 'route11',
+            1 => 
+            array (
+              'resource' => 'resource',
+              'id' => 'id',
+              'relationship' => 'relationship',
+            ),
+          ),
+        ),
+      ),
+    ),
+    'POST' => 
+    array (
+      0 => 
+      array (
+        'regex' => '~^(?|/([A-Za-z-]+)|/([A-Za-z-]+)/([0-9]+)/relationships/([A-Za-z-]+))$~',
+        'routeMap' => 
+        array (
+          2 => 
+          array (
+            0 => 'route7',
+            1 => 
+            array (
+              'resource' => 'resource',
+            ),
+          ),
+          4 => 
+          array (
+            0 => 'route12',
+            1 => 
+            array (
+              'resource' => 'resource',
+              'id' => 'id',
+              'relationship' => 'relationship',
             ),
           ),
         ),
@@ -213,45 +141,26 @@
     array (
       0 => 
       array (
-        'regex' => '~^(?|/([^/]+)|/([^/]+)/([0-9]+)|/([^/]+)/([0-9]+)/([^/]+)|/([^/]+)/([0-9]+)/([^/]+)/([^/]+))$~',
+        'regex' => '~^(?|/([A-Za-z-]+)/([0-9]+)|/([A-Za-z-]+)/([0-9]+)/relationships/([A-Za-z-]+))$~',
         'routeMap' => 
         array (
-          2 => 
-          array (
-            0 => 'route4',
-            1 => 
-            array (
-              'graph_tok0' => 'graph_tok0',
-            ),
-          ),
           3 => 
           array (
-            0 => 'route4',
+            0 => 'route10',
             1 => 
             array (
-              'graph_tok0' => 'graph_tok0',
-              'graph_tok1' => 'graph_tok1',
+              'resource' => 'resource',
+              'id' => 'id',
             ),
           ),
           4 => 
           array (
-            0 => 'route4',
+            0 => 'route14',
             1 => 
             array (
-              'graph_tok0' => 'graph_tok0',
-              'graph_tok1' => 'graph_tok1',
-              'graph_tok2' => 'graph_tok2',
-            ),
-          ),
-          5 => 
-          array (
-            0 => 'route4',
-            1 => 
-            array (
-              'graph_tok0' => 'graph_tok0',
-              'graph_tok1' => 'graph_tok1',
-              'graph_tok2' => 'graph_tok2',
-              'graph_tok3' => 'graph_tok3',
+              'resource' => 'resource',
+              'id' => 'id',
+              'relationship' => 'relationship',
             ),
           ),
         ),

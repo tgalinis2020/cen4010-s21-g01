@@ -14,7 +14,7 @@
   ),
   1 => 
   array (
-    1 => 
+    0 => 
     array (
       0 => 
       array (
@@ -39,11 +39,6 @@
           0 => 'image',
           1 => 'image_url',
         ),
-        'likes' => 
-        array (
-          0 => 'likes',
-          1 => 'like_count',
-        ),
         'createdAt' => 
         array (
           0 => 'createdAt',
@@ -57,6 +52,20 @@
           0 => 9,
           1 => 'users',
           2 => 'user_id',
+        ),
+        'likes' => 
+        array (
+          0 => 10,
+          1 => 'users',
+          2 => 
+          array (
+            0 => 
+            array (
+              0 => 'post_likes',
+              1 => 'post_id',
+              2 => 'user_id',
+            ),
+          ),
         ),
         'tags' => 
         array (
@@ -121,7 +130,7 @@
         ),
       ),
     ),
-    2 => 
+    1 => 
     array (
       0 => 
       array (
@@ -185,7 +194,7 @@
         ),
       ),
     ),
-    3 => 
+    2 => 
     array (
       0 => 
       array (
@@ -300,7 +309,7 @@
         ),
       ),
     ),
-    4 => 
+    3 => 
     array (
       0 => 
       array (
@@ -353,7 +362,7 @@
         ),
       ),
     ),
-    5 => 
+    4 => 
     array (
       0 => 
       array (
@@ -434,7 +443,7 @@
         ),
       ),
     ),
-    6 => 
+    5 => 
     array (
       0 => 
       array (
@@ -479,7 +488,7 @@
         ),
       ),
     ),
-    7 => 
+    6 => 
     array (
       0 => 
       array (

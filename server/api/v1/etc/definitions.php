@@ -39,17 +39,18 @@ return [
         );
     }),
 
-    Graph\Adapters\Slim\Adapter::class => factory(function (ContainerInterface $c) {
+    Graph\Schema\Container::class => factory(function (ContainerInterface $c) {
         $settings = $c->get('settings')['graph'];
+        $schemas = [];
 
-        $driver = new Graph\Drivers\Doctrine\Driver(
-            $c->get(DBAL\Connection::class),
-            $settings['driver']
-        );
+        list($_, $definitions) = (require $settings['definitions']);
 
-        $graph = new Graph\App($settings, $driver, $c->get('response'), $c);
+        foreach ($definitions as $definition) { 
+            $schema = Graph\Schema::fromArray($definition);
+            $schemas[$schema->getType()] = $schema;
+        }
 
-        return new Graph\Adapters\Slim\Adapter($graph);
+        return new Graph\Schema\Container($schemas);
     }),
 
     Middleware\Session::class => create(Middleware\Session::class)
@@ -62,34 +63,82 @@ return [
     }),
 
     Http\Session\Resolve::class => create(Http\Session\Resolve::class),
-
+    
     Http\Session\Create::class => create(Http\Session\Create::class)
-        ->constructor(get(Connection::class), get(Services\JWT\Encoder::class)),
-
+        ->constructor(get(DBAL\Connection::class), get(Services\JWT\Encoder::class)),
+    
     Http\Session\Delete::class => create(Http\Session\Delete::class),
 
-    Http\Actions\Users\Create::class => create(Http\Actions\Users\Create::class)
-        ->constructor(get(Connection::class)),
+    Http\Passwords\Set::class => create(Http\Passwords\Set::class)
+        ->constructor(get(DBAL\Connection::class)),
 
-    Http\Actions\Users\Update::class => create(Http\Actions\Users\Update::class)
-        ->constructor(get(Connection::class)),
+    Http\Passwords\Update::class => create(Http\Passwords\Update::class)
+        ->constructor(get(DBAL\Connection::class)),
+    
+    Http\Actions\Resolve::class => factory(function (ContainerInterface $c) {
+        $settings = $c->get('settings')['graph'];
 
-    Http\Actions\Posts\Create::class => create(Http\Actions\Posts\Create::class)
-        ->constructor(get(Connection::class)),
+        return new Http\Actions\Resolve(
+            $c->get(DBAL\Connection::class),
+            $c->get(Graph\Schema\Container::class),
+            $settings['baseUrl']
+        );
+    }),
 
-    Http\Actions\Posts\Update::class => create(Http\Actions\Posts\Update::class)
-        ->constructor(get(Connection::class)),
+    Http\Actions\Add::class => factory(function (ContainerInterface $c) {
+        $settings = $c->get('settings')['graph'];
+        
+        return new Http\Actions\Add(
+            $c->get(DBAL\Connection::class),
+            $c->get(Graph\Schema\Container::class),
+            $settings['baseUrl']
+        );
+    }),
 
-    Http\Actions\Comments\Create::class => create(Http\Actions\Comments\Create::class)
-        ->constructor(get(Connection::class)),
+    Http\Actions\Update::class => factory(function (ContainerInterface $c) {
+        $settings = $c->get('settings')['graph'];
+        
+        return new Http\Actions\Update(
+            $c->get(DBAL\Connection::class),
+            $c->get(Graph\Schema\Container::class),
+            $settings['baseUrl']
+        );
+    }),
 
-    Http\Actions\Comments\Update::class => create(Http\Actions\Comments\Update::class)
-        ->constructor(get(Connection::class)),
+    Http\Actions\Remove::class => factory(function (ContainerInterface $c) {
+        return new Http\Actions\Remove(
+            $c->get(DBAL\Connection::class),
+            $c->get(Graph\Schema\Container::class)
+        );
+    }),
 
-    Http\Actions\Pets\Create::class => create(Http\Actions\Pets\Create::class)
-        ->constructor(get(Connection::class)),
+    Http\Actions\Relationships\Add::class => factory(function (ContainerInterface $c) {
+        $settings = $c->get('settings')['graph'];
+        
+        return new Http\Actions\Relationships\Add(
+            $c->get(DBAL\Connection::class),
+            $c->get(Graph\Schema\Container::class),
+            $settings['baseUrl']
+        );
+    }),
 
-    Http\Actions\Pets\Update::class => create(Http\Actions\Pets\Update::class)
-        ->constructor(get(Connection::class)),
+    Http\Actions\Relationships\Remove::class => factory(function (ContainerInterface $c) {
+        $settings = $c->get('settings')['graph'];
+        
+        return new Http\Actions\Relationships\Remove(
+            $c->get(DBAL\Connection::class),
+            $c->get(Graph\Schema\Container::class),
+            $settings['baseUrl']
+        );
+    }),
 
+    Http\Actions\Relationships\Update::class => factory(function (ContainerInterface $c) {
+        $settings = $c->get('settings')['graph'];
+        
+        return new Http\Actions\Relationships\Update(
+            $c->get(DBAL\Connection::class),
+            $c->get(Graph\Schema\Container::class),
+            $settings['baseUrl']
+        );
+    }),
 ];

@@ -1,6 +1,7 @@
 {
     "scripts": {
-        "graph": "php bin/graph etc/graph.yml var/cache/schemas.php"
+        "graph": "php bin/graph etc/graph.yml var/cache/schemas.php",
+        "deps": "php bin/rebuild-container"
     },
 
     "require": {

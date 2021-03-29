@@ -14,13 +14,19 @@ schemas:
       title: $
       text: text_content
       image: image_url
-      likes: like_count
       createdAt: created_at
 
     relationships:
       author:
         belongsTo: users
         using: user_id
+
+      likes:
+        belongsToMany: users
+        using:
+          - relation: post_likes
+            from: post_id
+            to: user_id
 
       tags:
         hasMany: tags

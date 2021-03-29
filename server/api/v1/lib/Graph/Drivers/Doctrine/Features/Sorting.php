@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace ThePetPark\Library\Graph\Drivers\Doctrine\Features;
 
+use Doctrine\DBAL\Query\QueryBuilder;
 use ThePetPark\Library\Graph;
+use ThePetPark\Library\Graph\Schema;
 use ThePetPark\Library\Graph\Schema\ReferenceTable;
 
 use function trim;
@@ -21,14 +23,22 @@ use function array_pop;
  */
 class Sorting implements Graph\FeatureInterface
 {
-    use Graph\Drivers\Doctrine\FeatureTrait;
+    /** @var \Doctrine\DBAL\Query\QueryBuilder*/
+    protected $qb;
 
-    public function apply(array $params, ReferenceTable $refs): bool
+    /** @param \Doctrine\DBAL\Query\QueryBuilder */
+    public function __construct(QueryBuilder $qb)
     {
-        if (isset($params['sort']) === false) {
-            return false;
-        }
+        $this->qb = $qb;
+    }
 
+    public function provides(): string
+    {
+        return 'sort';
+    }
+
+    public function apply(array $params, Schema\Container $schemas, ReferenceTable $refs): bool
+    {
         foreach (explode(',', $params['sort']) as $fullyQualifiedField) {
             $ref = $refs->getBaseRef();
             $order = 'ASC';
@@ -49,18 +59,10 @@ class Sorting implements Graph\FeatureInterface
             foreach ($tokens as $relationship) {
                 $token .= $delim . $relationship;
 
-                // TODO:    Filters are evaulated before resolving any resources.
-                //          Might not even be worth checking if a reference
-                //          exists for the provided token.
-                if ($refs->has($token)) {
-                    $ref = $refs->get($token);
-                } else {
-                    $related = $refs->resolve($relationship, $ref);
-                    $this->driver->resolve($related, $ref);
-                    $ref = $related;
-                }
+                $ref = $refs->has($token)
+                   ? $refs->get($token)
+                   : $refs->resolve($relationship, $ref);
 
-                $ref = $related;
                 $delim = '.';
             }
 
@@ -74,22 +76,15 @@ class Sorting implements Graph\FeatureInterface
 
             } elseif ($ref->getSchema()->hasRelationship($field)) {
 
-                $token = $delim . $field;
-                
-                if ($refs->has($token)) {
-                    $ref = $refs->get($token);
-                } else {
-                    $related = $refs->resolve($field, $ref);
-                    $this->driver->resolve($related, $ref);
-                    $ref = $related;
-                }
+                $ref = $refs->has($fullyQualifiedField)
+                   ? $refs->get($fullyQualifiedField)
+                   : $refs->resolve($field, $ref);
 
                 $field = $ref->getSchema()->getId();
 
             }
 
-            $this->driver->getQueryBuilder()
-                ->addOrderBy($ref . '.' . $field, $order);
+            $this->qb->addOrderBy($ref . '.' . $field, $order);
         }
 
         return true;

@@ -7,47 +7,46 @@ class CompiledContainer extends DI\CompiledContainer{
   'Doctrine\\DBAL\\Connection' => 'get1',
   'ThePetPark\\Services\\JWT\\Encoder' => 'get2',
   'ThePetPark\\Services\\JWT\\Decoder' => 'get3',
-  'ThePetPark\\Library\\Graph\\Adapters\\Slim\\Adapter' => 'get4',
+  'ThePetPark\\Library\\Graph\\Schema\\Container' => 'get4',
   'ThePetPark\\Middleware\\Session' => 'get5',
-  'ThePetPark\\Http\\UploadFile' => 'get6',
-  'ThePetPark\\Http\\Session\\Resolve' => 'get7',
-  'ThePetPark\\Http\\Session\\Create' => 'get8',
-  'ThePetPark\\Http\\Session\\Delete' => 'get9',
-  'ThePetPark\\Http\\Actions\\Users\\Create' => 'get10',
-  'subEntry1' => 'get11',
-  'ThePetPark\\Http\\Actions\\Users\\Update' => 'get12',
-  'ThePetPark\\Http\\Actions\\Posts\\Create' => 'get13',
-  'subEntry2' => 'get14',
-  'ThePetPark\\Http\\Actions\\Posts\\Update' => 'get15',
-  'subEntry3' => 'get16',
-  'ThePetPark\\Http\\Actions\\Comments\\Create' => 'get17',
-  'subEntry4' => 'get18',
-  'ThePetPark\\Http\\Actions\\Comments\\Update' => 'get19',
-  'subEntry5' => 'get20',
-  'ThePetPark\\Http\\Actions\\Pets\\Create' => 'get21',
-  'subEntry6' => 'get22',
-  'ThePetPark\\Http\\Actions\\Pets\\Update' => 'get23',
-  'subEntry7' => 'get24',
-  'router' => 'get25',
-  'environment' => 'get26',
-  'request' => 'get27',
-  'response' => 'get28',
-  'foundHandler' => 'get29',
-  'callableResolver' => 'get30',
-  'errorHandler' => 'get31',
-  'phpErrorHandler' => 'get32',
-  'notFoundHandler' => 'get33',
-  'notAllowedHandler' => 'get34',
-  'settings' => 'get35',
-  'subEntry8' => 'get36',
-  'subEntry9' => 'get37',
-  'subEntry10' => 'get38',
-  'subEntry11' => 'get39',
-  'subEntry12' => 'get40',
-  'subEntry13' => 'get41',
-  'subEntry14' => 'get42',
-  'subEntry15' => 'get43',
-  'subEntry16' => 'get44',
+  'subEntry1' => 'get6',
+  'ThePetPark\\Http\\UploadFile' => 'get7',
+  'ThePetPark\\Http\\Session\\Resolve' => 'get8',
+  'ThePetPark\\Http\\Session\\Create' => 'get9',
+  'subEntry2' => 'get10',
+  'subEntry3' => 'get11',
+  'ThePetPark\\Http\\Session\\Delete' => 'get12',
+  'ThePetPark\\Http\\Passwords\\Set' => 'get13',
+  'subEntry4' => 'get14',
+  'ThePetPark\\Http\\Passwords\\Update' => 'get15',
+  'subEntry5' => 'get16',
+  'ThePetPark\\Http\\Actions\\Resolve' => 'get17',
+  'ThePetPark\\Http\\Actions\\Add' => 'get18',
+  'ThePetPark\\Http\\Actions\\Update' => 'get19',
+  'ThePetPark\\Http\\Actions\\Remove' => 'get20',
+  'ThePetPark\\Http\\Actions\\Relationships\\Add' => 'get21',
+  'ThePetPark\\Http\\Actions\\Relationships\\Remove' => 'get22',
+  'ThePetPark\\Http\\Actions\\Relationships\\Update' => 'get23',
+  'router' => 'get24',
+  'environment' => 'get25',
+  'request' => 'get26',
+  'response' => 'get27',
+  'foundHandler' => 'get28',
+  'callableResolver' => 'get29',
+  'errorHandler' => 'get30',
+  'phpErrorHandler' => 'get31',
+  'notFoundHandler' => 'get32',
+  'notAllowedHandler' => 'get33',
+  'settings' => 'get34',
+  'subEntry6' => 'get35',
+  'subEntry7' => 'get36',
+  'subEntry8' => 'get37',
+  'subEntry9' => 'get38',
+  'subEntry10' => 'get39',
+  'subEntry11' => 'get40',
+  'subEntry12' => 'get41',
+  'subEntry13' => 'get42',
+  'subEntry14' => 'get43',
 );
 
     protected function get1()
@@ -87,28 +86,31 @@ class CompiledContainer extends DI\CompiledContainer{
     {
         return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
         $settings = $c->get('settings')['graph'];
+        $schemas = [];
 
-        $driver = new \ThePetPark\Library\Graph\Drivers\Doctrine\Driver(
-            $c->get(\Doctrine\DBAL\Connection::class),
-            $settings['driver']
-        );
+        list($_, $definitions) = (require $settings['definitions']);
 
-        $graph = new \ThePetPark\Library\Graph\App($settings, $driver, $c->get('response'), $c);
+        foreach ($definitions as $definition) { 
+            $schema = \ThePetPark\Library\Graph\Schema::fromArray($definition);
+            $schemas[$schema->getType()] = $schema;
+        }
 
-        return new \ThePetPark\Library\Graph\Adapters\Slim\Adapter($graph);
-    }, 'ThePetPark\\Library\\Graph\\Adapters\\Slim\\Adapter');
+        return new \ThePetPark\Library\Graph\Schema\Container($schemas);
+    }, 'ThePetPark\\Library\\Graph\\Schema\\Container');
+    }
+
+    protected function get6()
+    {
+        return $this->delegateContainer->get('ThePetPark\\Services\\JWT\\Decoder');
     }
 
     protected function get5()
     {
-        return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
-        return new \ThePetPark\Middleware\Session(
-            $c->get(\ThePetPark\Services\JWT\Decoder::class)
-        );
-    }, 'ThePetPark\\Middleware\\Session');
+        $object = new ThePetPark\Middleware\Session($this->get6());
+        return $object;
     }
 
-    protected function get6()
+    protected function get7()
     {
         return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
         return new \ThePetPark\Http\UploadFile(
@@ -117,114 +119,145 @@ class CompiledContainer extends DI\CompiledContainer{
     }, 'ThePetPark\\Http\\UploadFile');
     }
 
-    protected function get7()
-    {
-        return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
-        return new \ThePetPark\Http\Session\Resolve();
-    }, 'ThePetPark\\Http\\Session\\Resolve');
-    }
-
     protected function get8()
     {
-        return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
-        return new \ThePetPark\Http\Session\Create(
-            $c->get(\Connection::class),
-            $c->get(\ThePetPark\Services\JWT\Encoder::class)
-        );
-    }, 'ThePetPark\\Http\\Session\\Create');
-    }
-
-    protected function get9()
-    {
-        return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
-        return new \ThePetPark\Http\Session\Delete();
-    }, 'ThePetPark\\Http\\Session\\Delete');
-    }
-
-    protected function get11()
-    {
-        return $this->delegateContainer->get('Connection');
+        $object = new ThePetPark\Http\Session\Resolve();
+        return $object;
     }
 
     protected function get10()
     {
-        $object = new ThePetPark\Http\Actions\Users\Create($this->get11());
+        return $this->delegateContainer->get('Doctrine\\DBAL\\Connection');
+    }
+
+    protected function get11()
+    {
+        return $this->delegateContainer->get('ThePetPark\\Services\\JWT\\Encoder');
+    }
+
+    protected function get9()
+    {
+        $object = new ThePetPark\Http\Session\Create($this->get10(), $this->get11());
         return $object;
     }
 
     protected function get12()
     {
-        $object = new ThePetPark\Http\Actions\Users\Update();
+        $object = new ThePetPark\Http\Session\Delete();
         return $object;
     }
 
     protected function get14()
     {
-        return $this->delegateContainer->get('Connection');
+        return $this->delegateContainer->get('Doctrine\\DBAL\\Connection');
     }
 
     protected function get13()
     {
-        $object = new ThePetPark\Http\Actions\Posts\Create($this->get14());
+        $object = new ThePetPark\Http\Passwords\Set($this->get14());
         return $object;
     }
 
     protected function get16()
     {
-        return $this->delegateContainer->get('Connection');
+        return $this->delegateContainer->get('Doctrine\\DBAL\\Connection');
     }
 
     protected function get15()
     {
-        $object = new ThePetPark\Http\Actions\Posts\Update($this->get16());
+        $object = new ThePetPark\Http\Passwords\Update($this->get16());
         return $object;
-    }
-
-    protected function get18()
-    {
-        return $this->delegateContainer->get('Connection');
     }
 
     protected function get17()
     {
-        $object = new ThePetPark\Http\Actions\Comments\Create($this->get18());
-        return $object;
+        return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
+        $settings = $c->get('settings')['graph'];
+
+        return new \ThePetPark\Http\Actions\Resolve(
+            $c->get(\Doctrine\DBAL\Connection::class),
+            $c->get(\ThePetPark\Library\Graph\Schema\Container::class),
+            $settings['baseUrl']
+        );
+    }, 'ThePetPark\\Http\\Actions\\Resolve');
     }
 
-    protected function get20()
+    protected function get18()
     {
-        return $this->delegateContainer->get('Connection');
+        return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
+        $settings = $c->get('settings')['graph'];
+        
+        return new \ThePetPark\Http\Actions\Add(
+            $c->get(\Doctrine\DBAL\Connection::class),
+            $c->get(\ThePetPark\Library\Graph\Schema\Container::class),
+            $settings['baseUrl']
+        );
+    }, 'ThePetPark\\Http\\Actions\\Add');
     }
 
     protected function get19()
     {
-        $object = new ThePetPark\Http\Actions\Comments\Update($this->get20());
-        return $object;
+        return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
+        $settings = $c->get('settings')['graph'];
+        
+        return new \ThePetPark\Http\Actions\Update(
+            $c->get(\Doctrine\DBAL\Connection::class),
+            $c->get(\ThePetPark\Library\Graph\Schema\Container::class),
+            $settings['baseUrl']
+        );
+    }, 'ThePetPark\\Http\\Actions\\Update');
     }
 
-    protected function get22()
+    protected function get20()
     {
-        return $this->delegateContainer->get('Connection');
+        return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
+        return new \ThePetPark\Http\Actions\Remove(
+            $c->get(\Doctrine\DBAL\Connection::class),
+            $c->get(\ThePetPark\Library\Graph\Schema\Container::class)
+        );
+    }, 'ThePetPark\\Http\\Actions\\Remove');
     }
 
     protected function get21()
     {
-        $object = new ThePetPark\Http\Actions\Pets\Create($this->get22());
-        return $object;
+        return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
+        $settings = $c->get('settings')['graph'];
+        
+        return new \ThePetPark\Http\Actions\Relationships\Add(
+            $c->get(\Doctrine\DBAL\Connection::class),
+            $c->get(\ThePetPark\Library\Graph\Schema\Container::class),
+            $settings['baseUrl']
+        );
+    }, 'ThePetPark\\Http\\Actions\\Relationships\\Add');
     }
 
-    protected function get24()
+    protected function get22()
     {
-        return $this->delegateContainer->get('Connection');
+        return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
+        $settings = $c->get('settings')['graph'];
+        
+        return new \ThePetPark\Http\Actions\Relationships\Remove(
+            $c->get(\Doctrine\DBAL\Connection::class),
+            $c->get(\ThePetPark\Library\Graph\Schema\Container::class),
+            $settings['baseUrl']
+        );
+    }, 'ThePetPark\\Http\\Actions\\Relationships\\Remove');
     }
 
     protected function get23()
     {
-        $object = new ThePetPark\Http\Actions\Pets\Update($this->get24());
-        return $object;
+        return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
+        $settings = $c->get('settings')['graph'];
+        
+        return new \ThePetPark\Http\Actions\Relationships\Update(
+            $c->get(\Doctrine\DBAL\Connection::class),
+            $c->get(\ThePetPark\Library\Graph\Schema\Container::class),
+            $settings['baseUrl']
+        );
+    }, 'ThePetPark\\Http\\Actions\\Relationships\\Update');
     }
 
-    protected function get25()
+    protected function get24()
     {
         return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
         $router = new \Slim\Router();
@@ -236,21 +269,21 @@ class CompiledContainer extends DI\CompiledContainer{
     }, 'router');
     }
 
-    protected function get26()
+    protected function get25()
     {
         return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
         return new \Slim\Http\Environment($_SERVER);
     }, 'environment');
     }
 
-    protected function get27()
+    protected function get26()
     {
         return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
         return \Slim\Http\Request::createFromEnvironment($c->get('environment'));
     }, 'request');
     }
 
-    protected function get28()
+    protected function get27()
     {
         return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
         $headers = new \Slim\Http\Headers([
@@ -262,49 +295,49 @@ class CompiledContainer extends DI\CompiledContainer{
     }, 'response');
     }
 
-    protected function get29()
+    protected function get28()
     {
         return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
         return new \Slim\Handlers\Strategies\RequestResponse();
     }, 'foundHandler');
     }
 
-    protected function get30()
+    protected function get29()
     {
         return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
         return new \Slim\CallableResolver($c);
     }, 'callableResolver');
     }
 
-    protected function get31()
+    protected function get30()
     {
         return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
         return new \Slim\Handlers\Error($c->get('settings')['displayErrorDetails']);
     }, 'errorHandler');
     }
 
-    protected function get32()
+    protected function get31()
     {
         return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
         return new \Slim\Handlers\PhpError($c->get('settings')['displayErrorDetails']);
     }, 'phpErrorHandler');
     }
 
-    protected function get33()
+    protected function get32()
     {
         return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
         return new \Slim\Handlers\NotFound();
     }, 'notFoundHandler');
     }
 
-    protected function get34()
+    protected function get33()
     {
         return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
         return new \Slim\Handlers\NotAllowed();
     }, 'notAllowedHandler');
     }
 
-    protected function get38()
+    protected function get37()
     {
         return [
             0 => 'HS256',
@@ -312,23 +345,23 @@ class CompiledContainer extends DI\CompiledContainer{
         ];
     }
 
-    protected function get37()
+    protected function get36()
     {
         return [
             'secret_key' => 'C:\\xampp\\htdocs\\cen4010-s21-g01\\server\\api\\v1\\etc/secret.key',
-            'algorithms' => $this->get38(),
+            'algorithms' => $this->get37(),
             'selected_algorithm' => 0,
         ];
     }
 
-    protected function get36()
+    protected function get35()
     {
         return [
-            'php-jwt' => $this->get37(),
+            'php-jwt' => $this->get36(),
         ];
     }
 
-    protected function get40()
+    protected function get39()
     {
         return $this->resolveFactory(static function () {
                 // Use MySQL config file to initialize the database connection.
@@ -343,24 +376,24 @@ class CompiledContainer extends DI\CompiledContainer{
                     'user'     => $conf['user'],
                     'password' => $conf['pass'],
                 ];
-            }, 'subEntry12');
+            }, 'subEntry10');
     }
 
-    protected function get39()
+    protected function get38()
     {
         return [
-            'connection' => $this->get40(),
+            'connection' => $this->get39(),
         ];
     }
 
-    protected function get43()
+    protected function get42()
     {
         return [
             'defaultPageSize' => 15,
         ];
     }
 
-    protected function get44()
+    protected function get43()
     {
         return [
             0 => 'ThePetPark\\Library\\Graph\\Drivers\\Doctrine\\Features\\Pagination\\CursorStrategy',
@@ -371,24 +404,24 @@ class CompiledContainer extends DI\CompiledContainer{
         ];
     }
 
-    protected function get42()
+    protected function get41()
     {
         return [
-            'settings' => $this->get43(),
-            'features' => $this->get44(),
+            'settings' => $this->get42(),
+            'features' => $this->get43(),
         ];
     }
 
-    protected function get41()
+    protected function get40()
     {
         return [
             'definitions' => 'C:\\xampp\\htdocs\\cen4010-s21-g01\\server\\api\\v1/var/cache/schemas.php',
             'baseUrl' => 'https://lamp.cse.fau.edu/~cen4010_s21_g01/api-v1.php',
-            'driver' => $this->get42(),
+            'driver' => $this->get41(),
         ];
     }
 
-    protected function get35()
+    protected function get34()
     {
         return [
             'httpVersion' => '1.1',
@@ -399,9 +432,9 @@ class CompiledContainer extends DI\CompiledContainer{
             'addContentLengthHeader' => true,
             'routerCacheFile' => 'C:\\xampp\\htdocs\\cen4010-s21-g01\\server\\api\\v1/var/cache/routes.php',
             'uploadDirectory' => 'C:\\xampp\\htdocs\\cen4010-s21-g01/public_html/uploads',
-            'firebase' => $this->get36(),
-            'doctrine' => $this->get39(),
-            'graph' => $this->get41(),
+            'firebase' => $this->get35(),
+            'doctrine' => $this->get38(),
+            'graph' => $this->get40(),
         ];
     }
 

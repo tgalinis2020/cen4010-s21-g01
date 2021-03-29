@@ -30,19 +30,16 @@ class Driver extends AbstractDriver
      * @param \Doctrine\DBAL\Connection $conn
      * @param \ThePetPark\Library\Graph\FeatureInterface[] $features
      */
-    public function __construct(Connection $conn, array $settings = [])
+    public function __construct(QueryBuilder $qb, array $settings = [])
     {
-        parent::__construct($settings['features']);
-        $this->qb = $conn->createQueryBuilder();
+        $this->qb = $qb;
         $this->settings = [
             'defaultPageSize' => $settings['defaultPageSize'] ?? 12,
         ];
-    }
 
-    /** @return \Doctrine\DBAL\Query\QueryBuilder */
-    public function getQueryBuilder(): QueryBuilder
-    {
-        return $this->qb;
+        foreach ($settings['features'] as $featureCls) {
+            $this->features[] = new $featureCls($this->qb);
+        }
     }
 
     /**
@@ -53,17 +50,10 @@ class Driver extends AbstractDriver
         return $this->settings['defaultPageSize'];
     }
 
-    public function init(Schema\Reference $source)
+    public function setSource(Schema\Reference $source)
     {
         $this->qb->select()->distinct()
             ->from($source->getSchema()->getImplType(), (string) $source);
-    }
-
-    public function apply(array $params, ReferenceTable $refs)
-    {
-        foreach ($this->features as $feat) {
-            $feat->apply($params, $refs);
-        }
     }
 
     public function reset(Schema\Reference $source)
@@ -71,15 +61,13 @@ class Driver extends AbstractDriver
         $this->qb
             ->resetQueryParts(['select', 'distinct', 'orderBy'])
             ->setFirstResult(0)
-            ->setMaxResults(null);
-
-        // Always select the resource's ID.
-        $this->qb->addSelect(sprintf(
-            '%1$s.%2$s %1$s_%3$s',
-            $source,
-            $source->getSchema()->getId(),
-            'id'
-        ));
+            ->setMaxResults(null)
+            ->addSelect(sprintf(
+                '%1$s.%2$s %1$s_%3$s',
+                $source,
+                $source->getSchema()->getId(),
+                'id'
+            ));
     }
 
     public function select(Schema\Reference $source, string $resourceID)
@@ -106,7 +94,7 @@ class Driver extends AbstractDriver
 
         // Add the attributes to the select statement, aliasing the fields
         // as {reference enum}_{attribute name}
-        foreach ($schema->getAttributes() as list($attr, $impl)) {
+        foreach ($schema->getImplAttributes() as list($attr, $impl)) {
             $this->qb->addSelect(sprintf(
                 '%1$s.%2$s %1$s_%3$s',
                 $source,
@@ -128,10 +116,15 @@ class Driver extends AbstractDriver
                 // Pivot tables need their own relation enums too.
                 $pivotEnum = $source . '_' . $related . '_' . $i;
                 
-                $this->qb->innerJoin($joinOn, $pivot, $pivotEnum, $this->qb->expr()->eq(
-                    $joinOn    . '.' . $joinOnField,
-                    $pivotEnum . '.' . $from
-                ));
+                $this->qb->innerJoin(
+                    $joinOn,
+                    $pivot,
+                    $pivotEnum,
+                    $this->qb->expr()->eq(
+                        $joinOn    . '.' . $joinOnField,
+                        $pivotEnum . '.' . $from
+                    )
+                );
 
                 $joinOn = $pivotEnum;
                 $joinOnField = $to;
@@ -185,7 +178,7 @@ class Driver extends AbstractDriver
         ));
     }
 
-    public function fetchAll(): array
+    public function execute(): array
     {
         return $this->qb->execute()->fetchAll(FetchMode::ASSOCIATIVE);
     }

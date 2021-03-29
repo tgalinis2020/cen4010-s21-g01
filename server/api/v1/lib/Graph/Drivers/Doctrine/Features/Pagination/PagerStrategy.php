@@ -10,10 +10,11 @@ use ThePetPark\Library\Graph\Schema;
 use ThePetPark\Library\Graph\Schema\ReferenceTable;
 
 /**
- * This pagination strategy is synonymous with applying a greater-than filter
- * on the provided ID in the cursor. Simple and efficient!
+ * Similar to the offset/limit strategy.
+ * Offset is derived from page number and size of the page.
+ * Again, not recommended for large sets of data.
  */
-class CursorStrategy implements FeatureInterface
+class PagerStrategy implements FeatureInterface
 {
     /** @var \Doctrine\DBAL\Query\QueryBuilder */
     protected $qb;
@@ -36,19 +37,15 @@ class CursorStrategy implements FeatureInterface
     {
         $page = $params['page'];
 
-        if (isset($page['cursor']) === false) {
+        if (isset($page['number']) === false || ((int) $page['number']) < 1) {
             return false;
         }
 
-        $ref = $refs->getBaseRef();
+        $page = ((int) $page['number']) - 1; // Pages start at 1
+        $size = (int) ($page['size'] ?? $this->defaultPageSize);
 
-        $this->qb
-            ->andWhere($this->qb->expr()->gt(
-                $ref . '.' . $ref->getSchema()->getId(),
-                $this->qb->createNamedParameter($page['cursor'])
-            ))
-            ->setMaxResults((int) ($page['size'] ?? $this->defaultPageSize));
-        
+        $this->qb->setFirstResult($page * $size)->setMaxResults($size);
+
         return true;
     }
 }

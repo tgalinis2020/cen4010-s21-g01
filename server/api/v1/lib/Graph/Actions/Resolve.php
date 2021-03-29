@@ -69,6 +69,7 @@ class Resolve implements Graph\ActionInterface
         $driver->init($base);  
         $driver->apply($params, $refs);
 
+        // BEGIN(resource selection)
         if ($resourceID !== null) {
 
             $driver->select($base, $resourceID);
@@ -108,6 +109,7 @@ class Resolve implements Graph\ActionInterface
         }
 
         $driver->prepare($base);
+        // END(resource selection)
         
         /*
         $mainSQL = (string) $driver; // Invoke Doctrine\Driver::__toString
