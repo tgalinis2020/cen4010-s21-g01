@@ -34,7 +34,7 @@ return [
 
     'response' => factory(function (ContainerInterface $c) {
         $headers = new Slim\Http\Headers([
-            'Content-Type' => 'application/json; charset=UTF-8',
+            'Content-Type' => 'application/vnd.api+json; charset=UTF-8',
         ]);
         $response = new Slim\Http\Response(200, $headers);
 

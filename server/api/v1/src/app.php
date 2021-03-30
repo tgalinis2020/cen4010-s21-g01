@@ -11,9 +11,15 @@ return (function () {
     $root = dirname(__DIR__);
     
     require $root . '/vendor/autoload.php';
-    require $root . '/var/cache/CompiledContainer.php';
 
-    $app = new Slim\App(new CompiledContainer());
+    $app = new Slim\App(
+        (new \DI\ContainerBuilder())
+            ->enableCompilation($root . '/var/cache')
+            ->addDefinitions($root . '/etc/settings.php')
+            ->addDefinitions($root . '/etc/slim.php')
+            ->addDefinitions($root . '/etc/definitions.php')
+            ->build()
+    );
 
     // The Session middleware reads the session cookie and attaches the user's
     // session details to the request.
@@ -59,14 +65,6 @@ return (function () {
             });            
         });
     });
-
-    // TODO:    To-one relationships are updated using PATCH requests.
-    //          To-many relationships are updating using POST (to add),
-    //          DELETE (to remove) along with PATCH (to replace).
-    //          Need to coalesce the POST, PATCH, and DELETE handlers!
-
-    // Mount the resource graph.
-    //$app->group('', Graph\Adapters\Slim\Adapter::class);
 
     return $app;
 })();

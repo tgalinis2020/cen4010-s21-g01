@@ -57,7 +57,7 @@ final class Update
 
         list($mask, $related, $link) = $schema->getRelationship($relationship);
 
-        if (($mask & R::ONE) === R::ONE) {
+        if ($mask & R::ONE) {
 
             if (isset($data['type'], $data['id']) === false && $data !== null) {
                 return $response->withStatus(400);

@@ -1,4 +1,4 @@
-# Resource Graph: A framework for managing API resources
+# Resource Graph: A library for managing API resources
 
 Author: Thomas Galinis
 
@@ -6,8 +6,10 @@ At first, The Pet Park's API resource routes were mapped by hand.
 After realizing how many routes to resources and their corresponding relationships
 had to be made, I was thinking that the methods of fetching data were the same.
 In an attempt to minimize copy-paste and automate the selection of API resources,
-this library came to. Decided to partially follow the [JSON:API](https://jsonapi.org/format/)
-specification to allow for expressive and efficient queries.
+this library came to. Decided to follow the [JSON:API](https://jsonapi.org/format/)
+specification to allow for expressive and efficient queries. Effort has been
+made to make this library reusable, but the project has a hard dependency
+on Doctrine's Database Abstraction Layer library.
 
 
 Similar and more robust tools most likely already exist, but this was an
@@ -25,6 +27,15 @@ There are a couple of limitations, however:
 
 * Attributes can only be strings, even if their types are numeric.
 
+* Currently there's no way to bind default values to attributes when creating
+  a resource.
+
+* Probably the biggest problem: there is no form of access control whatsoever.
+  This library has one purpose: map backend actions to URLs following the
+  JSON:API specification. There's nothing to stop mischievous actors to
+  edit, say, a post's author by making a PATCH request to
+  `/posts/1/relationships/author`.
+
 
 ## Dependecies
 
@@ -41,22 +52,9 @@ There are a couple of limitations, however:
 
 The idea behind this library is to declaratively define a back-end's schema.
 Using these definitions, a SQL query can be generated based on a URL.
-For starters, you'll need to create a Graph definitions file.
+For starters, you'll need to create a definitions file.
 
 ```yaml
-# Default actions map to schemas that haven't implemented an action to handle
-# a request type.
-actions:
-    # For regular use-cases, use resource actions.
-    resources:
-        GET: Path\To\Graph\Actions\DefaultResourceResolver
-    
-    # Relationship actions -- relevant for relationship queries.
-    # i.e. the "relationship" keyword is present between a resource's ID
-    # and relationship.
-    relationships:
-        GET: Path\To\My\DefaultRelationshipResolver
-
 # Resource mappings are defined here. This is not a complete example.
 schemas:
     posts:
@@ -67,13 +65,6 @@ schemas:
         # ID field mappings default to "id"; if your table's primary key
         # has a different field name, specify it here.
         id: post_id
-
-        actions:
-            # As stated before, default actions will be mapped to unimplemented
-            # schema actions. If there is no action to handle an event, Graph
-            # will return a 501 Not Implemented back to the client.
-            resource:
-                POST: Path\To\My\Posts\Create
 
         attributes:
             # Attribute is defined before the colon. Its implementation name
@@ -126,8 +117,6 @@ schemas:
 ```
 
 For a complete example, see The Pet Park's graph in `/server/api/v1/etc/graph.yml`.
-Note: attributes can only have one dimension. If you want to get a post's
-tags, you have to include it using `/posts?include=tags`.
 
 Once the schema has been created, it must be compiled into a format that the
 library can read. This can be done using the `bin/graph` console utility.
@@ -145,14 +134,5 @@ The utility takes a YAML definitions file as the first argument and the
 destination for the compiled definitions as the second argument.
 
 ```console
-$ php bin/graph etc/my-graph.yml var/cache/my-graph.cache
+$ php bin/graph etc/my-graph.yml var/cache/my-graph.cache.php
 ```
-
-When providing settings for a Graph instance in PHP, provide the absolute
-path to the compiled file in the "definitions" settings key.
-
-## TO-DO
-
-- [x] Break up Graph\App into smaller, self-contained components.
-      If POST/PUT/PATCH/DELETE requests are made, the reference table
-      and other components are needlesly loaded.

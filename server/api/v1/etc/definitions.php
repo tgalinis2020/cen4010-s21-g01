@@ -43,9 +43,7 @@ return [
         $settings = $c->get('settings')['graph'];
         $schemas = [];
 
-        list($_, $definitions) = (require $settings['definitions']);
-
-        foreach ($definitions as $definition) { 
+        foreach ((require $settings['definitions']) as $definition) { 
             $schema = Graph\Schema::fromArray($definition);
             $schemas[$schema->getType()] = $schema;
         }

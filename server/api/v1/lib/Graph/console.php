@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 require dirname(__DIR__, 2) . '/vendor/autoload.php';
 
-use ThePetPark\Library\Graph\App as Graph;
-use ThePetPark\Library\Graph\Actions;
 use ThePetPark\Library\Graph\Schema\Relationship as R;
 
 if ($argc < 3) {
@@ -27,28 +25,6 @@ $schemas = [];
 $typeSchemaMap = [];
 $nschemas = 0;
 
-/** @var \ThePetPark\Library\Graph\ActionInterface[] */
-$actions = [
-    Actions\NotImplemented::class,
-];
-
-/** @var int */
-$nactions = 1;
-
-/** @var array */
-$defaultActions = [];
-
-/** @var \ThePetPark\Library\Graph\ActionInterface[] */
-$defaultActions[Graph::RESOURCE_CONTEXT]     = [];
-
-/** @var \ThePetPark\Library\Graph\ActionInterface[] */
-$defaultActions[Graph::RELATIONSHIP_CONTEXT] = [];
-
-$contextTypes = [
-    'resource'      => Graph::RESOURCE_CONTEXT,
-    'relationship'  => Graph::RELATIONSHIP_CONTEXT,
-];
-
 $relationshipTypes = [
     'belongsTo'     => R::OWNED|R::ONE,
     'belongsToMany' => R::OWNED|R::MANY,
@@ -58,16 +34,6 @@ $relationshipTypes = [
 
 try {
 
-    // Get default schema actions
-    if (isset($root['actions'])) {
-        foreach ($contextTypes as $ctx => $type) {
-            foreach ($root['actions'][$ctx] ?? [] as $httpVerb => $action) {
-                $defaultActions[$type][$httpVerb] = $nactions++;
-                $actions[] = $action; // register default action
-            }
-        }
-    }
-
     if (isset($root['schemas'])) {
         foreach ($root['schemas'] as $resource => $def) {
             $id            = $def['id'] ?? 'id';
@@ -75,31 +41,6 @@ try {
             $actionMap     = [];
             $attributes    = [];
             $relationships = [];
-
-            // Initialize action map using not-implemented action.
-            foreach ($contextTypes as $type) {
-                $actionMap[$type] = [
-                    'GET'     => Graph::ACTION_NOT_IMPL,
-                    'POST'    => Graph::ACTION_NOT_IMPL,
-                    'PUT'     => Graph::ACTION_NOT_IMPL,
-                    'PATCH'   => Graph::ACTION_NOT_IMPL,
-                    'DELETE'  => Graph::ACTION_NOT_IMPL,
-                ];
-            }
-
-            foreach ($contextTypes as $ctx => $type) {
-                foreach ($def['actions'][$ctx] ?? [] as $httpVerb => $action) {
-                    $actionMap[$type][$httpVerb] = $nactions++;
-                    $actions[] = $action; // register schema action
-                }
-
-                // Map defaults to unimplemented schema actions.
-                foreach ($defaultActions[$type] as $httpVerb => $actionEnum) {
-                    if ($actionMap[$type][$httpVerb] === Graph::ACTION_NOT_IMPL) {
-                        $actionMap[$type][$httpVerb] = $actionEnum;
-                    }
-                }
-            }
 
             foreach ($def['attributes'] ?? [] as $attr => $field) {
                 // 0 = selectable value (default is 0 if no sparse fields specified)
@@ -128,8 +69,8 @@ try {
                     ));
                 }
 
-                list($relationshipType) = array_keys($r);
-                list($related) = array_values($r);
+                $relationshipType = key($r);
+                $related = current($r);
 
                 if (isset($relationshipTypes[$relationshipType]) === false) {
                     throw new Exception(sprintf(
@@ -137,7 +78,7 @@ try {
                     ));
                 }
 
-                $mask  = $relationshipTypes[$relationshipType];
+                $mask = $relationshipTypes[$relationshipType];
 
                 if (is_array($using)) {
                     $chain = [];
@@ -174,8 +115,7 @@ try {
         list($def, $attributes, $relationships, $actionMap) = $schema;
         list($type, $implType, $id) = $def;
 
-        // Relationships are defined in index 2.
-        foreach ($schema[2] as $relationship => $relationshipData) {
+        foreach ($relationships as $relationship => $relationshipData) {
             list($mask, $related, $using) = $relationshipData;
 
             if (isset($typeSchemaMap[$related]) === false) {
@@ -193,6 +133,4 @@ try {
     echo 'error: ', $e->getMessage(), PHP_EOL;
 }
 
-$cache = [$actions, $schemas];
-
-file_put_contents($dest, sprintf("<?php return %s;", var_export($cache, true)));
+file_put_contents($dest, sprintf("<?php return %s;", var_export($schemas, true)));

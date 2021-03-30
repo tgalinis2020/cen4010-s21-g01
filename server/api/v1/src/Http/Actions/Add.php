@@ -7,7 +7,7 @@ namespace ThePetPark\Http\Actions;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Doctrine\DBAL\Connection;
-
+use Exception;
 use ThePetPark\Library\Graph\Schema;
 use ThePetPark\Library\Graph\Schema\Relationship as R;
 
@@ -18,10 +18,6 @@ use function array_diff;
 use function array_keys;
 use function count;
 
-/**
- * Generates a query using the information provided in the request's
- * attributes. Returns a JSON-API document.
- */
 final class Add
 {
     /** @var \ThePetPark\Library\Graph\Schema\Container */
@@ -69,6 +65,9 @@ final class Add
 
         $schema = $this->schemas->get($resource);
         $qb = $this->conn->createQueryBuilder()->insert($schema->getImplType());
+        
+        /*
+        // Some fields are nullable so this might be a hinderance.
         $diff = count(array_diff(array_keys($attributes), $schema->getAttributes()));
 
         if ($diff > 0) {
@@ -76,6 +75,7 @@ final class Add
             // be provided. Default values are not yet implemented. :(
             return $response->withStatus(400);
         }
+        */
 
         $values = [];
 
@@ -136,7 +136,14 @@ final class Add
             }
         }
 
-        $qb->execute();
+        try {
+            $qb->execute();
+        } catch (Exception $e) {
+            // TODO:    IF proper error reporting is implemented, it would be
+            //          great to report what exactly went wrong (i.e.) required
+            //          attribute/relationship is missing, etc.
+            return $response->withStatus(400);
+        }
 
         $id = $this->conn->lastInsertId();
 
@@ -152,12 +159,15 @@ final class Add
             foreach ($value as $identifier) {
 
                 $qb = $this->conn->createQueryBuilder();
-                $r = ['type' => $related, 'id' => htmlentities($identifier['id'], ENT_QUOTES)];
+                $obj = [
+                    'type' => $related,
+                    'id'   => htmlentities($identifier['id'], ENT_QUOTES)
+                ];
                 
                 if ($mask & R::ONE) {
-                    $rels[$name] = $r;
+                    $rels[$name] = $obj;
                 } else {
-                    $rels[$name][$n++] = $r;
+                    $rels[$name][$n++] = $obj;
                 }
     
                 // TODO:    Only single-dimension relationships are supported.
@@ -170,7 +180,7 @@ final class Add
     
                     $qb->insert($pivot)
                         ->setValue($from, $qb->createNamedParameter($id))
-                        ->setValue($to, $qb->createNamedParameter($r['id']));
+                        ->setValue($to, $qb->createNamedParameter($obj['id']));
     
                 } else {
     
@@ -183,7 +193,7 @@ final class Add
                     $schema = $this->schemas->get($target);
     
                     $qb->update($schema->getImplType())
-                        ->set($link, $qb->createNamedParameter($r['id']))
+                        ->set($link, $qb->createNamedParameter($obj['id']))
                         ->where($qb->expr()->eq($link, $qb->createNamedParameter($id)));
                 }
     
@@ -199,13 +209,13 @@ final class Add
                 'self' => $this->baseUrl . '/' . $resource . '/' . $id,
             ],
             'data' => [
-                'id' => $id,
-                'type' => $resource,
+                'id'         => $id,
+                'type'       => $resource,
                 'attributes' => $values,
             ],
         ];
 
-        if (empty($rels) === false) {
+        if (count($rels) > 0) {
             $document['data']['relationships'] = $rels;
         }
 

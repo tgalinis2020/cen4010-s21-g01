@@ -88,9 +88,7 @@ class CompiledContainer extends DI\CompiledContainer{
         $settings = $c->get('settings')['graph'];
         $schemas = [];
 
-        list($_, $definitions) = (require $settings['definitions']);
-
-        foreach ($definitions as $definition) { 
+        foreach ((require $settings['definitions']) as $definition) { 
             $schema = \ThePetPark\Library\Graph\Schema::fromArray($definition);
             $schemas[$schema->getType()] = $schema;
         }
@@ -287,7 +285,7 @@ class CompiledContainer extends DI\CompiledContainer{
     {
         return $this->resolveFactory(static function (\Psr\Container\ContainerInterface $c) {
         $headers = new \Slim\Http\Headers([
-            'Content-Type' => 'application/json; charset=UTF-8',
+            'Content-Type' => 'application/vnd.api+json; charset=UTF-8',
         ]);
         $response = new \Slim\Http\Response(200, $headers);
 

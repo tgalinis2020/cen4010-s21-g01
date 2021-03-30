@@ -22,6 +22,15 @@ use function current;
 /**
  * Generates a query using the information provided in the request's
  * attributes. Returns a JSON-API document.
+ * 
+ * TODO:    Might be a nice to add relationship links for each requested
+ *          resource, even if no includes are specified.
+ * 
+ * TODO:    When including a resource type that yields nothing, the whole
+ *          query returns nothing!
+ *          Probably should execute one query per comma-separated relation!
+ *          Need to decouple the Driver from the ReferenceTable to make this
+ *          work.
  */
 final class Resolve
 {
@@ -208,7 +217,10 @@ final class Resolve
                 ));
             }
 
+            //$records = [];
+
             foreach (explode(',', $params['include']) as $included) {
+                //$sub = clone $qb;
                 $ref = $base;
                 $token = $delim = '';
                 
@@ -240,6 +252,8 @@ final class Resolve
                 }
 
                 $resolved[$ref->getSchema()->getType()] = [];
+
+                //$records = array_merge($records, $sub->execute()->fetchAll(FetchMode::ASSOCIATIVE));
             }
             
             // TODO:    Like before, data retrieval and serialization is done
