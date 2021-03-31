@@ -85,12 +85,12 @@ class ReferenceTable implements ContainerInterface
      * 
      * Therefore, this function can only return relationships.
      */
-    public function get(string $token): Schema\Relationship
+    public function get($token): Schema\Relationship
     {
         return $this->references[$this->map[$token]];
     }
 
-    public function has(string $token): bool
+    public function has($token): bool
     {
         return isset($this->map[$token]);
     }

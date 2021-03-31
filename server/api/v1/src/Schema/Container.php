@@ -18,13 +18,13 @@ class Container implements ContainerInterface
         $this->schemas = $schemas;
     }
 
-    public function get(string $type): Schema
+    public function get($id): Schema
     {
-        return $this->schemas[$type];
+        return $this->schemas[$id];
     }
 
-    public function has(string $type): bool
+    public function has($id): bool
     {
-        return isset($this->schemas[$type]);
+        return isset($this->schemas[$id]);
     }
 }
