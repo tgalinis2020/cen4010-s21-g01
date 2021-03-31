@@ -2,13 +2,10 @@
 
 declare(strict_types=1);
 
-use ThePetPark\Library\Graph\Drivers\Doctrine\Features;
-
 /**
  * Slim application settings along with configuation for third-party
  * dependnecies.
  */
-
 return [
     'settings' => [
         'httpVersion' => '1.1',
@@ -19,6 +16,11 @@ return [
         'addContentLengthHeader' => true,
         'routerCacheFile' => dirname(__DIR__) . '/var/cache/routes.php',
         'uploadDirectory' => dirname(__DIR__, 4) . '/public_html/uploads',
+
+        // API settings
+        'defaultPageSize' => 12,
+        'definitions' => dirname(__DIR__) . '/var/cache/schemas.php',
+        'baseUrl' => 'https://lamp.cse.fau.edu/~cen4010_s21_g01/api-v1.php',
 
         'firebase' => [
             'php-jwt' => [
@@ -46,24 +48,6 @@ return [
                     'password' => $conf['pass'],
                 ];
             },
-        ],
-
-        'graph' => [
-            'definitions' => dirname(__DIR__) . '/var/cache/schemas.php',
-            'baseUrl' => 'https://lamp.cse.fau.edu/~cen4010_s21_g01/api-v1.php',
-            'driver' => [
-                'settings' => [
-                    'defaultPageSize' => 15,
-                ],
-
-                'features' => [
-                    Features\Pagination\CursorStrategy::class,
-                    Features\Pagination\PageStrategy::class,
-                    Features\Pagination\OffsetLimitStrategy::class,
-                    Features\Filters::class,
-                    Features\Sorting::class,
-                ],
-            ],
         ],
     ],
 ];

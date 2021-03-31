@@ -9,6 +9,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 
 /**
  * Protects endpoints from unauthenticated users.
+ * Session middleware should precede this.
  */
 final class Guard
 {

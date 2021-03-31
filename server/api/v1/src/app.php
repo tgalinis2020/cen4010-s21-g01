@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use ThePetPark\Http;
 use ThePetPark\Middleware\Guard;
+use ThePetPark\Middleware\Features;
 
 date_default_timezone_set('UTC');
 
@@ -17,9 +18,32 @@ return (function () {
             ->enableCompilation($root . '/var/cache')
             ->addDefinitions($root . '/etc/settings.php')
             ->addDefinitions($root . '/etc/slim.php')
-            ->addDefinitions($root . '/etc/definitions.php')
+            ->addDefinitions($root . '/etc/services.php')
+            ->addDefinitions($root . '/etc/middleware.php')
+            ->addDefinitions($root . '/etc/actions.php')
             ->build()
     );
+
+    // Since multiple API endpoints can resolve to resources, this function
+    // helps bootstrap them. Add/remove feature middleware as needed.
+    //
+    // Note that Slim puts middleware in a stack so the last middleware added is
+    // the first one to execute.
+    function addResolver(string $pattern, Slim\App $route) {
+        $route->get($pattern, Http\Actions\Resolve::class)
+            ->add(Features\Pagination\Links\PageBased::class)
+            ->add(Features\Pagination\Links\OffsetBased::class)
+            ->add(Features\Pagination\Links\CursorBased::class)
+            ->add(Features\ParseIncludes::class)
+            ->add(Features\Resolver::class)        // This is the main feature.
+            ->add(Features\Pagination\PageBased::class)
+            ->add(Features\Pagination\OffsetBased::class)
+            ->add(Features\Pagination\CursorBased::class)
+            ->add(Features\Sorting::class)
+            ->add(Features\Filtering::class)
+            ->add(Features\SparseFieldsets::class)
+            ->add(Features\Initialization::class); // This must be invoked first!
+    }
 
     // The Session middleware reads the session cookie and attaches the user's
     // session details to the request.
@@ -48,23 +72,23 @@ return (function () {
     // The order routes are defined matters: more specific routes should be
     // declared first (like the ones above here).
     $app->group('/{resource:[A-Za-z-]+}', function (Slim\App $r) {
-        $r->get('',  Http\Actions\Resolve::class);
+        addResolver('', $r);
         $r->post('', Http\Actions\Add::class)->add(Guard::class);
 
         $r->group('/{id:[0-9]+}', function (Slim\App $s) {
-            $s->get('',     Http\Actions\Resolve::class);
+            addResolver('', $s);
             $s->patch('',   Http\Actions\Update::class)->add(Guard::class);
             $s->delete('',  Http\Actions\Remove::class)->add(Guard::class);
-            $s->get('/{relationship:(?!relationships)[A-Za-z-]+}', Http\Actions\Resolve::class);
+            addResolver('/{relationship:(?!relationships)[A-Za-z-]+}', $s);
 
             $s->group('/relationships/{relationship:[A-Za-z-]+}', function (Slim\App $t) {
-                //$t->get('', Http\Actions\Relationships\Resolve::class); // not implemented
+                //addResolver('', $t); // not supported
                 $t->post('',   Http\Actions\Relationships\Add::class)->add(Guard::class);    // add for to-many, no-op for to-one
                 $t->patch('',  Http\Actions\Relationships\Update::class)->add(Guard::class); // replace for to-many, add+remove for to-one
                 $t->delete('', Http\Actions\Relationships\Remove::class)->add(Guard::class); // remove for to-many, no-op for to-one
             });            
         });
-    });
+    })->add(Features\Check::class);
 
     return $app;
 })();

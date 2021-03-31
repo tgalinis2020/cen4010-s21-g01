@@ -62,7 +62,6 @@ final class UploadFile
         case UPLOAD_ERR_NO_TMP_DIR:
         case UPLOAD_ERR_CANT_WRITE:
         case UPLOAD_ERR_PARTIAL:
-        case UPLOAD_ERR_NO_FILE:
         case UPLOAD_ERR_EXTENSION:
         default:
             return $res->withStatus(500);

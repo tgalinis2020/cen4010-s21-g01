@@ -23,17 +23,13 @@ final class Update
     /** @var \ThePetPark\Library\Graph\Schema\Container */
     private $schemas;
 
-    /** @var string */
-    private $baseUrl;
-
     /** @var \Doctrine\DBAL\Connection */
     private $conn;
 
-    public function __construct(Connection $conn, Schema\Container $schemas, string $url)
+    public function __construct(Connection $conn, Schema\Container $schemas)
     {
         $this->conn = $conn;
         $this->schemas = $schemas;
-        $this->baseUrl = $url;
     }
 
     public function __invoke(Request $request, Response $response): Response

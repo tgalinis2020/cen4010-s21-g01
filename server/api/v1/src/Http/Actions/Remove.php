@@ -35,14 +35,7 @@ final class Remove
     {
         $resource = $request->getAttribute('resource');
         $id = $request->getAttribute('id');
-
-        if ($this->schemas->has($resource) === false) {
-            // Provided resource doesn't exist.
-            return $response->withStatus(404);
-        }
-
         $schema = $this->schemas->get($resource);
-        
         $qb = $this->conn->createQueryBuilder()->delete($schema->getImplType());
 
         $qb->where($qb->expr()->eq($schema->getId(), $qb->createNamedParameter($id)));

@@ -80,14 +80,10 @@ class Schema
      * [
      *     [resource-type, implementation-name, impl-id-field],
      *     [
-     *         [0, attribute-name, implementation-name], ...
+     *         [attribute-name, implementation-name], ...
      *     ],
      *     [
      *         [relationship-mask, relationship-name, link-or-chain], ...
-     *     ],
-     *     [
-     *         [http-verb => resource-action, ...],
-     *         [http-verb => relationship-action, ...]
      *     ]
      * ]
      * 

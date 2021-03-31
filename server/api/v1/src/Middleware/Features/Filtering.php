@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Library\Graph\Drivers\Doctrine\Features;
+namespace ThePetPark\Middleware\Features;
 
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
-use ThePetPark\Library\Graph\FeatureInterface;
-use ThePetPark\Library\Graph\Schema;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use ThePetPark\Library\Graph\Schema\ReferenceTable;
 
 use function is_array;
@@ -22,7 +22,7 @@ use function explode;
  * 
  * GET /articles?filter[createdAt][lt]=2021-03-17
  */
-class Filtering implements FeatureInterface
+final class Filtering
 {
     const SUPPORTED_FILTERS = [
         'eq' => ExpressionBuilder::EQ,
@@ -37,21 +37,20 @@ class Filtering implements FeatureInterface
         'ni' => 'NOT IN',
     ];
 
-    /** @var \Doctrine\DBAL\Query\QueryBuilder*/
-    protected $qb;
+    public function __invoke(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        callable $next
+    ): ResponseInterface {
 
-    public function __construct(QueryBuilder $qb)
-    {
-        $this->qb = $qb;
-    }
+        if (is_array($params['filter'] ?? '') === false) {
+            return $next($request, $response);
+        }
 
-    public function provides(): string
-    {
-        return 'filter';
-    }
+        $qb = $request->getAttribute(QueryBuilder::class);
+        $refs = $request->getAttribute(ReferenceTable::class);
+        $params = $request->getAttribute(Resolver::PARAMETERS);
 
-    public function apply(array $params, Schema\Container $schemas, ReferenceTable $refs): bool
-    {
         foreach ($params['filter'] as $fullyQualifiedField => $filterAndValue) {
             $ref = $refs->getBaseRef();
 
@@ -70,7 +69,7 @@ class Filtering implements FeatureInterface
 
                 $ref = $refs->has($token)
                    ? $refs->get($token)
-                   : $refs->resolve($relationship, $ref);
+                   : $refs->resolve($relationship, $ref, $qb);
 
                 $delim = '.';
             }
@@ -90,7 +89,7 @@ class Filtering implements FeatureInterface
 
                         $ref = $refs->has($fullyQualifiedField)
                            ? $refs->get($fullyQualifiedField)
-                           : $refs->resolve($field, $ref);
+                           : $refs->resolve($field, $ref, $qb);
 
                         $field = $ref->getSchema()->getId();
 
@@ -116,7 +115,7 @@ class Filtering implements FeatureInterface
                             $value = $this->qb->createNamedParameter($value);
                         }
 
-                        $this->qb->andWhere($this->qb->expr()->comparison(
+                        $qb->andWhere($qb->expr()->comparison(
                             $ref . '.' . $field,
                             self::SUPPORTED_FILTERS[$filter],
                             $value
@@ -126,6 +125,6 @@ class Filtering implements FeatureInterface
             }
         }
 
-        return true;
+        return $next($request, $response);
     }
 }

@@ -15,10 +15,6 @@ use function json_decode;
 use function array_pop;
 use function htmlentities;
 
-/**
- * Generates a query using the information provided in the request's
- * attributes. Returns a JSON-API document.
- */
 final class Remove
 {
     /** @var \ThePetPark\Library\Graph\Schema\Container */
@@ -65,14 +61,6 @@ final class Remove
 
         list($mask, $related, $link) = $schema->getRelationship($relationship);
 
-        /*
-        if (($mask & (R::ONE|R::OWNED)) && is_array($link)) {
-            // Belongs-to-one relationships should always be resolvable
-            // using a string link.
-            return $response->withStatus(500);
-        }
-        */
-
         // For convenience, convert a single resource identifier to an array.
         if ($mask & R::ONE) {
             $data = [$data];
@@ -80,19 +68,19 @@ final class Remove
 
         // First pass: make sure provided resource identifiers are valid before
         // doing anything.
-        foreach ($data as $identifier) {
-            if (isset($identifier['id'], $identifier['type']) === false) {
+        foreach ($data as $obj) {
+            if (isset($obj['id'], $obj['type']) === false) {
                 // Resource identifiers must have an ID and type.
                 return $response->withStatus(400);
             }
 
-            if ($identifier['type'] !== $related) {
+            if ($obj['type'] !== $related) {
                 // Provided identifier must match related resource type.
                 return $response->withStatus(400);
             }
         }
 
-        foreach ($data as $identifier) {
+        foreach ($data as $obj) {
             $qb = $this->conn->createQueryBuilder();
 
             // TODO:    Only single-dimension relationships are supported.
@@ -111,7 +99,7 @@ final class Remove
                         ),
                         $qb->expr()->eq(
                             $to,
-                            $qb->createNamedParameter(htmlentities($identifier['id'], ENT_QUOTES))
+                            $qb->createNamedParameter(htmlentities($obj['id'], ENT_QUOTES))
                         )
                     ));
 

@@ -71,19 +71,19 @@ final class Add
         }
 
         // First pass: make sure provided resource identifiers are valid.
-        foreach ($data as $identifier) {
-            if (isset($identifier['id'], $identifier['type']) === false) {
+        foreach ($data as $obj) {
+            if (isset($obj['id'], $obj['type']) === false) {
                 // Resource identifiers must have an ID and type.
                 return $response->withStatus(400);
             }
 
-            if ($identifier['type'] !== $related) {
+            if ($obj['type'] !== $related) {
                 // Provided identifier must match related resource type.
                 return $response->withStatus(400);
             }
         }
 
-        foreach ($data as $identifier) {
+        foreach ($data as $obj) {
             $qb = $this->conn->createQueryBuilder();
 
             // TODO:    Only single-dimension relationships are supported.
@@ -96,7 +96,7 @@ final class Add
 
                 $qb->insert($pivot)
                     ->setValue($from, $qb->createNamedParameter($id))
-                    ->setValue($to, $qb->createNamedParameter(htmlentities($identifier['id'], ENT_QUOTES)));
+                    ->setValue($to, $qb->createNamedParameter(htmlentities($obj['id'], ENT_QUOTES)));
 
             } else {
 
@@ -109,7 +109,7 @@ final class Add
                 $schema = $this->schemas->get($target);
 
                 $qb->update($schema->getImplType())
-                    ->set($link, $qb->createNamedParameter(htmlentities($identifier['id'], ENT_QUOTES)))
+                    ->set($link, $qb->createNamedParameter(htmlentities($obj['id'], ENT_QUOTES)))
                     ->where($qb->expr()->eq($link, $qb->createNamedParameter($id)));
             }
 

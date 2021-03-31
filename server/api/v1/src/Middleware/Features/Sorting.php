@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Library\Graph\Drivers\Doctrine\Features;
+namespace ThePetPark\Middleware\Features;
 
 use Doctrine\DBAL\Query\QueryBuilder;
-use ThePetPark\Library\Graph;
-use ThePetPark\Library\Graph\Schema;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use ThePetPark\Library\Graph\Schema\ReferenceTable;
 
 use function trim;
@@ -21,24 +21,22 @@ use function array_pop;
  *          how its done when applying filters. Maybe it's possible to
  *          put shared logic into a driver method.
  */
-class Sorting implements Graph\FeatureInterface
+final class Sorting
 {
-    /** @var \Doctrine\DBAL\Query\QueryBuilder*/
-    protected $qb;
+    public function __invoke(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        callable $next
+    ): ResponseInterface {
+        
+        if (isset($params['sort']) === false) {
+            return $next($request, $response);
+        }
 
-    /** @param \Doctrine\DBAL\Query\QueryBuilder */
-    public function __construct(QueryBuilder $qb)
-    {
-        $this->qb = $qb;
-    }
+        $qb = $request->getAttribute(QueryBuilder::class);
+        $refs = $request->getAttribute(ReferenceTable::class);
+        $params = $request->getAttribute(Resolver::PARAMETERS);
 
-    public function provides(): string
-    {
-        return 'sort';
-    }
-
-    public function apply(array $params, Schema\Container $schemas, ReferenceTable $refs): bool
-    {
         foreach (explode(',', $params['sort']) as $fullyQualifiedField) {
             $ref = $refs->getBaseRef();
             $order = 'ASC';
@@ -84,9 +82,10 @@ class Sorting implements Graph\FeatureInterface
 
             }
 
-            $this->qb->addOrderBy($ref . '.' . $field, $order);
+            $qb->addOrderBy($ref . '.' . $field, $order);
         }
 
-        return true;
+        return $next($request, $response);
+
     }
 }

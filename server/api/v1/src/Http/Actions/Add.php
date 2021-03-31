@@ -38,22 +38,16 @@ final class Add
 
     public function __invoke(Request $request, Response $response): Response
     {
-        $resource = $request->getAttribute('resource');
-        $id = $request->getAttribute('id');
-
-        if ($this->schemas->has($resource) === false) {
-            // Provided resource doesn't exist.
-            return $response->withStatus(404);
-        }
-
         $input = json_decode((string) $request->getBody(), true);
         $data = $input['data'] ?? null;
-
+        
         if ($data === null) {
             // Body is empty, can't continue.
             return $response->withStatus(400);
         }
-
+        
+        $resource = $request->getAttribute('resource');
+        $id = $request->getAttribute('id');
         $type = $data['type'] ?? null;
         $attributes = $data['attributes'] ?? [];
         $relationships = $data['relationships'] ?? [];

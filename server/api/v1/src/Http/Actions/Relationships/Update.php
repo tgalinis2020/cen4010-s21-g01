@@ -22,11 +22,10 @@ final class Update
     /** @var \Doctrine\DBAL\Connection */
     private $conn;
 
-    public function __construct(Connection $conn, Schema\Container $schemas, string $url)
+    public function __construct(Connection $conn, Schema\Container $schemas)
     {
         $this->conn = $conn;
         $this->schemas = $schemas;
-        $this->baseUrl = $url;
     }
 
     public function __invoke(Request $request, Response $response): Response
@@ -126,9 +125,9 @@ final class Update
 
         } else {
 
-            // Updating to-many relationships === full replacement
+            // Updating to-many relationships === full replacement.
             // Delete current associations and insert provided ones.
-            // Since this operation is kind of niche and dangerous, it will
+            // Since this operation is niche and dangerous, it will
             // not be supported for the time being.
             return $response->withStatus(403);
 
