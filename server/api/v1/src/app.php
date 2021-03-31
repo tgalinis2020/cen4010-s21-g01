@@ -86,7 +86,7 @@ return (function () {
         addResolver($r, '');
 
         $r->post('', Http\Actions\Add::class)
-            ->add(Middleware\Features\Auth\Guard\Permissive::class);
+            ->add(Middleware\Auth\Guard\Permissive::class);
 
         $r->group('/{id:[0-9]+}', function (Slim\App $s) {
             addResolver($s, '');
