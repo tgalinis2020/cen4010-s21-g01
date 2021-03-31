@@ -31,7 +31,7 @@
       array (
         0 => 'createdAt',
         1 => 'created_at',
-        2 => 'ThePetPark\\Values\\CurrentDate',
+        2 => 'ThePetPark\\Values\\CurrentDateTime',
       ),
     ),
     2 => 
@@ -121,7 +121,7 @@
       array (
         0 => 'createdAt',
         1 => 'created_at',
-        2 => NULL,
+        2 => 'ThePetPark\\Values\\CurrentDateTime',
       ),
     ),
     2 => 
@@ -199,7 +199,7 @@
       array (
         0 => 'createdAt',
         1 => 'created_at',
-        2 => 'ThePetPark\\Values\\CurrentDate',
+        2 => 'ThePetPark\\Values\\CurrentDateTime',
       ),
     ),
     2 => 
@@ -316,6 +316,12 @@
         0 => 'avatar',
         1 => 'avatar_url',
         2 => NULL,
+      ),
+      'createdAt' => 
+      array (
+        0 => 'createdAt',
+        1 => 'created_at',
+        2 => 'ThePetPark\\Values\\CurrentDateTime',
       ),
     ),
     2 => 

@@ -7,7 +7,7 @@ schemas:
       createdAt: created_at
 
     defaults:
-      createdAt: ThePetPark\Values\CurrentDate
+      createdAt: ThePetPark\Values\CurrentDateTime
 
     relationships:
       $author:
@@ -46,6 +46,9 @@ schemas:
     attributes:
       text: text_content
       createdAt: created_at
+    
+    defaults:
+      createdAt: ThePetPark\Values\CurrentDateTime
 
     relationships:
       # Relationships starting with a dollar-sign denote that the resource this
@@ -73,7 +76,7 @@ schemas:
 
     defaults:
       idpCode: ThePetPark\Values\ThePetParkIdpCode
-      createdAt: ThePetPark\Values\CurrentDate
+      createdAt: ThePetPark\Values\CurrentDateTime
     
     relationships:
       pets:
@@ -119,6 +122,10 @@ schemas:
       name: pet_name
       description: pet_description
       avatar: avatar_url
+      createdAt: created_at
+
+    defaults:
+      createdAt: ThePetPark\Values\CurrentDateTime
     
     relationships:
       $owner:
