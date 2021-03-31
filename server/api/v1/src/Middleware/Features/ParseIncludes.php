@@ -78,7 +78,7 @@ final class ParseIncludes
         // Create a new query based on retrieved data. Keep the base
         // resource's ID since it will be needed for relationship
         // propagation.
-        $qb->resetQueryParts(['select', 'distinct', 'orderBy'])
+        $qb->resetQueryParts(['select', 'orderBy'])
             ->setFirstResult(0)
             ->setMaxResults(null)
             ->addSelect(sprintf(
