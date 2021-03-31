@@ -15,7 +15,7 @@ return (function () {
 
     $app = new Slim\App(
         (new \DI\ContainerBuilder())
-            ->enableCompilation($root . '/var/cache')
+            //->enableCompilation($root . '/var/cache')
             ->addDefinitions($root . '/etc/settings.php')
             ->addDefinitions($root . '/etc/slim.php')
             ->addDefinitions($root . '/etc/actions.php')

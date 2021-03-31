@@ -14,7 +14,8 @@ return [
         'determineRouteBeforeAppMiddleware' => false,
         'displayErrorDetails' => true,
         'addContentLengthHeader' => true,
-        'routerCacheFile' => dirname(__DIR__) . '/var/cache/routes.php',
+        //'routerCacheFile' => dirname(__DIR__) . '/var/cache/routes.php',
+        'routerCacheFile' => false,
         'uploadDirectory' => dirname(__DIR__, 4) . '/public_html/uploads',
 
         // API settings
