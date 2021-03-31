@@ -44,7 +44,7 @@ return [
                     'host'     => $conf['host'],
                     'port'     => $conf['port'],
                     'dbname'   => $conf['database'],
-                    'charset'  => $conf['charset'],
+                    'charset'  => 'utf8',
                     'user'     => $conf['user'],
                     'password' => $conf['pass'],
                 ];
