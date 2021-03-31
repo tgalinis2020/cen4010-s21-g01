@@ -8,8 +8,8 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use ThePetPark\Library\Graph\Schema;
-use ThePetPark\Library\Graph\Schema\ReferenceTable;
+use ThePetPark\Schema;
+use ThePetPark\Schema\ReferenceTable;
 
 /**
  * Selecting resources is a multi-stage processes.
@@ -21,7 +21,7 @@ final class Initialization
     /** @var \Doctrine\DBAL\Connection */
     private $conn;
 
-    /** @var \ThePetPark\Library\Graph\Schema\Container */
+    /** @var \ThePetPark\Schema\Container */
     private $schemas;
 
     /** @var string */

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Middleware;
+namespace ThePetPark\Middleware\Auth;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -15,7 +15,9 @@ final class Guard
 {
     public function __invoke(Request $req, Response $res, callable $next)
     {
-        if ($req->getAttribute(Session::TOKEN) === null) {
+        $session = $req->getAttribute(Session::TOKEN);
+
+        if ($session === null) {
             return $res->withStatus(401);
         }
             

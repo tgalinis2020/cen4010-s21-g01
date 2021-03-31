@@ -7,7 +7,7 @@ namespace ThePetPark\Http\Session;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
-use ThePetPark\Middleware\Session;
+use ThePetPark\Middleware\Auth\Session;
 
 use function json_encode;
 

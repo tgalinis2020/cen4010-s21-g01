@@ -7,7 +7,7 @@ namespace ThePetPark\Middleware\Features\Pagination;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Doctrine\DBAL\Query\QueryBuilder;
-use ThePetPark\Library\Graph\Schema\ReferenceTable;
+use ThePetPark\Schema\ReferenceTable;
 
 /**
  * This pagination strategy is synonymous with applying a greater-than filter

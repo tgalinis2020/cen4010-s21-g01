@@ -8,8 +8,8 @@ use Doctrine\DBAL\FetchMode;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use ThePetPark\Library\Graph\Schema\ReferenceTable;
-use ThePetPark\Library\Graph\Schema\Relationship as R;
+use ThePetPark\Schema\ReferenceTable;
+use ThePetPark\Schema\Relationship as R;
 
 use function reset;
 use function current;
@@ -49,7 +49,7 @@ final class ParseIncludes
             return $next($request, $response);
         }
 
-        /** @var \ThePetPark\Library\Graph\Schema\ReferenceTable */
+        /** @var \ThePetPark\Schema\ReferenceTable */
         $refs = $request->getAttribute(ReferenceTable::class);
 
         /** @var \Doctrine\DBAL\Query\QueryBuilder */

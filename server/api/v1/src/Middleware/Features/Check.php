@@ -6,7 +6,7 @@ namespace ThePetPark\Middleware\Features;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use ThePetPark\Library\Graph\Schema;
+use ThePetPark\Schema;
 
 /**
  * Returns a 404 if the resource specified in the URL does not exist.

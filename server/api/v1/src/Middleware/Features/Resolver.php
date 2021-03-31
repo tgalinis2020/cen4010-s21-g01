@@ -8,8 +8,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Doctrine\DBAL\FetchMode;
 use Doctrine\DBAL\Query\QueryBuilder;
-use ThePetPark\Library\Graph\Schema\ReferenceTable;
-use ThePetPark\Library\Graph\Schema\Relationship as R;
+use ThePetPark\Schema\ReferenceTable;
+use ThePetPark\Schema\Relationship as R;
 
 /**
  * The primary feature: fetch the data associated with the given URL.
@@ -73,7 +73,7 @@ final class Resolver
         /** @var string */
         $relationship = $route->getArgument('relationship');
 
-        /** @var \ThePetPark\Library\Graph\Schema\ReferenceTable */
+        /** @var \ThePetPark\Schema\ReferenceTable */
         $refs = $request->getAttribute(ReferenceTable::class);
 
         /** @var \Doctrine\DBAL\Query\QueryBuilder */

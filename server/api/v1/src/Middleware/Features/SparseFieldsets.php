@@ -6,13 +6,13 @@ namespace ThePetPark\Middleware\Features;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use ThePetPark\Library\Graph\Schema;
+use ThePetPark\Schema;
 
 use function explode;
 
 final class SparseFieldsets
 {
-    /** @var \ThePetPark\Library\Graph\Schema\Container */
+    /** @var \ThePetPark\Schema\Container */
     private $schemas;
 
     public function __construct(Schema\Container $schemas)

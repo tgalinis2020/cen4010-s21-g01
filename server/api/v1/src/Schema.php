@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Library\Graph;
+namespace ThePetPark;
 
 /**
  * An abstract representation of the back-end data model.
@@ -19,6 +19,13 @@ namespace ThePetPark\Library\Graph;
  */
 class Schema
 {
+    const TYPE_NAME = 0;
+    const TYPE_SRC  = 1;
+
+    const ATTR_NAME = 0;
+    const ATTR_SRC  = 1;
+    const ATTR_DEFAULT_VALE = 2;
+
     /**
      * Back-end alias to resource ID. Defaults to "id".
      * 
@@ -68,11 +75,10 @@ class Schema
     protected $relationships;
 
     /**
-     * A two-dimensional array containing a HTTP verb to Graph action handler.
-     * First dimension applies to resources; the second is for relationships.
-     * By default these will map to the Graph's NotImplemented handler.
+     * Far from a proper access control solution, but denoting what resource
+     * owns another will help prevent unauthorized updates.
      */
-    protected $actions;
+    protected $owner;
 
     /**
      * Cached schemas have the following shape:
@@ -92,7 +98,7 @@ class Schema
      */
     public static function fromArray(array $definitions): self
     {
-        list($resource, $attributes, $relationships, $actions) = $definitions;
+        list($resource, $attributes, $relationships, $owner) = $definitions;
         list($type, $src, $id) = $resource;
 
         $self = new self();
@@ -101,10 +107,10 @@ class Schema
         $self->type = [$type, $src];
         $self->attributes = $attributes;
         $self->relationships = $relationships;
-        $self->actions = $actions;
+        $self->owner = $owner;
         
-        foreach ($attributes as list($attr, $_)) {
-            $self->fields[] = $attr;
+        foreach ($attributes as $attr) {
+            $self->fields[] = $attr[0];
         }
 
         return $self; 
@@ -117,12 +123,12 @@ class Schema
 
     public function getType(): string
     {
-        return $this->type[0];
+        return $this->type[self::TYPE_NAME];
     }
 
     public function getImplType(): string
     {
-        return $this->type[1];
+        return $this->type[self::TYPE_SRC];
     }
 
     public function hasAttribute(string $attr): bool
@@ -141,10 +147,20 @@ class Schema
 
         // If sparse fieldsets were given, not all attributes may be selected.
         foreach ($this->fields as $attr) {
-            $attrs[] = $this->attributes[$attr];
+            $selected = $this->attributes[$attr];
+            $attrs[] = [$selected[self::ATTR_NAME], $selected[self::ATTR_SRC]];
         }
     
         return $attrs;
+    }
+
+    public function getDefaultValueFactory(string $attr)
+    {
+        if ($this->attributes[$attr][self::ATTR_DEFAULT_VALE] === null) {
+            return null;
+        }
+
+        return new $this->attributes[$attr][self::ATTR_DEFAULT_VALE];
     }
 
     public function clearFields()
@@ -159,7 +175,7 @@ class Schema
 
     public function getImplAttribute(string $attr)
     {
-        return ($attr === 'id') ? $this->id : $this->attributes[$attr][1];
+        return $this->attributes[$attr][self::ATTR_SRC];
     }
 
     public function getRelationship(string $relationship): array
@@ -172,13 +188,18 @@ class Schema
         return isset($this->relationships[$relationship]);
     }
 
-    public function setActionKey(int $context, string $action, int $key)
+    public function hasOwningRelationship(): bool
     {
-        $this->actions[$context][$action] = $key;
+        return $this->owner !== null;
     }
 
-    public function getActionKey(int $context, string $action): int
+    /**
+     * Owning relationships must be of type direct belongs-to-one.
+     * That is, the foreign key to the owner exists in this table; the
+     * link must be a string.
+     */
+    public function getOwningRelationship(): string
     {
-        return $this->actions[$context][$action];
+        return $this->relationships[$this->owner][2];
     }
 }

@@ -5,18 +5,15 @@ declare(strict_types=1);
 use Psr\Container\ContainerInterface;
 use Doctrine\DBAL;
 use ThePetPark\Http;
+use ThePetPark\Schema;
 use ThePetPark\Services;
 use ThePetPark\Middleware;
-use ThePetPark\Library\Graph;
 
 use function DI\create;
 use function DI\factory;
 use function DI\get;
 
 return [
-
-    Middleware\Session::class => create(Middleware\Session::class)
-        ->constructor(get(Services\JWT\Decoder::class)),
 
     Http\UploadFile::class => factory(function (ContainerInterface $c) {
         return new Http\UploadFile($c->get('settings')['uploadDirectory']);
@@ -38,14 +35,14 @@ return [
     Http\Actions\Resolve::class => factory(function (ContainerInterface $c) {
         return new Http\Actions\Resolve(
             $c->get(DBAL\Connection::class),
-            $c->get(Graph\Schema\Container::class)
+            $c->get(Schema\Container::class)
         );
     }),
 
     Http\Actions\Add::class => factory(function (ContainerInterface $c) {
         return new Http\Actions\Add(
             $c->get(DBAL\Connection::class),
-            $c->get(Graph\Schema\Container::class),
+            $c->get(Schema\Container::class),
             $c->get('settings')['baseUrl']
         );
     }),
@@ -53,21 +50,21 @@ return [
     Http\Actions\Update::class => factory(function (ContainerInterface $c) {
         return new Http\Actions\Update(
             $c->get(DBAL\Connection::class),
-            $c->get(Graph\Schema\Container::class)
+            $c->get(Schema\Container::class)
         );
     }),
 
     Http\Actions\Remove::class => factory(function (ContainerInterface $c) {
         return new Http\Actions\Remove(
             $c->get(DBAL\Connection::class),
-            $c->get(Graph\Schema\Container::class)
+            $c->get(Schema\Container::class)
         );
     }),
 
     Http\Actions\Relationships\Add::class => factory(function (ContainerInterface $c) {
         return new Http\Actions\Relationships\Add(
             $c->get(DBAL\Connection::class),
-            $c->get(Graph\Schema\Container::class),
+            $c->get(Schema\Container::class),
             $c->get('settings')['baseUrl']
         );
     }),
@@ -75,7 +72,7 @@ return [
     Http\Actions\Relationships\Remove::class => factory(function (ContainerInterface $c) {
         return new Http\Actions\Relationships\Remove(
             $c->get(DBAL\Connection::class),
-            $c->get(Graph\Schema\Container::class),
+            $c->get(Schema\Container::class),
             $c->get('settings')['baseUrl'] ?? 'http://localhost'
         );
     }),
@@ -83,7 +80,7 @@ return [
     Http\Actions\Relationships\Update::class => factory(function (ContainerInterface $c) {
         return new Http\Actions\Relationships\Update(
             $c->get(DBAL\Connection::class),
-            $c->get(Graph\Schema\Container::class)
+            $c->get(Schema\Container::class)
         );
     }),
 ];

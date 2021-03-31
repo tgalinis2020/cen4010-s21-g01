@@ -7,7 +7,7 @@ namespace ThePetPark\Middleware\Features\Pagination\Links;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use ThePetPark\Middleware\Features\Resolver;
-use ThePetPark\Library\Graph\Schema\Relationship as R;
+use ThePetPark\Schema\Relationship as R;
 
 final class OffsetBased
 {

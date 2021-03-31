@@ -13,21 +13,25 @@
       array (
         0 => 'title',
         1 => 'title',
+        2 => NULL,
       ),
       'text' => 
       array (
         0 => 'text',
         1 => 'text_content',
+        2 => NULL,
       ),
       'image' => 
       array (
         0 => 'image',
         1 => 'image_url',
+        2 => NULL,
       ),
       'createdAt' => 
       array (
         0 => 'createdAt',
         1 => 'created_at',
+        2 => 'ThePetPark\\Values\\CurrentDate',
       ),
     ),
     2 => 
@@ -95,9 +99,7 @@
         ),
       ),
     ),
-    3 => 
-    array (
-    ),
+    3 => 'author',
   ),
   1 => 
   array (
@@ -113,11 +115,13 @@
       array (
         0 => 'text',
         1 => 'text_content',
+        2 => NULL,
       ),
       'createdAt' => 
       array (
         0 => 'createdAt',
         1 => 'created_at',
+        2 => NULL,
       ),
     ),
     2 => 
@@ -143,9 +147,7 @@
         ),
       ),
     ),
-    3 => 
-    array (
-    ),
+    3 => 'author',
   ),
   2 => 
   array (
@@ -161,36 +163,43 @@
       array (
         0 => 'email',
         1 => 'email',
+        2 => NULL,
       ),
       'username' => 
       array (
         0 => 'username',
         1 => 'username',
+        2 => NULL,
       ),
       'firstName' => 
       array (
         0 => 'firstName',
         1 => 'first_name',
+        2 => NULL,
       ),
       'lastName' => 
       array (
         0 => 'lastName',
         1 => 'last_name',
+        2 => NULL,
       ),
       'avatar' => 
       array (
         0 => 'avatar',
         1 => 'avatar_url',
+        2 => NULL,
       ),
       'idpCode' => 
       array (
         0 => 'idpCode',
         1 => 'idp_code',
+        2 => 'ThePetPark\\Values\\ThePetParkIdpCode',
       ),
       'createdAt' => 
       array (
         0 => 'createdAt',
         1 => 'created_at',
+        2 => 'ThePetPark\\Values\\CurrentDate',
       ),
     ),
     2 => 
@@ -242,9 +251,7 @@
         ),
       ),
     ),
-    3 => 
-    array (
-    ),
+    3 => NULL,
   ),
   3 => 
   array (
@@ -260,6 +267,7 @@
       array (
         0 => 'text',
         1 => 'text_content',
+        2 => NULL,
       ),
     ),
     2 => 
@@ -279,9 +287,7 @@
         ),
       ),
     ),
-    3 => 
-    array (
-    ),
+    3 => NULL,
   ),
   4 => 
   array (
@@ -297,16 +303,19 @@
       array (
         0 => 'name',
         1 => 'pet_name',
+        2 => NULL,
       ),
       'description' => 
       array (
         0 => 'description',
         1 => 'pet_description',
+        2 => NULL,
       ),
       'avatar' => 
       array (
         0 => 'avatar',
         1 => 'avatar_url',
+        2 => NULL,
       ),
     ),
     2 => 
@@ -344,9 +353,7 @@
         2 => 'type_id',
       ),
     ),
-    3 => 
-    array (
-    ),
+    3 => 'owner',
   ),
   5 => 
   array (
@@ -362,6 +369,7 @@
       array (
         0 => 'breed',
         1 => 'pet_breed',
+        2 => NULL,
       ),
     ),
     2 => 
@@ -373,9 +381,7 @@
         2 => 'breed_id',
       ),
     ),
-    3 => 
-    array (
-    ),
+    3 => NULL,
   ),
   6 => 
   array (
@@ -391,6 +397,7 @@
       array (
         0 => 'type',
         1 => 'pet_type',
+        2 => NULL,
       ),
     ),
     2 => 
@@ -402,8 +409,6 @@
         2 => 'type_id',
       ),
     ),
-    3 => 
-    array (
-    ),
+    3 => NULL,
   ),
 );

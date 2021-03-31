@@ -8,8 +8,8 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Doctrine\DBAL\Connection;
 use Exception;
-use ThePetPark\Library\Graph\Schema;
-use ThePetPark\Library\Graph\Schema\Relationship as R;
+use ThePetPark\Schema;
+use ThePetPark\Schema\Relationship as R;
 
 use function json_encode;
 use function json_decode;
@@ -20,7 +20,7 @@ use function count;
 
 final class Add
 {
-    /** @var \ThePetPark\Library\Graph\Schema\Container */
+    /** @var \ThePetPark\Schema\Container */
     private $schemas;
 
     /** @var string */
@@ -72,10 +72,23 @@ final class Add
         */
 
         $values = [];
+        $present = [];
+        
+        foreach ($schema->getAttributes() as $attr) {
+            $present[$attr] = $attr;
+        }
 
         foreach ($attributes as $attr => $value) {
             if ($schema->hasAttribute($attr) === false) {
                 return $response->withStatus(400);
+            }
+
+            unset($present[$attr]);
+
+            if (isset($attributes[$attr]) === false) {
+                $default = $schema->getDefaultValueFactory($attr);
+
+                $value = $default === null ? false : $default->get();
             }
 
             $values[$attr] = htmlentities($value, ENT_QUOTES);
@@ -84,6 +97,22 @@ final class Add
                 $schema->getImplAttribute($attr),
                 $qb->createNamedParameter($values[$attr])
             );
+        }
+
+        // If an attribute was not provided, attempt to add a default value.
+        foreach ($present as $attr) {
+            $default = $schema->getDefaultValueFactory($attr);
+
+            $value = $default === null ? null : $default->get();
+
+            if ($default !== null) {
+                $values[$attr] = htmlentities($value, ENT_QUOTES);
+
+                $qb->setValue(
+                    $schema->getImplAttribute($attr),
+                    $qb->createNamedParameter($values[$attr])
+                );
+            }
         }
 
         $rels     = [];

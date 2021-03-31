@@ -8,8 +8,8 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Doctrine\DBAL\Connection;
 use Exception;
-use ThePetPark\Library\Graph\Schema;
-use ThePetPark\Library\Graph\Schema\Relationship as R;
+use ThePetPark\Schema;
+use ThePetPark\Schema\Relationship as R;
 
 use function json_decode;
 use function array_pop;
@@ -17,7 +17,7 @@ use function htmlentities;
 
 final class Remove
 {
-    /** @var \ThePetPark\Library\Graph\Schema\Container */
+    /** @var \ThePetPark\Schema\Container */
     private $schemas;
 
     /** @var string */

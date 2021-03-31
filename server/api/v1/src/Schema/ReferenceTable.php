@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Library\Graph\Schema;
+namespace ThePetPark\Schema;
 
 use Doctrine\DBAL\Query\QueryBuilder;
 use Psr\Container\ContainerInterface;
-use ThePetPark\Library\Graph\Schema;
-use ThePetPark\Library\Graph\Schema\Relationship as R;
+use ThePetPark\Schema;
+use ThePetPark\Schema\Relationship as R;
 
 use function substr;
 use function strrchr;
@@ -38,7 +38,7 @@ class ReferenceTable implements ContainerInterface
      * Root reference must be a Schema\Reference.
      * All other references are of type Schema\Relationship.
      * 
-     * @var \ThePetPark\Library\Graph\Schema\Relationship[]
+     * @var \ThePetPark\Schema\Relationship[]
      */
     protected $references = [];
 
@@ -60,13 +60,13 @@ class ReferenceTable implements ContainerInterface
      */
     protected $baseRef;
 
-    /** @var \ThePetPark\Library\Graph\Schema\Container */
+    /** @var \ThePetPark\Schema\Container */
     protected $schemas;
 
     /** @var \Doctrine\DBAL\Query\QueryBuilder */
     protected $qb;
 
-    /** @param \ThePetPark\Library\Graph\Schema\Container $schemas */
+    /** @param \ThePetPark\Schema\Container $schemas */
     public function __construct(
         Schema\Container $schemas,
         string $base
@@ -205,7 +205,7 @@ class ReferenceTable implements ContainerInterface
         return $this->references[$this->baseRef];
     }
 
-    /** @return \ThePetPark\Library\Graph\Schema\Reference[] */
+    /** @return \ThePetPark\Schema\Reference[] */
     public function getParentRefs(): array
     {
         return $this->parentRefs;

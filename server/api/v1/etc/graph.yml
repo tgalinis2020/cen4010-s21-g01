@@ -1,23 +1,16 @@
-# default actions will map to unimplemented schema actions
-actions:
-  resource:
-    GET: ThePetPark\Library\Graph\Actions\Resolve
-
 schemas:
-  posts:
-    actions:
-      resource:
-        POST: ThePetPark\Http\Actions\Posts\Create
-        PATCH: ThePetPark\Http\Actions\Posts\Update
-    
+  posts:    
     attributes:
       title: $
       text: text_content
       image: image_url
       createdAt: created_at
 
+    defaults:
+      createdAt: ThePetPark\Values\CurrentDate
+
     relationships:
-      author:
+      $author:
         belongsTo: users
         using: user_id
 
@@ -50,17 +43,14 @@ schemas:
             to: comment_id
     
   comments:
-    actions:
-      resource:
-        POST: ThePetPark\Http\Actions\Comments\Create
-        PATCH: ThePetPark\Http\Actions\Comments\Update
-
     attributes:
       text: text_content
       createdAt: created_at
 
     relationships:
-      author:
+      # Relationships starting with a dollar-sign denote that the resource this
+      # relationship resolves to owns this resource.
+      $author:
         belongsTo: users
         using: user_id
       
@@ -72,11 +62,6 @@ schemas:
             to: post_id
 
   users:
-    actions:
-      resource:
-        POST: ThePetPark\Http\Actions\Users\Create
-        PATCH: ThePetPark\Http\Actions\Users\Update
-
     attributes:
       email: $ # use a dollar sign to denote that attr name === field name
       username: $ 
@@ -85,6 +70,10 @@ schemas:
       avatar: avatar_url
       idpCode: idp_code
       createdAt: created_at
+
+    defaults:
+      idpCode: ThePetPark\Values\ThePetParkIdpCode
+      createdAt: ThePetPark\Values\CurrentDate
     
     relationships:
       pets:
@@ -126,18 +115,13 @@ schemas:
             to: post_id
 
   pets:
-    actions:
-      resource:
-        POST: ThePetPark\Http\Actions\Pets\Create
-        PATCH: ThePetPark\Http\Actions\Pets\Update
-
     attributes:
       name: pet_name
       description: pet_description
       avatar: avatar_url
     
     relationships:
-      owner:
+      $owner:
         belongsTo: users
         using: user_id
 

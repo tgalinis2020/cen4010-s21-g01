@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Library\Graph\Schema;
+namespace ThePetPark\Schema;
 
-use ThePetPark\Library\Graph\Schema;
+use ThePetPark\Schema;
 
 class Reference
 {
@@ -14,7 +14,7 @@ class Reference
     /** @var int */
     protected $ref;
 
-    /** @var \ThePetPark\Library\Graph\Schema */
+    /** @var \ThePetPark\Schema */
     protected $schema;
 
     public function __construct(int $id, Schema $schema, string $prefix = 'r')

@@ -8,7 +8,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Doctrine\DBAL\Connection;
 use Exception;
-use ThePetPark\Library\Graph\Schema;
+use ThePetPark\Schema;
 
 /**
  * TODO:    Since access control has not been implemented yet, this
@@ -19,7 +19,7 @@ use ThePetPark\Library\Graph\Schema;
  */
 final class Remove
 {
-    /** @var \ThePetPark\Library\Graph\Schema\Container */
+    /** @var \ThePetPark\Schema\Container */
     private $schemas;
 
     /** @var \Doctrine\DBAL\Connection */

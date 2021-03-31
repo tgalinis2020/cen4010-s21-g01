@@ -7,7 +7,7 @@ namespace ThePetPark\Middleware\Features;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use ThePetPark\Library\Graph\Schema\ReferenceTable;
+use ThePetPark\Schema\ReferenceTable;
 
 use function trim;
 use function substr;

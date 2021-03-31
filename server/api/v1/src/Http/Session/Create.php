@@ -9,7 +9,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Doctrine\DBAL\Connection;
 use ThePetPark\Services\JWT\Encoder;
-use ThePetPark\Middleware\Session;
+use ThePetPark\Middleware\Auth\Session;
 
 use function time;
 use function setcookie;

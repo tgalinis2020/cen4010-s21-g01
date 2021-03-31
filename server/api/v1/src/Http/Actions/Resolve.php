@@ -6,9 +6,9 @@ namespace ThePetPark\Http\Actions;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
-use ThePetPark\Library\Graph\Schema;
-use ThePetPark\Library\Graph\Schema\ReferenceTable;
-use ThePetPark\Library\Graph\Schema\Relationship as R;
+use ThePetPark\Schema;
+use ThePetPark\Schema\ReferenceTable;
+use ThePetPark\Schema\Relationship as R;
 use ThePetPark\Middleware\Features\Resolver;
 
 use function reset;

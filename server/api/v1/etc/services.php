@@ -4,14 +4,10 @@ declare(strict_types=1);
 
 use Psr\Container\ContainerInterface;
 use Doctrine\DBAL;
-use ThePetPark\Http;
 use ThePetPark\Services;
-use ThePetPark\Middleware;
-use ThePetPark\Library\Graph;
+use ThePetPark\Schema;
 
-use function DI\create;
 use function DI\factory;
-use function DI\get;
 
 return [
 
@@ -39,16 +35,16 @@ return [
         );
     }),
 
-    Graph\Schema\Container::class => factory(function (ContainerInterface $c) {
+    Schema\Container::class => factory(function (ContainerInterface $c) {
         $definitions = require $c->get('settings')['definitions'];
         $schemas = [];
 
         foreach ($definitions as $definition) { 
-            $schema = Graph\Schema::fromArray($definition);
+            $schema = Schema::fromArray($definition);
             $schemas[$schema->getType()] = $schema;
         }
 
-        return new Graph\Schema\Container($schemas);
+        return new Schema\Container($schemas);
     }),
 
 ];

@@ -1,7 +1,6 @@
 {
     "scripts": {
-        "graph": "php bin/graph etc/graph.yml var/cache/schemas.php",
-        "deps": "php bin/rebuild-container"
+        "graph": "php bin/graph etc/graph.yml var/cache/schemas.php"
     },
 
     "require": {
@@ -16,8 +15,7 @@
 
     "autoload": {
         "psr-4": {
-            "ThePetPark\\": "src/",
-            "ThePetPark\\Library\\": "lib/"
+            "ThePetPark\\": "src/"
         }
     }
 }

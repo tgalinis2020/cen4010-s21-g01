@@ -3,13 +3,11 @@
 declare(strict_types=1);
 
 use Psr\Container\ContainerInterface;
-use Doctrine\DBAL;
 use Doctrine\DBAL\Connection;
-use ThePetPark\Http;
+use ThePetPark\Schema;
 use ThePetPark\Services;
-use ThePetPark\Middleware;
+use ThePetPark\Middleware\Auth;
 use ThePetPark\Middleware\Features;
-use ThePetPark\Library\Graph\Schema;
 
 use function DI\create;
 use function DI\factory;
@@ -17,8 +15,13 @@ use function DI\get;
 
 return [
 
-    Middleware\Session::class => create(Middleware\Session::class)
+    Auth\Session::class => create(Auth\Session::class)
         ->constructor(get(Services\JWT\Decoder::class)),
+
+    Auth\Guard::class => create(Auth\Guard::class),
+
+    Auth\Protect::class => create(Auth\Protect::class)
+        ->constructor(get(Connection::class), get(Schema\Container::class)),
 
     Features\Check::class => create(Features\Check::class)
         ->constructor(get(Schema\Container::class)),

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Library\Graph\Schema;
+namespace ThePetPark\Schema;
 
-use ThePetPark\Library\Graph\Schema;
+use ThePetPark\Schema;
 
 class Relationship extends Reference
 {

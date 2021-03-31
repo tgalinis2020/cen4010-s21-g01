@@ -8,7 +8,7 @@ use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use ThePetPark\Library\Graph\Schema\ReferenceTable;
+use ThePetPark\Schema\ReferenceTable;
 
 use function is_array;
 use function in_array;

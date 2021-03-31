@@ -7,8 +7,8 @@ namespace ThePetPark\Http\Actions\Relationships;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Doctrine\DBAL\Connection;
-use ThePetPark\Library\Graph\Schema;
-use ThePetPark\Library\Graph\Schema\Relationship as R;
+use ThePetPark\Schema;
+use ThePetPark\Schema\Relationship as R;
 
 use function json_encode;
 use function json_decode;
@@ -21,7 +21,7 @@ use function htmlentities;
  */
 final class Add
 {
-    /** @var \ThePetPark\Library\Graph\Schema\Container */
+    /** @var \ThePetPark\Schema\Container */
     private $schemas;
 
     /** @var string */
