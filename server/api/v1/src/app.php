@@ -84,7 +84,9 @@ return (function () {
     // attempting to do any operations.
     $app->group('/{resource:[A-Za-z-]+}', function (Slim\App $r) {
         addResolver($r, '');
-        protect($r->post('', Http\Actions\Add::class));
+
+        $r->post('', Http\Actions\Add::class)
+            ->add(Middleware\Features\Auth\Guard\Permissive::class);
 
         $r->group('/{id:[0-9]+}', function (Slim\App $s) {
             addResolver($s, '');

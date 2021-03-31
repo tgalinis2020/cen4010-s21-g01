@@ -20,6 +20,8 @@ return [
 
     Auth\Guard::class => create(Auth\Guard::class),
 
+    Auth\Guard\Permissive::class => create(Auth\Guard\Permissive::class),
+
     Auth\Protect::class => create(Auth\Protect::class)
         ->constructor(get(Connection::class), get(Schema\Container::class)),
 
