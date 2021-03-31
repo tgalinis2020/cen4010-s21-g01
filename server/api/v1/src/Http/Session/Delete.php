@@ -20,7 +20,7 @@ final class Delete
         }
 
         // A cookie with no expiry will be immediately unset.
-        setcookie(Session::TOKEN);
+        setcookie(Session::TOKEN, '', 0, '/~cen4010_s21_g01', $req->getUri()->getHost(), true, true);
 
         return $res->withStatus(204);
     }
