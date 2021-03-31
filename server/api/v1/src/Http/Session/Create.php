@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace ThePetPark\Http\Session;
 
-use Doctrine\DBAL\FetchMode;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Doctrine\DBAL\Connection;
 use ThePetPark\Services\JWT\Encoder;
 use ThePetPark\Middleware\Auth\Session;
+
+use PDO;
 
 use function time;
 use function setcookie;
@@ -62,7 +63,7 @@ final class Create
                 $qb->expr()->eq('u.email', $username)
             ))
             ->execute()
-            ->fetch(FetchMode::ASSOCIATIVE);
+            ->fetch(PDO::FETCH_ASSOC);
 
         // If the user account was not found or the passwords did not match,
         // return a 404 Not Found status code to the client.
