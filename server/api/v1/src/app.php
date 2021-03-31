@@ -79,6 +79,9 @@ return (function () {
     // Resource graph action-to-route mappings.
     // The order routes are defined matters: more specific routes should be
     // declared first (like the ones above here).
+    //
+    // The "Check" middleware ensures that the requested resource exists before
+    // attempting to do any operations.
     $app->group('/{resource:[A-Za-z-]+}', function (Slim\App $r) {
         addResolver($r, '');
         protect($r->post('', Http\Actions\Add::class));
