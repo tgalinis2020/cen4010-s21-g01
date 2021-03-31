@@ -1,0 +1,163 @@
+schemas:
+  posts:    
+    attributes:
+      title: $
+      text: text_content
+      image: image_url
+      createdAt: created_at
+
+    defaults:
+      createdAt: ThePetPark\Values\CurrentDate
+
+    relationships:
+      $author:
+        belongsTo: users
+        using: user_id
+
+      likes:
+        belongsToMany: users
+        using:
+          - relation: post_likes
+            from: post_id
+            to: user_id
+
+      tags:
+        hasMany: tags
+        using:
+          - relation: post_tags
+            from: post_id
+            to: tag_id
+
+      pets:
+        hasMany: pets
+        using:
+          - relation: post_pets
+            from: post_id
+            to: pet_id
+
+      comments:
+        hasMany: comments
+        using:
+          - relation: post_comments
+            from: post_id
+            to: comment_id
+    
+  comments:
+    attributes:
+      text: text_content
+      createdAt: created_at
+
+    relationships:
+      # Relationships starting with a dollar-sign denote that the resource this
+      # relationship resolves to owns this resource.
+      $author:
+        belongsTo: users
+        using: user_id
+      
+      post:
+        belongsTo: posts
+        using:
+          - relation: post_comments
+            from: comment_id
+            to: post_id
+
+  users:
+    attributes:
+      email: $ # use a dollar sign to denote that attr name === field name
+      username: $ 
+      firstName: first_name
+      lastName: last_name
+      avatar: avatar_url
+      idpCode: idp_code
+      createdAt: created_at
+
+    defaults:
+      idpCode: ThePetPark\Values\ThePetParkIdpCode
+      createdAt: ThePetPark\Values\CurrentDate
+    
+    relationships:
+      pets:
+        hasMany: pets
+        using: user_id
+        
+      posts:
+        hasMany: posts
+        using: user_id
+
+      comments:
+        hasMany: comments
+        using: user_id
+
+      favorites:
+        hasMany: posts
+        using:
+          - relation: user_favorite_posts
+            from: user_id
+            to: post_id
+      
+      subscriptions:
+        hasMany: pets
+        using:
+          - relation: subscriptions
+            from: user_id
+            to: pet_id
+
+  tags:
+    attributes:
+      text: text_content
+
+    relationships:
+      posts:
+        belongsToMany: posts
+        using:
+          - relation: post_tags
+            from: tag_id
+            to: post_id
+
+  pets:
+    attributes:
+      name: pet_name
+      description: pet_description
+      avatar: avatar_url
+    
+    relationships:
+      $owner:
+        belongsTo: users
+        using: user_id
+
+      posts:
+        belongsToMany: posts
+        using:
+          - relation: post_pets
+            from: pet_id
+            to: post_id
+
+      breed:
+        belongsTo: pet-breeds
+        using: breed_id
+
+      type:
+        belongsTo: pet-types
+        using: type_id
+
+  pet-breeds:
+    src: pet_breeds # need to specify source table since resource name is different
+
+    attributes:
+      breed: pet_breed
+
+    relationships:
+      pets:
+        hasMany: pets
+        using: breed_id
+
+  pet-types:
+    src: pet_types
+
+    attributes:
+      type: pet_type
+
+    relationships:
+      pets:
+        hasMany: pets
+        using: type_id
