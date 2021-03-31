@@ -6,10 +6,11 @@ namespace ThePetPark\Middleware\Features;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Doctrine\DBAL\FetchMode;
 use Doctrine\DBAL\Query\QueryBuilder;
 use ThePetPark\Schema\ReferenceTable;
 use ThePetPark\Schema\Relationship as R;
+
+use PDO;
 
 /**
  * The primary feature: fetch the data associated with the given URL.
@@ -124,7 +125,7 @@ final class Resolver
         $prefix   = $base . '_';
         $items    = [];
 
-        foreach ($qb->execute()->fetchAll(FetchMode::ASSOCIATIVE) as $rec) {
+        foreach ($qb->execute()->fetchAll(PDO::FETCH_ASSOC) as $rec) {
             $resourceID = $rec[$prefix . 'id'];
             $item = ['type' => $type, 'id' => $resourceID, 'attributes' => []];
 

@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace ThePetPark\Middleware\Features;
 
-use Doctrine\DBAL\FetchMode;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use ThePetPark\Schema\ReferenceTable;
 use ThePetPark\Schema\Relationship as R;
+
+use PDO;
 
 use function reset;
 use function current;
@@ -159,7 +160,7 @@ final class ParseIncludes
                 $resolved[$ref->getSchema()->getType()] = [];
             }
 
-            $records[$nqueries++] = $sub->execute()->fetchAll(FetchMode::ASSOCIATIVE);
+            $records[$nqueries++] = $sub->execute()->fetchAll(PDO::FETCH_ASSOC);
         }
 
         foreach ($refs->getParentRefs() as $refID => $parent) {
