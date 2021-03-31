@@ -52,7 +52,6 @@ final class Initialization
         $base = $refs->getBaseRef();
         $qb = $this->conn->createQueryBuilder()
             ->select()
-            ->distinct()
             ->from($base->getSchema()->getImplType(), (string) $base);
 
         $links = [];
