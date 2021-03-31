@@ -6,5 +6,5 @@ namespace ThePetPark;
 
 interface DefaultValueInterface
 {
-    public function get();
+    public function get(): string;
 }

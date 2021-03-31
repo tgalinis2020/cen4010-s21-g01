@@ -7,10 +7,12 @@ namespace ThePetPark\Values;
 use ThePetPark\DefaultValueInterface;
 use ThePetPark\Idp;
 
+use function sprintf;
+
 class ThePetParkIdpCode implements DefaultValueInterface
 {
-    public function get()
+    public function get(): string
     {
-        return Idp::THEPETPARK;
+        return sprintf("%d", Idp::THEPETPARK);
     }
 }
