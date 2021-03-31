@@ -34,14 +34,14 @@ final class Resolve
         
         if ($quantity & R::ONE) {
             $document['data'] = current($data) ?: null;
+        } elseif (empty($data)) {
+            $document['data'] = [];
         } else {
-
             // Each resource is indexed by resource ID; don't include the
             // indexing in the final result.
             foreach ($data as $resource) {
                 $document['data'][] = $resource;
             }
-
         }
 
         // TODO:    The JSON:API spec does mention to return an error document
