@@ -1,7 +1,7 @@
-import api_request from '../api/api_request'
 import Base from './Base'
+import api_request from '../api/api_request'
 
-class User extends Base
+export default class User extends Base
 {
     constructor() {
         super('users')
@@ -28,7 +28,10 @@ class User extends Base
     }
 
     login(password) {
-        return api_request('POST', '/session', { username, password })
+        return api_request('POST', '/session', {
+            username: this.getAttribute('username'),
+            password
+        })
     }
 
     logout() {

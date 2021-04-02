@@ -1,6 +1,8 @@
 import Base from './Base'
 
-class Pet extends Base
+export default class Pet extends Base
 {
-    // stub
+    constructor() {
+        super('pets')
+    }
 }

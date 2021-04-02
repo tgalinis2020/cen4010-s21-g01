@@ -15,7 +15,7 @@ export default class Base
         this.attributes = obj.attributes
 
         if ('createdAt' in this.attributes) {
-            this.attributes.createdAt = convert_datetime(this.attributes.createdAt)
+            this.createdAt = convert_datetime(this.attributes.createdAt)
         }
 
         this.relationships = obj.relationships
@@ -55,6 +55,7 @@ export default class Base
         }
 
         return api_request('POST', `/${this.type}`, payload)
+            .then(res => res.data)
     }
 
     update() {

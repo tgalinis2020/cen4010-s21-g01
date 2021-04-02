@@ -8,9 +8,9 @@
  * @returns {Date} A Date object initialized using provided string.
  */
  export default function convert_datetime(datetime) {
-    const [date, time] = datetime.split(' ')
-    const [date, month, year] = date.split('-')
-    const [hours, minutes, seconds] = time.split(':')
+    const [datePart, timePart] = datetime.split(' ')
+    const [date, month, year] = datePart.split('-')
+    const [hours, minutes, seconds] = timePart.split(':')
 
     return Date.UTC(year, month, date, hours, minutes, seconds)
 }

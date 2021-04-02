@@ -1,6 +1,8 @@
 import Base from './Base'
 
-class Comment extends Base
+export default class Comment extends Base
 {
-    // stub
+    constructor() {
+        super('comments')
+    }
 }
