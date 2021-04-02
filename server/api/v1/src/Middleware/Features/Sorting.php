@@ -57,9 +57,7 @@ final class Sorting
             foreach ($tokens as $relationship) {
                 $token .= $delim . $relationship;
 
-                $ref = $refs->has($token)
-                   ? $refs->get($token)
-                   : $refs->resolve($relationship, $ref);
+                $ref = $refs->resolve($relationship, $ref, $qb);
 
                 $delim = '.';
             }
@@ -74,9 +72,7 @@ final class Sorting
 
             } elseif ($ref->getSchema()->hasRelationship($field)) {
 
-                $ref = $refs->has($fullyQualifiedField)
-                   ? $refs->get($fullyQualifiedField)
-                   : $refs->resolve($field, $ref);
+                $ref = $refs->resolve($field, $ref, $qb);
 
                 $field = $ref->getSchema()->getId();
 

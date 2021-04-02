@@ -14,6 +14,9 @@ use PDO;
 
 /**
  * The primary feature: fetch the data associated with the given URL.
+ * 
+ * TODO:    Might be useful to add relationship links for each requested
+ *          resource, even if no includes are specified.
  */
 final class Resolver
 {
@@ -23,41 +26,29 @@ final class Resolver
      * 
      * @var string
      */
-    const PARAMETERS = 'Parameters';
+    const PARAMETERS = '__parameters__';
 
     /**
-     * This endpoint generates a JSON:API document in the form of a PHP array.
-     * The render middleware handles outputting the final result.
+     * The array representing the output document may be modified by middleware,
+     * so it is provided as a request attribute.
      * 
      * @var string
      */
-    const DOCUMENT = 'Document';
+    const DOCUMENT = '__document__';
 
     /**
-     * Raw data and the amount of records (one or many).
+     * Raw data indexed by reference ID.
      * 
      * @var string
      */
-    const DATA = 'Data';
-
-    
-    /**
-     * One of the more useful features the JSON:API specification describes
-     * is including related resources in one request.
-     * 
-     * The array contained in this request attribute will contain the 
-     * related resource IDs indexed by reference ID.
-     * 
-     * @var string
-     */
-    const RELATIONSHIPS = 'Relationships';
+    const DATA = '__data__';
 
     /**
      * Denotes whether fetched data was an item or collection.
      * 
      * @var string
      */
-    const QUANTITY = 'Quantity';
+    const QUANTITY = '__quantity__';
 
     public function __invoke(
         ServerRequestInterface $request,
@@ -92,17 +83,9 @@ final class Resolver
             ));
 
             if ($relationship !== null) {
-
-                if ($base->getSchema()->hasRelationship($relationship) === false) {
-                    return $response->withStatus(400);
-                }
                 
                 // Promote relationship to the context of the query.
-                // Note that applied filters may have already resolved
-                // related resources.
-                $base = $refs->has($relationship)
-                    ? $refs->get($relationship)
-                    : $refs->resolve($relationship, $base, $qb);
+                $base = $refs->resolve($relationship, $base, $qb);
 
                 if ($base->getType() & R::ONE) {
                     $quantity = R::ONE;

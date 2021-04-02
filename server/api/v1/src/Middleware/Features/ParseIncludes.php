@@ -14,11 +14,11 @@ use PDO;
 
 use function reset;
 use function current;
-use function next;
 use function explode;
+use function count;
 
 /**
- * Add included data to the document.
+ * Add related resources to the data collection.
  */
 final class ParseIncludes
 {
@@ -34,9 +34,6 @@ final class ParseIncludes
         ResponseInterface $response,
         callable $next
     ): ResponseInterface {
-
-        /** @var array */
-        $document = $request->getAttribute(Resolver::DOCUMENT);
 
         /** @var array */
         $data = $request->getAttribute(Resolver::DATA);
@@ -58,21 +55,11 @@ final class ParseIncludes
 
         $base = $refs->getBaseRef();
 
-        $type = $base->getSchema()->getType();
-
-        $resolved = [$type => []];
-
         $refQueryMap = [];
 
         $nqueries = 0;
         
         $records = [];
-
-        // There should only be one item in the data array.
-        // Mark each record as resolved.
-        foreach (current($data) as $record) {
-            $resolved[$type][$record['id']] = true;
-        }
 
         // Reset fields but keep source table(s), conditions and base IDs.
         // Create a new query based on retrieved data. Keep the base
@@ -140,14 +127,11 @@ final class ParseIncludes
                 
                 }
 
-                // A resource may have already been resolved (joined in
-                // the query) if it was used in a filter.
-                if ($refs->has($token)) {
-                    $relatedRef = $refs->get($token);
-                } else {
-                    $relatedRef = $refs->resolve($relationship, $ref, $sub);
-                }
+                $relatedRef = $refs->resolve($relationship, $ref, $sub);
                 
+                // The set*Ref methods add the attributes of the target
+                // resource to the query using the provided QueryBuilder
+                // instance.
                 $refs->setParentRef($relatedRef, $ref, $sub);
 
                 $ref = $relatedRef;
@@ -156,16 +140,12 @@ final class ParseIncludes
                 $refQueryMap[$ref->getRef()] = $nqueries;
             }
 
-            if (isset($resolved[$ref->getSchema()->getType()]) === false) {
-                $resolved[$ref->getSchema()->getType()] = [];
-            }
-
             $records[$nqueries++] = $sub->execute()->fetchAll(PDO::FETCH_ASSOC);
         }
 
         foreach ($refs->getParentRefs() as $refID => $parent) {
             $data[$refID] = [];
-            $ref = $refs->getRefById($refID);
+            $ref = $refs->get($refID);
             $schema = $ref->getSchema();
             $prefix = $ref . '_';
 
@@ -228,38 +208,8 @@ final class ParseIncludes
             }
         }
 
-        // Point to included data, which should start immediately after the
-        // first reference.
-        reset($data);
-        
-        // Main data is the first element, skip it.
-        $included = next($data);
-        
-        $document['included'] = [];
-        
-        // Note:    Some included resources may contain duplicate data.
-        //          This is why the "resolved" map exists.
-        // 
-        // e.g.     Fetching article authors and article comment authors -- an
-        //          article author can also be a comment author. Don't include
-        //          the same person twice!      
-        while ($included !== false) {
-            foreach ($included as $key => $resource) {
-                $type = $resource['type'];
-
-                if (isset($resolved[$type][$key]) === false) {
-                    $document['included'][] = $resource;
-                    $resolved[$type][$key] = true;
-                }
-            }
-
-            $included = next($data);
-        }
-
         return $next(
-            $request
-                ->withAttribute(Resolver::DATA, $data)
-                ->withAttribute(Resolver::DOCUMENT, $document),
+            $request->withAttribute(Resolver::DATA, $data),
             $response
         );
     }

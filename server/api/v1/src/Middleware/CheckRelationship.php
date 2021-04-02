@@ -2,16 +2,17 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Middleware\Features;
+namespace ThePetPark\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use ThePetPark\Schema;
 
 /**
- * Returns a 404 if the resource specified in the URL does not exist.
+ * Returns a 404 if the resource's specified relationship in the URL does not
+ * exist.
  */
-final class Check
+final class CheckRelationship
 {
     /** @var \ThePetPark\Graph\Schemas\Container */
     private $schemas;
@@ -29,8 +30,10 @@ final class Check
 
         /** @var \Slim\Route */
         $route = $request->getAttribute('route');
+
+        $schema = $this->schemas->get($route->getArgument('resource'));
         
-        if ($this->schemas->has($route->getArgument('resource')) === false) {
+        if ($schema->hasRelationship($route->getArgument('relationship')) === false) {
             return $response->withStatus(404);
         }
 

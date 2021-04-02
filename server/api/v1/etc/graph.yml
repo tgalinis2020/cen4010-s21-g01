@@ -87,6 +87,13 @@ schemas:
         hasMany: posts
         using: user_id
 
+      liked-posts:
+        hasMany: posts
+        using:
+          - relation: post_likes
+            from: user_id
+            to: post_id
+            
       comments:
         hasMany: comments
         using: user_id

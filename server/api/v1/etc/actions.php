@@ -32,8 +32,8 @@ return [
     Http\Passwords\Update::class => create(Http\Passwords\Update::class)
         ->constructor(get(DBAL\Connection::class)),
     
-    Http\Actions\Resolve::class => factory(function (ContainerInterface $c) {
-        return new Http\Actions\Resolve(
+    Http\Actions\Render::class => factory(function (ContainerInterface $c) {
+        return new Http\Actions\Render(
             $c->get(DBAL\Connection::class),
             $c->get(Schema\Container::class)
         );

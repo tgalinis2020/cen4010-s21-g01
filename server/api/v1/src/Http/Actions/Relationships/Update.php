@@ -34,11 +34,6 @@ final class Update
         $id = $request->getAttribute('id');
         $relationship = $request->getAttribute('relationship');
 
-        if ($this->schemas->has($resource) === false) {
-            // Provided resource doesn't exist.
-            return $response->withStatus(404);
-        }
-
         $input = json_decode((string) $request->getBody(), true);
         $data = $input['data'] ?? false;
 
@@ -48,16 +43,13 @@ final class Update
         }
 
         $schema = $this->schemas->get($resource);
-
-        if ($schema->hasRelationship($relationship) === false) {
-            // Relationship does not exist.
-            return $response->withStatus(404);
-        }
+        $qb = $this->conn->createQueryBuilder();
 
         list($mask, $related, $link) = $schema->getRelationship($relationship);
 
         if ($mask & R::ONE) {
 
+            // Data could be null if resetting a to-one relationship.
             if (isset($data['type'], $data['id']) === false && $data !== null) {
                 return $response->withStatus(400);
             }
@@ -65,18 +57,11 @@ final class Update
             $value = null;
             
             if ($data !== null) {
-
                 if ($data['type'] !== $related) {
-                    return $response->withStatus(400);
+                    return $response->withStatus(400); // Resource types should match.
                 }
 
-                $value = $data['id'];
-            }
-
-            $qb = $this->conn->createQueryBuilder();
-
-            if ($value !== null) {
-                $value = $qb->createNamedParameter(htmlentities($value, ENT_QUOTES));
+                $value = $qb->createNamedParameter(htmlentities($data['id'], ENT_QUOTES));;
             }
 
             if (is_array($link)) {
@@ -86,14 +71,14 @@ final class Update
                 // Before attempting to modify the relationship, check to see
                 // if it exists in the first place.
                 $sub = $this->conn->createQueryBuilder();
-                $exists = $sub
-                    ->select("1")
+                $exists = '1' === $sub
+                    ->select('1')
                     ->from($pivot)
                     ->where($qb->expr()->eq($from, $sub->createNamedParameter($id)))
                     ->execute()
                     ->fetchColumn(0);
                 
-                if ($exists === "1") {
+                if ($exists) {
                     $qb->update($pivot)
                         ->set($to, $value)
                         ->where($qb->expr()->eq($from, $qb->createNamedParameter($id)));

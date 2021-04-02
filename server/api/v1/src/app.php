@@ -30,7 +30,7 @@ return (function () {
     // Note that Slim puts middleware in a stack so the last middleware added is
     // the first one to execute.
     function addResolver(Slim\App $endpoint, string $pattern) {
-        $endpoint->get($pattern, Http\Actions\Resolve::class)
+        return $endpoint->get($pattern, Http\Actions\Render::class)
             ->add(Middleware\Features\Pagination\Links\PageBased::class)
             ->add(Middleware\Features\Pagination\Links\OffsetBased::class)
             ->add(Middleware\Features\Pagination\Links\CursorBased::class)
@@ -48,8 +48,8 @@ return (function () {
     // The "Protect" middleware ensures the user owns the resource they are
     // trying to mutate.
     function protect(Slim\Route $route) {
-        $route
-            ->add(Middleware\Auth\Protect::class)
+        return $route
+            ->add(Middleware\Auth\Guard\Protect::class)
             ->add(Middleware\Auth\Guard::class);
     }
 
@@ -58,7 +58,9 @@ return (function () {
     $app->add(Middleware\Auth\Session::class);
 
     // Images must be uploaded before a post can be created.
-    $app->post('/upload', ThePetPark\Http\UploadFile::class);
+    // Only authenticated users can upload images.
+    $app->post('/upload', ThePetPark\Http\UploadFile::class)
+        ->add(Middleware\Auth\Guard::class);
 
     // Mount the authentication functions to the session namespace.
     // Sessions are resources that are managed by client applications, not this
@@ -81,7 +83,7 @@ return (function () {
     // declared first (like the ones above here).
     //
     // The "Check" middleware ensures that the requested resource exists before
-    // attempting to do any operations.
+    // attempting to do any operations on it.
     $app->group('/{resource:[A-Za-z-]+}', function (Slim\App $r) {
         addResolver($r, '');
 
@@ -92,16 +94,17 @@ return (function () {
             addResolver($s, '');
             protect($s->patch('',   Http\Actions\Update::class));
             protect($s->delete('',  Http\Actions\Remove::class));
-            addResolver($s, '/{relationship:(?!relationships)[A-Za-z-]+}');
+            addResolver($s, '/{relationship:(?!relationships)[A-Za-z-]+}')
+                ->add(Middleware\CheckRelationship::class);
 
             $s->group('/relationships/{relationship:[A-Za-z-]+}', function (Slim\App $t) {
                 //addResolver($t, '');                                             // not supported
                 protect($t->post('',   Http\Actions\Relationships\Add::class));    // add for to-many, no-op for to-one
                 protect($t->patch('',  Http\Actions\Relationships\Update::class)); // replace for to-many (not supported), add+remove for to-one
                 protect($t->delete('', Http\Actions\Relationships\Remove::class)); // remove for to-many, no-op for to-one
-            });            
+            })->add(Middleware\CheckRelationship::class);          
         });
-    })->add(Middleware\Features\Check::class);
+    })->add(Middleware\Check::class);
 
     return $app;
 })();

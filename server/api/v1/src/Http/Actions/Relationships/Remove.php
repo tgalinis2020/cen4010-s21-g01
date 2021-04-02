@@ -39,11 +39,6 @@ final class Remove
         $id = $request->getAttribute('id');
         $relationship = $request->getAttribute('relationship');
 
-        if ($this->schemas->has($resource) === false) {
-            // Provided resource doesn't exist.
-            return $response->withStatus(404);
-        }
-
         $input = json_decode((string) $request->getBody(), true);
         $data = $input['data'] ?? null;
 
@@ -53,11 +48,6 @@ final class Remove
         }
 
         $schema = $this->schemas->get($resource);
-
-        if ($schema->hasRelationship($relationship) === false) {
-            // Relationship does not exist.
-            return $response->withStatus(404);
-        }
 
         list($mask, $related, $link) = $schema->getRelationship($relationship);
 

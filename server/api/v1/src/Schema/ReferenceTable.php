@@ -79,20 +79,14 @@ class ReferenceTable implements ContainerInterface
         $this->references[$this->refcount++] = $ref;
     }
 
-    /**
-     * Note: although the root Schema\Reference is present in the references
-     * collection, it is not present in the token-to-reference map.
-     * 
-     * Therefore, this function can only return relationships.
-     */
-    public function get($token): Schema\Relationship
+    public function get($id): Schema\Relationship
     {
-        return $this->references[$this->map[$token]];
+        return $this->references[$id];
     }
 
-    public function has($token): bool
+    public function has($id): bool
     {
-        return isset($this->map[$token]);
+        return isset($this->references[$id]);
     }
 
     /**
@@ -104,6 +98,12 @@ class ReferenceTable implements ContainerInterface
         Schema\Reference $source,
         QueryBuilder $qb
     ): Schema\Relationship {
+
+        // If the relationship is already resolved, return it.
+        if (isset($this->map[$token])) {
+            return $this->references[$this->map[$token]];
+        }
+
         $id = $this->refcount++;
         $name = substr(strrchr($token, '.') ?: '', 1) ?: $token;
         
@@ -152,7 +152,7 @@ class ReferenceTable implements ContainerInterface
                 (string) $related,
                 $qb->expr()->eq(
                     $joinOn  . '.' . $joinOnField,
-                    $related . '.'. $related->getSchema()->getId()
+                    $related . '.' . $related->getSchema()->getId()
                 )
             );
         } else {
@@ -209,11 +209,6 @@ class ReferenceTable implements ContainerInterface
     public function getParentRefs(): array
     {
         return $this->parentRefs;
-    }
-
-    public function getRefById(int $id): Schema\Relationship
-    {
-        return $this->references[$id];
     }
 
     private static function addSelect(QueryBuilder $qb, Schema\Reference $source)

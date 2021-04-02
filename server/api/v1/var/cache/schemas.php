@@ -216,6 +216,20 @@
         1 => 'posts',
         2 => 'user_id',
       ),
+      'liked-posts' => 
+      array (
+        0 => 6,
+        1 => 'posts',
+        2 => 
+        array (
+          0 => 
+          array (
+            0 => 'post_likes',
+            1 => 'user_id',
+            2 => 'post_id',
+          ),
+        ),
+      ),
       'comments' => 
       array (
         0 => 6,

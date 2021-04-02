@@ -67,9 +67,7 @@ final class Filtering
             foreach ($tokens as $relationship) {
                 $token .= $delim . $relationship;
 
-                $ref = $refs->has($token)
-                   ? $refs->get($token)
-                   : $refs->resolve($relationship, $ref, $qb);
+                $ref = $refs->resolve($relationship, $ref, $qb);
 
                 $delim = '.';
             }
@@ -87,9 +85,7 @@ final class Filtering
 
                     } elseif ($ref->getSchema()->hasRelationship($field)) {
 
-                        $ref = $refs->has($fullyQualifiedField)
-                           ? $refs->get($fullyQualifiedField)
-                           : $refs->resolve($field, $ref, $qb);
+                        $ref = $refs->resolve($field, $ref, $qb);
 
                         $field = $ref->getSchema()->getId();
 
@@ -110,7 +106,7 @@ final class Filtering
                                 $vals[] = $this->qb->createNamedParameter($val);
                             }
 
-                            $value = '(' . implode(', ', $vals) . ')';
+                            $value = '(' . implode(',', $vals) . ')';
                         } else {
                             $value = $this->qb->createNamedParameter($value);
                         }

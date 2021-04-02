@@ -22,10 +22,13 @@ return [
 
     Auth\Guard\Permissive::class => create(Auth\Guard\Permissive::class),
 
-    Auth\Protect::class => create(Auth\Protect::class)
+    Auth\Guard\Protect::class => create(Auth\Guard\Protect::class)
         ->constructor(get(Connection::class), get(Schema\Container::class)),
 
     Features\Check::class => create(Features\Check::class)
+        ->constructor(get(Schema\Container::class)),
+
+    Features\CheckRelationship::class => create(Features\CheckRelationship::class)
         ->constructor(get(Schema\Container::class)),
     
     Features\Initialization::class => factory(function (ContainerInterface $c) {

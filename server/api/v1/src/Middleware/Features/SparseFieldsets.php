@@ -10,6 +10,10 @@ use ThePetPark\Schema;
 
 use function explode;
 
+/**
+ * Sparse fieldsets can be explicitly specified to return resource objects
+ * with the given attributes.
+ */
 final class SparseFieldsets
 {
     /** @var \ThePetPark\Schema\Container */
@@ -25,7 +29,7 @@ final class SparseFieldsets
         ResponseInterface $response,
         callable $next
     ): ResponseInterface {
-        $params = $request->getAttribute('parameters');
+        $params = $request->getAttribute(Resolver::PARAMETERS);
 
         foreach (($params['fields'] ?? []) as $type => $fieldset) {
             if ($this->schemas->has($type)) {

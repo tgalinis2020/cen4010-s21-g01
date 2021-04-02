@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace ThePetPark\Middleware\Auth;
+namespace ThePetPark\Middleware\Auth\Guard;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Doctrine\DBAL\Connection;
 use ThePetPark\Schema;
+use ThePetPark\Middleware\Auth\Session;
 
 /**
  * Protects mutation endpoints from unauthorized users.

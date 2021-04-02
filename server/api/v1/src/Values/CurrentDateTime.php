@@ -6,7 +6,7 @@ namespace ThePetPark\Values;
 
 use ThePetPark\DefaultValueInterface;
 
-use date;
+use function date;
 
 class CurrentDateTime implements DefaultValueInterface
 {
