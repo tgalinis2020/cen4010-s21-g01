@@ -29,13 +29,14 @@ final class Sorting
         callable $next
     ): ResponseInterface {
         
+        $params = $request->getAttribute(Resolver::PARAMETERS);
+        
         if (isset($params['sort']) === false) {
             return $next($request, $response);
         }
 
         $qb = $request->getAttribute(QueryBuilder::class);
         $refs = $request->getAttribute(ReferenceTable::class);
-        $params = $request->getAttribute(Resolver::PARAMETERS);
 
         foreach (explode(',', $params['sort']) as $fullyQualifiedField) {
             $ref = $refs->getBaseRef();

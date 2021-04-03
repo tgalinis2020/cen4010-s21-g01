@@ -42,6 +42,8 @@ final class Filtering
         ResponseInterface $response,
         callable $next
     ): ResponseInterface {
+        
+        $params = $request->getAttribute(Resolver::PARAMETERS);
 
         if (is_array($params['filter'] ?? '') === false) {
             return $next($request, $response);
@@ -49,7 +51,6 @@ final class Filtering
 
         $qb = $request->getAttribute(QueryBuilder::class);
         $refs = $request->getAttribute(ReferenceTable::class);
-        $params = $request->getAttribute(Resolver::PARAMETERS);
 
         foreach ($params['filter'] as $fullyQualifiedField => $filterAndValue) {
             $ref = $refs->getBaseRef();
