@@ -15,7 +15,7 @@ import api_request from './api/api_request'
 import convert_datetime from './api/convert_datetime'
 
 
-function LoginForm({ onLoginSuccess, onLoginError }) {
+function LoginForm({ onLoginSuccess, onLoginError, onLogoutSuccess }) {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
 
@@ -45,6 +45,8 @@ function LoginForm({ onLoginSuccess, onLoginError }) {
         .then(onLoginSuccess)
         .catch(onLoginError)
 
+    const onLogout = () => api_request('DELETE', '/session').then(onLogoutSuccess)
+
     return (
         <Form>
             <Form.Group>
@@ -62,6 +64,8 @@ function LoginForm({ onLoginSuccess, onLoginError }) {
             </Form.Group>
 
             <Button variant="primary" onClick={onLogin}>Login</Button>
+
+            <Button variant="secondary" onClick={onLogout}>Logout</Button>
         </Form>
     )
 }
@@ -88,6 +92,8 @@ export default function Main() {
     const [session, setSession] = useState(null)
 
     const onFileChanged = event => setFile(event.target)
+    const onLoginError = code => window.alert(`Can't log in! (error code ${code})`)
+    const onLogoutSuccess = () => setSession(null)
 
     const onSubmitFile = () => upload_image(file)
         .then(res => res.json())
@@ -109,11 +115,14 @@ export default function Main() {
             return u
         }))
         .then(setUsers)
- 
-    const onLoginError = code => window.alert(`Can't log in! (error code ${code})`)
 
     useEffect(() => {
         onGetUsers() // Load users when component loads.
+
+        api_request('GET', '/session')
+            .then(res => res.json())
+            .then(res => res.data)
+            .catch(err => err.code)
     })
 
     return (
