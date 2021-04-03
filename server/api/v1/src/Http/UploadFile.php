@@ -6,6 +6,7 @@ namespace ThePetPark\Http;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Doctrine\DBAL\Connection;
 use ThePetPark\Middleware\Auth\Session;
 
 use function sprintf;
@@ -21,11 +22,11 @@ use function time;
 final class UploadFile
 {
     /** @var string */
-    protected $uploadDirectory;
+    private $uploads;
 
-    public function __construct(string $uploadDirectory)
+    public function __construct(array $uploadDirectory)
     {
-        $this->uploadDirectory = $uploadDirectory;
+        $this->uploads = $uploadDirectory;
     }
 
     public function __invoke(Request $req, Response $res): Response
@@ -45,12 +46,19 @@ final class UploadFile
         switch ($uploadedFile->getError()) {
         case UPLOAD_ERR_OK:
             $ext = pathinfo($uploadedFile->getClientFilename(), PATHINFO_EXTENSION);
-            $file = sprintf('%x%x.%0.8s', bin2hex(random_bytes(4)), time(), $ext);
-            $path = $this->uploadDirectory . DIRECTORY_SEPARATOR . $file;
+            $file = sprintf('%x_%x.%0.8s', bin2hex(random_bytes(4)), time(), $ext);
+
+            $uploadedFile->moveTo(
+                $this->uploads['root']
+                . $this->uploads['endpoint']
+                . '/'
+                . $file
+            );
+
     
-            $uploadedFile->moveTo($path);
-    
-            $res->getBody()->write(json_encode(['data' => $path]));
+            $res->getBody()->write(json_encode([
+                'data' => $this->uploads['base'] . $this->uploads['endpoint'] . '/' . $file,
+            ]));
     
             return $res->withStatus(201);
         

@@ -16,7 +16,11 @@ return [
         'addContentLengthHeader' => true,
         //'routerCacheFile' => dirname(__DIR__) . '/var/cache/routes.php',
         'routerCacheFile' => false,
-        'uploadDirectory' => dirname(__DIR__, 4) . '/public_html/uploads',
+        'uploadDirectory' => [
+            'root' => dirname(__DIR__, 4) . '/public_html', // root location w.r.t filesystem
+            'base' => '/~cen4010_s21_g01', // root directory w.r.t URL
+            'endpoint' => '/uploads', // where to store uploads
+        ],
 
         // API settings
         'defaultPageSize' => 12,
