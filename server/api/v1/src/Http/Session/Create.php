@@ -50,6 +50,8 @@ final class Create
             ->select([
                 'u.id',
                 'u.idp_code    idpCode',
+                'u.email',
+                'u.username',
                 'u.first_name  firstName',
                 'u.last_name   lastName',
                 'u.avatar_url  avatar',

@@ -1,12 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 import Table from 'react-bootstrap/Table'
 import Button from 'react-bootstrap/Button'
+import ButtonGroup from 'react-bootstrap/ButtonGroup'
 import Container from 'react-bootstrap/Container'
 import Form from 'react-bootstrap/Form'
 import Figure from 'react-bootstrap/Figure'
-import FigureImage from 'react-bootstrap/FigureImage'
-import FigureCaption from 'react-bootstrap/esm/FigureCaption'
 
 import User from './Models/User'
 
@@ -14,24 +13,23 @@ import upload_image from './api/upload_image'
 import api_request from './api/api_request'
 import convert_datetime from './api/convert_datetime'
 
-const getSession = ({ id, username, firstName, lastName, email, createdAt }) => ({
-    type: 'users',
-    id,
-    attributes: {
-        username,
-        firstName,
-        lastName,
-        email,
-        createdAt: convert_datetime(createdAt)
+function getSession(props) {
+    return {
+        type: 'users',
+        id: props.id,
+        attributes: {
+            username: props.username,
+            firstName: props.firstName,
+            lastName: props.lastName,
+            email: props.email,
+            createdAt: convert_datetime(props.createdAt)
+        }
     }
-})
+}
 
 function LoginForm({ onLoginSuccess, onLoginError, onLogoutSuccess }) {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
-
-    const onUsernameChange = event => setUsername(event.target.value)
-    const onPasswordChange = event => setPassword(event.target.value)
 
     const onLogin = () => api_request('POST', '/session', { username, password })
         .then(res => {
@@ -39,14 +37,16 @@ function LoginForm({ onLoginSuccess, onLoginError, onLogoutSuccess }) {
                 throw res.status
             }
 
-            return res
+            return res.json()
         })
         .then(res => res.data)
         .then(getSession)
         .then(onLoginSuccess)
         .catch(onLoginError)
 
-    const onLogout = () => api_request('DELETE', '/session').then(onLogoutSuccess)
+    const onLogout = () => {
+        api_request('DELETE', '/session').then(onLogoutSuccess)
+    }
 
     return (
         <Form>
@@ -54,20 +54,20 @@ function LoginForm({ onLoginSuccess, onLoginError, onLogoutSuccess }) {
                 <Form.Label>Username</Form.Label>
                 <Form.Control type="text"
                               placeholder="Enter username"
-                              onChange={onUsernameChange} />
+                              onChange={e => setUsername(e.target.value)} />
             </Form.Group>
 
             <Form.Group>
                 <Form.Label>Password</Form.Label>
                 <Form.Control type="password"
                               placeholder="Enter password"
-                              onChange={onPasswordChange} />
+                              onChange={e => setPassword(e.target.value)} />
             </Form.Group>
 
-            <Button.Group>
+            <ButtonGroup>
                 <Button variant="primary" onClick={onLogin}>Login</Button>
-                <Button variant="secondary" onClick={onLogout}>Logout</Button>
-            </Button.Group>
+                <Button variant="primary" onClick={onLogout}>Logout</Button>
+            </ButtonGroup>
         </Form>
     )
 }
@@ -76,9 +76,9 @@ function LoginForm({ onLoginSuccess, onLoginError, onLogoutSuccess }) {
 function ImageFigure({ image }) {
     return (
         <Figure>
-            <FigureImage src={image} width={400} />
+            <Figure.Image src={image} width={400} />
 
-            <FigureCaption>Uploaded Image</FigureCaption>
+            <Figure.Caption>Uploaded Image</Figure.Caption>
         </Figure>
     )
 }
@@ -119,15 +119,17 @@ export default function Main() {
         .then(setUsers)
 
     // Check to see if the user is already logged in.
-    api_request('GET', '/session')
-        .then(res => res.json())
-        .then(res => res.data)
-        .then(getSession)
-        .then(setSession)
-        .catch(err => console.log('Not logged in'))
-
+    
     // Load users when component loads.
-    onGetUsers()
+    useEffect(() => {
+        onGetUsers()
+        api_request('GET', '/session')
+            .then(res => res.json())
+            .then(res => res.data)
+            .then(getSession)
+            .then(setSession)
+            .catch(err => console.log('Not logged in'))
+    }, [setSession])
 
     return (
         <Container>
