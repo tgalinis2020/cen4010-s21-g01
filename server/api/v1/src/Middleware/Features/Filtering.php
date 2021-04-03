@@ -42,7 +42,7 @@ final class Filtering
         ResponseInterface $response,
         callable $next
     ): ResponseInterface {
-        
+
         $params = $request->getAttribute(Resolver::PARAMETERS);
 
         if (is_array($params['filter'] ?? '') === false) {
@@ -106,12 +106,12 @@ final class Filtering
                             $vals = [];
 
                             foreach (explode(',', $value) as $val) {
-                                $vals[] = $this->qb->createNamedParameter($val);
+                                $vals[] = $qb->createNamedParameter($val);
                             }
 
                             $value = '(' . implode(',', $vals) . ')';
                         } else {
-                            $value = $this->qb->createNamedParameter($value);
+                            $value = $qb->createNamedParameter($value);
                         }
 
                         $qb->andWhere($qb->expr()->comparison(
