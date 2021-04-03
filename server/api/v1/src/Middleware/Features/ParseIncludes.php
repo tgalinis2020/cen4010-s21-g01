@@ -66,7 +66,7 @@ final class ParseIncludes
         // resource's ID since it will be needed for relationship
         // propagation.
         $qb->resetQueryParts(['select', 'orderBy'])
-            ->setFirstResult(0)
+            ->setFirstResult(null)
             ->setMaxResults(null)
             ->addSelect(sprintf(
                 '%1$s.%2$s %1$s_%3$s',
@@ -127,7 +127,7 @@ final class ParseIncludes
                 
                 }
 
-                $relatedRef = $refs->resolve($relationship, $ref, $sub);
+                $relatedRef = $refs->resolve($token, $ref, $sub);
                 
                 // The set*Ref methods add the attributes of the target
                 // resource to the query using the provided QueryBuilder

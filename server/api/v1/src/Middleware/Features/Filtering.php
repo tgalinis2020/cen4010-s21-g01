@@ -67,7 +67,7 @@ final class Filtering
             foreach ($tokens as $relationship) {
                 $token .= $delim . $relationship;
 
-                $ref = $refs->resolve($relationship, $ref, $qb);
+                $ref = $refs->resolve($token, $ref, $qb);
 
                 $delim = '.';
             }
@@ -85,7 +85,9 @@ final class Filtering
 
                     } elseif ($ref->getSchema()->hasRelationship($field)) {
 
-                        $ref = $refs->resolve($field, $ref, $qb);
+                        $token .= $delim . $field;
+
+                        $ref = $refs->resolve($token, $ref, $qb);
 
                         $field = $ref->getSchema()->getId();
 
