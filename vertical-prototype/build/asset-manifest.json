@@ -1,18 +1,18 @@
 {
   "files": {
-    "main.js": "/static/js/main.db1eb93b.chunk.js",
-    "main.js.map": "/static/js/main.db1eb93b.chunk.js.map",
-    "runtime-main.js": "/static/js/runtime-main.fe41acf5.js",
-    "runtime-main.js.map": "/static/js/runtime-main.fe41acf5.js.map",
-    "static/js/2.584bd2a9.chunk.js": "/static/js/2.584bd2a9.chunk.js",
-    "static/js/2.584bd2a9.chunk.js.map": "/static/js/2.584bd2a9.chunk.js.map",
-    "static/js/3.dafeb3bc.chunk.js": "/static/js/3.dafeb3bc.chunk.js",
-    "static/js/3.dafeb3bc.chunk.js.map": "/static/js/3.dafeb3bc.chunk.js.map",
-    "index.html": "/index.html",
-    "static/js/2.584bd2a9.chunk.js.LICENSE.txt": "/static/js/2.584bd2a9.chunk.js.LICENSE.txt"
+    "main.js": "https://lamp.cse.fau.edu/~cen4010_s21_g01/static/js/main.db1eb93b.chunk.js",
+    "main.js.map": "https://lamp.cse.fau.edu/~cen4010_s21_g01/static/js/main.db1eb93b.chunk.js.map",
+    "runtime-main.js": "https://lamp.cse.fau.edu/~cen4010_s21_g01/static/js/runtime-main.39551545.js",
+    "runtime-main.js.map": "https://lamp.cse.fau.edu/~cen4010_s21_g01/static/js/runtime-main.39551545.js.map",
+    "static/js/2.584bd2a9.chunk.js": "https://lamp.cse.fau.edu/~cen4010_s21_g01/static/js/2.584bd2a9.chunk.js",
+    "static/js/2.584bd2a9.chunk.js.map": "https://lamp.cse.fau.edu/~cen4010_s21_g01/static/js/2.584bd2a9.chunk.js.map",
+    "static/js/3.dafeb3bc.chunk.js": "https://lamp.cse.fau.edu/~cen4010_s21_g01/static/js/3.dafeb3bc.chunk.js",
+    "static/js/3.dafeb3bc.chunk.js.map": "https://lamp.cse.fau.edu/~cen4010_s21_g01/static/js/3.dafeb3bc.chunk.js.map",
+    "index.html": "https://lamp.cse.fau.edu/~cen4010_s21_g01/index.html",
+    "static/js/2.584bd2a9.chunk.js.LICENSE.txt": "https://lamp.cse.fau.edu/~cen4010_s21_g01/static/js/2.584bd2a9.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
-    "static/js/runtime-main.fe41acf5.js",
+    "static/js/runtime-main.39551545.js",
     "static/js/2.584bd2a9.chunk.js",
     "static/js/main.db1eb93b.chunk.js"
   ]
