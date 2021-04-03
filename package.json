@@ -1,6 +1,7 @@
 {
     "scripts": {
-        "init": "bash ./scripts/init-project.sh"
+        "init": "bash ./scripts/init-project.sh",
+        "deploy-prototype": "cp -r ./vertical_prototype/build/* ./public_html/"
     },
     "dependencies": {
         "@fortawesome/fontawesome-free": "^5.15.2",
