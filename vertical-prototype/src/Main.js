@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 import Table from 'react-bootstrap/Table'
 import Button from 'react-bootstrap/Button'
@@ -64,9 +64,10 @@ function LoginForm({ onLoginSuccess, onLoginError, onLogoutSuccess }) {
                               onChange={onPasswordChange} />
             </Form.Group>
 
-            <Button variant="primary" onClick={onLogin}>Login</Button>
-
-            <Button variant="secondary" onClick={onLogout}>Logout</Button>
+            <Button.Group>
+                <Button variant="primary" onClick={onLogin}>Login</Button>
+                <Button variant="secondary" onClick={onLogout}>Logout</Button>
+            </Button.Group>
         </Form>
     )
 }
@@ -176,7 +177,7 @@ export default function Main() {
 
             <Form>
                 <Form.File label="Upload an image" onChange={onFileChanged} />
-                <Button variant="primary" onClick={onSubmitFile}>Upload Image</Button>
+                <Button className="my-4" variant="primary" onClick={onSubmitFile}>Upload Image</Button>
             </Form>
         </Container>
     )
