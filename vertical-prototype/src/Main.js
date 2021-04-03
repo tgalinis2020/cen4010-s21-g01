@@ -14,6 +14,17 @@ import upload_image from './api/upload_image'
 import api_request from './api/api_request'
 import convert_datetime from './api/convert_datetime'
 
+const getSession = ({ id, username, firstName, lastName, email, createdAt }) => ({
+    type: 'users',
+    id,
+    attributes: {
+        username,
+        firstName,
+        lastName,
+        email,
+        createdAt: convert_datetime(createdAt)
+    }
+})
 
 function LoginForm({ onLoginSuccess, onLoginError, onLogoutSuccess }) {
     const [username, setUsername] = useState('')
@@ -31,17 +42,7 @@ function LoginForm({ onLoginSuccess, onLoginError, onLogoutSuccess }) {
             return res
         })
         .then(res => res.data)
-        .then(({ id, username, firstName, lastName, email, createdAt }) => ({
-            type: 'users',
-            id,
-            attributes: {
-                username,
-                firstName,
-                lastName,
-                email,
-                createdAt: convert_datetime(createdAt)
-            }
-        }))
+        .then(getSession)
         .then(onLoginSuccess)
         .catch(onLoginError)
 
@@ -116,14 +117,16 @@ export default function Main() {
         }))
         .then(setUsers)
 
-    useEffect(() => {
-        onGetUsers() // Load users when component loads.
+    // Check to see if the user is already logged in.
+    api_request('GET', '/session')
+        .then(res => res.json())
+        .then(res => res.data)
+        .then(getSession)
+        .then(setSession)
+        .catch(err => console.log('Not logged in'))
 
-        api_request('GET', '/session')
-            .then(res => res.json())
-            .then(res => res.data)
-            .catch(err => err.code)
-    })
+    // Load users when component loads.
+    onGetUsers()
 
     return (
         <Container>
@@ -159,7 +162,9 @@ export default function Main() {
 
             <p>Logged in as: {session ? `${session.attributes.firstName} ${session.attributes.lastName}` : '(unauthenticated)'}</p>
 
-            <LoginForm onLoginSuccess={setSession} onLoginError={onLoginError} />
+            <LoginForm onLoginSuccess={setSession}
+                       onLoginError={onLoginError}
+                       onLogoutSuccess={onLogoutSuccess} />
 
             <hr />
 

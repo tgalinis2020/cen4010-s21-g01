@@ -96,6 +96,8 @@ final class Create
 
         setcookie(Session::TOKEN, $token, $expiry, $root, $host, true, true);
 
+        $res->getBody()->write(json_encode(['data' => $payload]));
+
         // Cookie was set, let the client know using the 201 status code.
         return $res->withStatus(201);
     }
