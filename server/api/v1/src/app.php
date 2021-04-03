@@ -59,7 +59,7 @@ return (function () {
 
     // Images must be uploaded before a post can be created.
     // Only authenticated users can upload images.
-    $app->post('/upload', ThePetPark\Http\UploadFile::class)
+    $app->post('/upload', Http\UploadFile::class)
         ->add(Middleware\Auth\Guard::class);
 
     // Mount the authentication functions to the session namespace.
