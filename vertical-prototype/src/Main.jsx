@@ -93,7 +93,7 @@ export default function Main() {
     const [imageUrl, setImageUrl] = useState(null)
     const [session, setSession] = useState(null)
 
-    const onFileChanged = event => setFile(event.target.files)
+    const onFileChanged = event => setFile(event.target.files.item(0))
     const onLoginError = code => window.alert(`Can't log in! (error code ${code})`)
     const onLogoutSuccess = () => setSession(null)
 
