@@ -17,7 +17,7 @@ import convert_datetime from './api/convert_datetime'
 // Normally an app would be made up of many smaller, self-contained components.
 // For the sake of demonstrating that things work, it's okay to have a mess for
 // now :)
-export default function App() {
+export default function Main() {
     const [file, setFile] = useState(null)
     const [users, setUsers] = useState([])
     const [imageUrl, setImageUrl] = useState(null)
@@ -27,7 +27,7 @@ export default function App() {
 
     const onFileChanged = event => setFile(event.target)
 
-    const onSubmitFile = upload_image(file)
+    const onSubmitFile = () => upload_image(file)
         .then(path => {
             setImageUrl(path)
             window.alert(`File uploaded! Path: ${path}`)
