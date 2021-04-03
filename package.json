@@ -1,7 +1,8 @@
 {
     "scripts": {
         "init": "bash ./scripts/init-project.sh",
-        "deploy-prototype": "cp -r ./vertical-prototype/build/* ./public_html/"
+        "deploy": "cp -r ./client/build/* ./public_html/",
+        "deploy-prototype": "cp -r ./vertical-prototype/build/* ./public_html/prototype"
     },
     "dependencies": {
         "@fortawesome/fontawesome-free": "^5.15.2",
