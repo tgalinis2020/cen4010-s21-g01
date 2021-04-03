@@ -1,5 +1,5 @@
 export default function api_request(method, target, payload = null) {
-    const url = `https://lamp.cse.fau.edu/~cen4010_s21_g01${target}`
+    const url = `https://lamp.cse.fau.edu/~cen4010_s21_g01/api-v1.php/${target}`
     const init = {
         method,
         headers: {
