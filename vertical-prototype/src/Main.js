@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 import Table from 'react-bootstrap/Table'
 import Button from 'react-bootstrap/Button'
@@ -14,41 +14,22 @@ import upload_image from './api/upload_image'
 import api_request from './api/api_request'
 import convert_datetime from './api/convert_datetime'
 
-// Normally an app would be made up of many smaller, self-contained components.
-// For the sake of demonstrating that things work, it's okay to have a mess for
-// now :)
-export default function Main() {
-    const [file, setFile] = useState(null)
-    const [users, setUsers] = useState([])
-    const [imageUrl, setImageUrl] = useState(null)
-    const [session, setSession] = useState(null)
+
+function LoginForm({ onLoginSuccess, onLoginError }) {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
-
-    const onFileChanged = event => setFile(event.target)
-
-    const onSubmitFile = () => upload_image(file)
-        .then(path => {
-            setImageUrl(path)
-            window.alert(`File uploaded! Path: ${path}`)
-        })
-        .catch(err => window.alert(`Unable to upload the image. ${session === null ? 'You are not signed in!' : 'Go bug Tom about this.'}`))
-
-    const onGetUsers = () => api_request('GET', '/users')
-        .then(res => res.data)
-        .then(users => users.map(user => {
-            const u = new User()
-            
-            u.hydrate(user)
-
-            return u
-        }))
-        .then(setUsers)
 
     const onUsernameChange = event => setUsername(event.target.value)
     const onPasswordChange = event => setPassword(event.target.value)
 
     const onLogin = () => api_request('POST', '/session', { username, password })
+        .then(res => {
+            if (res.status !== 201) {
+                throw res.status
+            }
+
+            return res
+        })
         .then(res => res.data)
         .then(({ id, username, firstName, lastName, email, createdAt }) => ({
             type: 'users',
@@ -61,21 +42,85 @@ export default function Main() {
                 createdAt: convert_datetime(createdAt)
             }
         }))
-        .then(setSession)
+        .then(onLoginSuccess)
+        .catch(onLoginError)
 
-    // Properties are passed in as a plain JavaScript object.
-    const ImageFigure = ({ image }) =>
+    return (
+        <Form>
+            <Form.Group>
+                <Form.Label>Username</Form.Label>
+                <Form.Control type="text"
+                              placeholder="Enter username"
+                              onChange={onUsernameChange} />
+            </Form.Group>
+
+            <Form.Group>
+                <Form.Label>Password</Form.Label>
+                <Form.Control type="password"
+                              placeholder="Enter password"
+                              onChange={onPasswordChange} />
+            </Form.Group>
+
+            <Button variant="primary" onClick={onLogin}>Login</Button>
+        </Form>
+    )
+}
+
+
+function ImageFigure({ image }) {
+    return (
         <Figure>
             <FigureImage src={image} width={400} />
 
             <FigureCaption>Uploaded Image</FigureCaption>
         </Figure>
+    )
+}
+
+
+// Normally an app would be made up of many smaller, self-contained components.
+// For the sake of demonstrating that things work, it's okay to have a mess for
+// now :)
+export default function Main() {
+    const [file, setFile] = useState(null)
+    const [users, setUsers] = useState([])
+    const [imageUrl, setImageUrl] = useState(null)
+    const [session, setSession] = useState(null)
+
+    const onFileChanged = event => setFile(event.target)
+
+    const onSubmitFile = () => upload_image(file)
+        .then(res => res.json())
+        .then(res => res.data)
+        .then(path => {
+            setImageUrl(path)
+            window.alert(`File uploaded! Path: ${path}`)
+        })
+        .catch(err => window.alert(`Unable to upload the image. ${session === null ? 'You are not signed in!' : 'Go bug Tom about this.'}`))
+
+    const onGetUsers = () => api_request('GET', '/users')
+        .then(res => res.json())
+        .then(res => res.data)
+        .then(users => users.map(user => {
+            const u = new User()
+            
+            u.hydrate(user)
+
+            return u
+        }))
+        .then(setUsers)
+ 
+    const onLoginError = code => window.alert(`Can't log in! (error code ${code})`)
+
+    useEffect(() => {
+        onGetUsers() // Load users when component loads.
+    })
 
     return (
         <Container>
             <h1>Users and Authentication</h1>
 
-            <Button onClick={onGetUsers}>Get Users</Button>
+            <Button className="mb-4" onClick={onGetUsers}>Refresh</Button>
 
             <Table>
                 <thead>
@@ -105,23 +150,7 @@ export default function Main() {
 
             <p>Logged in as: {session ? `${session.attributes.firstName} ${session.attributes.lastName}` : '(unauthenticated)'}</p>
 
-            <Form>
-                <Form.Group>
-                    <Form.Label>Username</Form.Label>
-                    <Form.Control type="text"
-                                  placeholder="Enter username"
-                                  onChange={onUsernameChange} />
-                </Form.Group>
-
-                <Form.Group>
-                    <Form.Label>Password</Form.Label>
-                    <Form.Control type="password"
-                                  placeholder="Enter password"
-                                  onChange={onPasswordChange} />
-                </Form.Group>
-
-                <Button variant="primary" onClick={onLogin}>Login</Button>
-            </Form>
+            <LoginForm onLoginSuccess={setSession} onLoginError={onLoginError} />
 
             <hr />
 
