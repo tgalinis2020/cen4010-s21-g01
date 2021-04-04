@@ -12,7 +12,7 @@ function convertDateTime(datetime) {
     const [date, month, year] = datePart.split('-')
     const [hours, minutes, seconds] = timePart.split(':')
 
-    return Date.UTC(year, month, date, hours, minutes, seconds)
+    return new Date(Date.UTC(year, month, date, hours, minutes, seconds))
 }
 
 export default convertDateTime
