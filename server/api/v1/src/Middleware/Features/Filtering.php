@@ -94,7 +94,7 @@ final class Filtering
                     }
 
                     if ($field !== null) {
-                        $this->filters[$filter]->apply($qb, $ref . '_' .  $field, $value);
+                        $this->filters[$filter]->apply($qb, $ref . '.' .  $field, $value);
                     }
                 }
             }
