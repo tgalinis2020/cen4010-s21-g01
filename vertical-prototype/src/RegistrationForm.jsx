@@ -30,7 +30,7 @@ function RegistrationForm({ onRegistered, onError }) {
         .then(() => apiRequest('POST', '/session', { username, password }))
         .then(() => uploadImage(avatar))
         .then(res => res.json())
-        .then(res => res.data())
+        .then(res => res.data)
         .then(url => user.setAttribute('avatar', url))
         .then(user => user.update())
         .then(onRegistered)

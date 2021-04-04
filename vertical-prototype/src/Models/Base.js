@@ -1,5 +1,4 @@
 import apiRequest from '../utils/apiRequest'
-import convert_datetime from '../utils/convertDateTime'
 
 export default class Base
 {
@@ -8,9 +7,6 @@ export default class Base
         this.attributes = obj.attributes || {}
         this.dirtyAttributes = []
         this.relationships = obj.relationships || {}
-        if ('createdAt' in this.attributes) {
-            this.createdAt = convert_datetime(this.attributes.createdAt)
-        }
     }
 
     // Child classes must override this method!
@@ -22,10 +18,6 @@ export default class Base
         this.id = obj.id || null
         this.attributes = obj.attributes || {}
         this.relationships = obj.relationships || {}
-
-        if ('createdAt' in this.attributes) {
-            this.createdAt = convert_datetime(this.attributes.createdAt)
-        }
 
         return this
     }
@@ -87,7 +79,7 @@ export default class Base
 
         const payload = { type: this.type, id: this.id, attributes }
 
-        return apiRequest('PATCH', `/${this.type}`, payload)
+        return apiRequest('PATCH', `/${this.type}/${this.id}`, payload)
             .then(() => {
                 this.dirtyAttributes = []
 

@@ -14,13 +14,20 @@ export default class User extends Base
      * @param {string}   password
      */
     create(password) {
-        return apiRequest('POST', `/${this.type}`, {
-            type:       this.type,
-            attributes: this.attributes,
-        }).then(obj => {
-            this.hydrate(obj.data)
-            return apiRequest('PUT', `/passwords/${obj.data.id}`, password)
-        }).then(res => this)
+        const type = this.type
+        const attributes = {}
+
+        for (const attr of this.dirtyAttributes) {
+            attributes[attr] = this.attributes[attr]
+        }
+
+        return apiRequest('POST', `/${type}`, { type, attributes })
+            .then(res => res.json())
+            .then(({ data }) => {
+                console.log(data)
+                this.hydrate(data)
+                return apiRequest('PUT', `/passwords/${data.id}`, password)
+            }).then(res => this)
     }
 
     updatePassword(current, password) {

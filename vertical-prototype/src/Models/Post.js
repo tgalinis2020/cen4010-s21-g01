@@ -20,7 +20,7 @@ export default class Post extends Base
             tagmap[tag] = false
         }
 
-        return apiRequest('GET', `/tags?filter[text][in]=${tags.map(tag => tag.getAttribute('text')).join(',')}`)
+        return apiRequest('GET', `/tags?filter[text][in]=${tags.join(',')}`)
             .then(res => res.json())
             .then(res => res.data)
             .then(data => {
@@ -32,7 +32,7 @@ export default class Post extends Base
                     hydratedTags.append(tag)
                 }
     
-                const newTags = tags.filter(tag => !(tag.getAttribute('text') in tagmap))
+                const newTags = tags.filter(tag => tagmap[tag] === false)
     
                 // The API does not support creating entities in bulk.
                 // Need to make one request for each new tag.

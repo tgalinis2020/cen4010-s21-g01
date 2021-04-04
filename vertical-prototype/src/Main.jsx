@@ -6,7 +6,6 @@ import Col from 'react-bootstrap/Col'
 import Card from 'react-bootstrap/Card'
 import Table from 'react-bootstrap/Table'
 import Button from 'react-bootstrap/Button'
-//import Form from 'react-bootstrap/Form'
 import ButtonGroup from 'react-bootstrap/esm/ButtonGroup'
 
 import Session from './Session'
@@ -17,26 +16,14 @@ import LoginForm from './LoginForm'
 import User from './Models/User'
 
 import apiRequest from './utils/apiRequest'
-//import uploadImage from './utils/uploadImage'
 import formatDate from './utils/formatDate'
 
 function Main() {
-    //const [file, setFile] = useState(null)
     const [users, setUsers] = useState([])
     const [posts, setPosts] = useState([])
-    //const [imageUrl, setImageUrl] = useState(null)
     const [session, setSessionUser] = useState(null)
 
-    //const handleFileChanged = event => setFile(event.target.files.item(0))
     const handleLoginError = code => window.alert(`Can't log in! (error: ${code})`)
-
-    /*
-    const submitFile = () => uploadImage(file)
-        .then(res => res.json())
-        .then(res => res.data)
-        .then(setImageUrl)
-        .catch(err => window.alert(`Unable to upload the image. ${session === null ? 'You are not signed in!' : 'Go bug Tom about this.'}`))
-    */
 
     const getUsers = () => apiRequest('GET', '/users')
         .then(res => res.json())
@@ -82,6 +69,13 @@ function Main() {
         .then(setPosts)
     
     // Load users and posts, check session status when component loads.
+    // The useEffect React hook follows the lifecyle of this component.
+    // The arrow function passed inside runs when the component is completely
+    // loaded. Optionally, it can return a cleanup function that runs
+    // when the component is destroyed.
+    //
+    // The second argument of useEffect is the dependencies, i.e. anything
+    // declared above in this component that is used in the hook.
     useEffect(() => {
         getUsers()
         getPosts()
@@ -99,7 +93,7 @@ function Main() {
         <Container>
             <h1>Users and Authentication</h1>
 
-            <Button className="mb-4" onClick={getUsers}>Refresh</Button>
+            <Button className="mb-4" onClick={() => getUsers()}>Refresh</Button>
 
             <Table>
                 <thead>
@@ -128,17 +122,19 @@ function Main() {
             </Table>
 
             {session ?
-                <Session user={session} /> :
-                <LoginForm
-                    onSuccess={setSessionUser}
-                    onError={handleLoginError} />
+                <Session user={session} onLogout={() => setSessionUser(null)} /> :
+                <>
+                    <LoginForm
+                        onSuccess={setSessionUser}
+                        onError={handleLoginError} />
+                    
+                    <p>Don't have an account? Create one!</p>
+
+                    <RegistrationForm
+                        onRegistered={setSessionUser}
+                        onError={console.error} />
+                </>
             }
-
-            <p>Don't have an account? Create one!</p>
-
-            <RegistrationForm
-                onRegistered={setSessionUser}
-                onError={console.error} />
 
             <hr />
 
@@ -156,7 +152,7 @@ function Main() {
                             <Card.Body>
                                 <Card.Title>{post.title}</Card.Title>
                                 <Card.Text>
-                                    <small className="text-muted">Posted By {posts.author} on {posts.createdAt}</small>
+                                    <small className="text-muted">Posted by {post.author} on {post.createdAt}</small>
                                     <p>{post.text}</p>
                                     <p className="text-muted">Tags: {post.tags.join(', ')}</p>
                                 </Card.Text>
