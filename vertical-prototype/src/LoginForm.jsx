@@ -14,7 +14,7 @@ function LoginForm({ onSuccess, onError }) {
     const [password, setPassword] = useState('')
 
     const login = () => apiRequest('POST', '/session', { username, password })
-        .then(convertToJsonOrThrowError)
+        .then(convertToJsonOrThrowError(201))
         .then(res => res.data)
         .then(({ uid }) => apiRequest('GET', `/users/${uid}`))
         .then(res => res.json())
