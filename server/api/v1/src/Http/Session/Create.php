@@ -38,26 +38,17 @@ final class Create
     {
         $document = json_decode((string) $req->getBody(), true);
         
-        $data = $document['data'] ?? null;
+        $data = $document['data'] ?? [];
 
-        if ($data === null) {
+        if (isset($data['username'], $data['password']) === false) {
             return $res->withStatus(400);
         }
 
         $qb = $this->conn->createQueryBuilder();
         $username = $qb->createNamedParameter($data['username']);
-        $acct = $qb
-            ->select([
-                'u.id',
-                'u.idp_code    idpCode',
-                'u.email',
-                'u.username',
-                'u.first_name  firstName',
-                'u.last_name   lastName',
-                'u.avatar_url  avatar',
-                'u.created_at  createdAt',
-                'p.passwd      password',
-            ])
+
+        list($id, $password) = $qb
+            ->select(['u.id', 'p.passwd password'])
             ->from('users', 'u')
             ->join('u', 'user_passwords', 'p', $qb->expr()->eq('p.id', 'u.id'))
             ->where($qb->expr()->orX(
@@ -65,14 +56,14 @@ final class Create
                 $qb->expr()->eq('u.email', $username)
             ))
             ->execute()
-            ->fetch(PDO::FETCH_ASSOC);
+            ->fetch(PDO::FETCH_NUM);
 
         // If the user account was not found or the passwords did not match,
         // return a 404 Not Found status code to the client.
         //
         // TODO:    if OAuth is ever implemented, third-party accounts are
         //          authenticated elsewhere. Those users don't have passwords.
-        if (password_verify($data['password'], $acct['password']) === false) {
+        if (password_verify($data['password'], $password) === false) {
             return $res->withStatus(404);
         }
 
@@ -87,12 +78,8 @@ final class Create
             'exp' => $expiry,
             'iss' => $domain,
             'aud' => $domain,
+            'uid' => $id,
         ];
-
-        // JWTs are not encrypted! Don't leak the password.
-        unset($acct['password']);
-
-        $payload += $acct;
 
         $token = $this->encoder->encode($payload);
 

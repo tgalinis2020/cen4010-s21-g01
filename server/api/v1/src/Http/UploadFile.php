@@ -41,12 +41,16 @@ final class UploadFile
         /** @var \Psr\Http\Message\UploadedFileInterface[] */
         $uploadedFiles = $req->getUploadedFiles();
 
-        $uploadedFile = $uploadedFiles['data'];
+        $uploadedFile = $uploadedFiles['data'] ?? null;
+
+        if ($uploadedFile === null) {
+            return $res->withStatus(400);
+        }
 
         switch ($uploadedFile->getError()) {
         case UPLOAD_ERR_OK:
             $ext = pathinfo($uploadedFile->getClientFilename(), PATHINFO_EXTENSION);
-            $file = sprintf('%x_%x.%0.8s', bin2hex(random_bytes(4)), time(), $ext);
+            $file = sprintf('%x_%x.%0.8s', bin2hex(random_bytes(32)), time(), $ext);
 
             $uploadedFile->moveTo(
                 $this->uploads['root']
@@ -54,7 +58,6 @@ final class UploadFile
                 . '/'
                 . $file
             );
-
     
             $res->getBody()->write(json_encode([
                 'data' => $this->uploads['base'] . $this->uploads['endpoint'] . '/' . $file,

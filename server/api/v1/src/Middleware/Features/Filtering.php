@@ -9,9 +9,9 @@ use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use ThePetPark\Schema\ReferenceTable;
+use ThePetPark\Filters;
 
 use function is_array;
-use function in_array;
 use function array_pop;
 use function explode;
 
@@ -24,18 +24,13 @@ use function explode;
  */
 final class Filtering
 {
-    const SUPPORTED_FILTERS = [
-        'eq' => ExpressionBuilder::EQ,
-        'ne' => ExpressionBuilder::NEQ,
-        'lt' => ExpressionBuilder::LT,
-        'le' => ExpressionBuilder::LTE,
-        'gt' => ExpressionBuilder::GT,
-        'ge' => ExpressionBuilder::GTE,
-        'lk' => 'LIKE',
-        'nl' => 'NOT LIKE',
-        'in' => 'IN',
-        'ni' => 'NOT IN',
-    ];
+    /** @var \ThePetPark\FilterInterface[] */
+    private $filters;
+
+    public function __construct(array $filters)
+    {
+        $this->filters = $filters;
+    }
 
     public function __invoke(
         ServerRequestInterface $request,
@@ -75,7 +70,7 @@ final class Filtering
 
             /** @var string $filter */
             foreach ($filterAndValue as $filter => $value) {
-                if (isset(self::SUPPORTED_FILTERS[$filter])) {
+                if (isset($this->filters[$filter])) {
                     if ($field === 'id') {
 
                         $field = $ref->getSchema()->getId();
@@ -99,26 +94,7 @@ final class Filtering
                     }
 
                     if ($field !== null) {
-                        // TODO:    This is kind of ugly :(
-                        //          The IN and NOT IN operataions are unique:
-                        //          they accept a variable amount of arguments.
-                        if (in_array($filter, ['in', 'ni'])) {
-                            $vals = [];
-
-                            foreach (explode(',', $value) as $val) {
-                                $vals[] = $qb->createNamedParameter($val);
-                            }
-
-                            $value = '(' . implode(',', $vals) . ')';
-                        } else {
-                            $value = $qb->createNamedParameter($value);
-                        }
-
-                        $qb->andWhere($qb->expr()->comparison(
-                            $ref . '.' . $field,
-                            self::SUPPORTED_FILTERS[$filter],
-                            $value
-                        ));
+                        $this->filters[$filter]->apply($qb, $ref . $field, $value);
                     }
                 }
             }

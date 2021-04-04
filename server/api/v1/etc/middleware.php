@@ -6,6 +6,7 @@ use Psr\Container\ContainerInterface;
 use Doctrine\DBAL\Connection;
 use ThePetPark\Schema;
 use ThePetPark\Services;
+use ThePetPark\Filters;
 use ThePetPark\Middleware\Auth;
 use ThePetPark\Middleware\Features;
 
@@ -44,7 +45,20 @@ return [
     Features\SparseFieldsets::class => create(Features\SparseFieldsets::class)
         ->constructor(get(Schema\Container::class)),
 
-    Features\Filtering::class => create(Features\Filtering::class),
+    Features\Filtering::class => factory(function (ContainerInterface $c) {
+        return new Features\Filtering([
+            'eq' => new Filters\EqualTo(),
+            'ne' => new Filters\NotEqualTo(),
+            'lt' => new Filters\LessThan(),
+            'le' => new Filters\LessThanOrEqualTo(),
+            'gt' => new Filters\GreaterThan(),
+            'ge' => new Filters\GreaterThanOrEqualTo(),
+            'lk' => new Filters\Like(),
+            'nl' => new Filters\NotLike(),
+            'in' => new Filters\In(),
+            'ni' => new Filters\NotIn(),
+        ]);
+    }),
 
     Features\Sorting::class => create(Features\Sorting::class),
 

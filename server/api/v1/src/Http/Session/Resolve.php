@@ -13,7 +13,7 @@ use function json_encode;
 
 /**
  * Since HttpOnly cookies cannot be read by JavaScript, this endpoint will
- * give the client application the authenticated user's details.
+ * give the client application the authenticated user's session details.
  * 
  * Return Codes:
  *   - 200 if session token is set

@@ -47,7 +47,7 @@ final class Protect
                 ->execute()
                 ->fetchColumn(0);
 
-            if ($ownerID !== $session['id']) {
+            if ($ownerID !== $session['uid']) {
                 return $response->withStatus(403);
             }
 
