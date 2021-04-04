@@ -3,13 +3,13 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup'
 import Media from 'react-bootstrap/Media'
 
 import apiRequest from './utils/apiRequest'
-import convertDateTime from './utils/convertDateTime'
+import formatDate from './utils/formatDate'
 
 function Session({ user, onLogout }) {
     const logout = () => apiRequest('DELETE', '/session')
         .then(onLogout)
 
-    const joinedOn = convertDateTime(user.getAttribute('createdAt'))
+    const joinedOn = formatDate(user.getAttribute('createdAt'))
 
     return (
         <Media>
