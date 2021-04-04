@@ -39,7 +39,12 @@ export default class Post extends Base
                 if (newTags.length > 0) {
                     return Promise
                         .all(newTags.map(text => apiRequest('POST', '/tags', { type: 'tags', attributes: { text }})))
-                        .then(results => results.map(res => new Tag(res.json().data)))
+                        .then(results => results.map(res => {
+                            const json = res.json()
+                            const t = new Tag(json.data)
+                            console.log(`Created new tag!`, t, 'Response: ', json)
+                            return t
+                        }))
                         .then(createdTags => hydratedTags.concat(createdTags))
     
                 } else {

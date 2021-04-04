@@ -19,6 +19,8 @@ function PostForm({ user, onPostCreated }) {
             return
         }
 
+        const post = new Post()
+
         const tagList = tags
             .split(',')
             .map(t => t.trim().toLowerCase())
@@ -26,9 +28,9 @@ function PostForm({ user, onPostCreated }) {
         uploadImage(file)
             .then(res => res.json())
             .then(res => res.data)
-            .then(image => new Post({
-                attributes: { title, text, image }
-            }))
+            .then(image => post.setAttribute('image', image))
+            .then(post => post.setAttribute('title', title))
+            .then(post => post.setAttribute('text', text))
             .then(post => post.create(user, tagList, []))
             .then(onPostCreated)
     }

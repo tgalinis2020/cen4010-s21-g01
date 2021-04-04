@@ -39,9 +39,13 @@ function Main() {
             for (const post of data) {
                 const { attributes, relationships } = post
                 
+                // TODO:    Pets and likes should be here as well but they are
+                //          not represented in the front-end yet.
+                // Note that some relationships might not be available, such as
+                // tags.
                 const related = {
-                    tags: relationships.tags.data.map(obj => obj.id),
-                    author: relationships.author.data.id
+                    author: relationships.author.data.id,
+                    tags: 'tags' in relationships ? relationships.tags.data.map(obj => obj.id) : [],
                 }
 
                 items.push({
