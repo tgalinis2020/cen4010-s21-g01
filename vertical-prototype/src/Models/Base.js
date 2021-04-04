@@ -1,28 +1,40 @@
-import api_request from '../api/api_request'
-import convert_datetime from '../api/convert_datetime'
+import apiRequest from '../utils/apiRequest'
+import convert_datetime from '../utils/convertDateTime'
 
 export default class Base
 {
-    constructor(type) {
-        this.id = null
-        this.type = type
-        this.attributes = {}
-        this.relationships = {}
+    constructor(obj = {}) {
+        this.id = obj.id || null
+        this.attributes = obj.attributes || {}
+        this.dirtyAttributes = []
+        this.relationships = obj.relationships || {}
+        if ('createdAt' in this.attributes) {
+            this.createdAt = convert_datetime(this.attributes.createdAt)
+        }
+    }
+
+    // Child classes must override this method!
+    get type() {
+        return 'generic'
     }
 
     hydrate(obj) {
-        this.id = obj.id
-        this.attributes = obj.attributes
+        this.id = obj.id || null
+        this.attributes = obj.attributes || {}
+        this.relationships = obj.relationships || {}
 
         if ('createdAt' in this.attributes) {
             this.createdAt = convert_datetime(this.attributes.createdAt)
         }
 
-        this.relationships = obj.relationships
+        return this
     }
 
     setAttribute(attr, val) {
+        this.dirtyAttributes.push(attr)
         this.attributes[attr] = val
+
+        return this
     }
 
     getAttribute(attr) {
@@ -45,33 +57,50 @@ export default class Base
     }
 
     create(relationships = null) {
-        const payload = {
-            type:       this.type,
-            attributes: this.attributes
+        const attributes = {}
+
+        for (const a of this.dirtyAttributes) {
+            attributes[a] = this.attributes[a]
         }
+
+        const payload = { type: this.type, attributes }
 
         if (relationships !== null) {
             payload['relationships'] = relationships
         }
 
-        return api_request('POST', `/${this.type}`, payload)
+        return apiRequest('POST', `/${this.type}`, payload)
+            .then(res => {
+                this.dirtyAttributes = []
+
+                return res.json()
+            })
             .then(res => res.data)
     }
 
     update() {
-        return api_request('PATCH', `/${this.type}`, {
-            type:       this.type,
-            id:         this.id,
-            attributes: this.attributes,
-        })
+        const attributes = {}
+
+        for (const a of this.dirtyAttributes) {
+            attributes[a] = this.attributes[a]
+        }
+
+        const payload = { type: this.type, id: this.id, attributes }
+
+        return apiRequest('PATCH', `/${this.type}`, payload)
+            .then(() => {
+                this.dirtyAttributes = []
+
+                return this
+            })
     }
 
     delete() {
-        return api_request('DELETE', `/${this.type}/${this.id}`);
+        return apiRequest('DELETE', `/${this.type}/${this.id}`);
     }
 
     updateRelationship(method, relationship, payload) {
-        return api_request(
+        return apiRequest(
             method,
             `/${this.type}/${this.id}/relationships/${relationship}`,
             payload

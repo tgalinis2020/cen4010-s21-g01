@@ -1,4 +1,4 @@
-export default function api_request(method, target, data = null) {
+function apiRequest(method, target, data = null) {
     const url = `https://lamp.cse.fau.edu/~cen4010_s21_g01/api-v1.php${target}`
     const init = {
         method,
@@ -14,3 +14,5 @@ export default function api_request(method, target, data = null) {
 
     return fetch(url, init)
 }
+
+export default apiRequest

@@ -2,7 +2,7 @@ import Base from './Base'
 
 export default class Pet extends Base
 {
-    constructor() {
-        super('pets')
+    get type() {
+        return 'pets'
     }
 }

@@ -1,141 +1,105 @@
 import { useState, useEffect } from 'react'
 
+import Container from 'react-bootstrap/Container'
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
+import Card from 'react-bootstrap/Card'
 import Table from 'react-bootstrap/Table'
 import Button from 'react-bootstrap/Button'
-import ButtonGroup from 'react-bootstrap/ButtonGroup'
-import Container from 'react-bootstrap/Container'
-import Form from 'react-bootstrap/Form'
-import Figure from 'react-bootstrap/Figure'
+//import Form from 'react-bootstrap/Form'
+import ButtonGroup from 'react-bootstrap/esm/ButtonGroup'
+
+import Session from './Session'
+import RegistrationForm from './RegistrationForm'
+import PostForm from './PostForm'
+import LoginForm from './LoginForm'
 
 import User from './Models/User'
 
-import upload_image from './api/upload_image'
-import api_request from './api/api_request'
-import convert_datetime from './api/convert_datetime'
+import apiRequest from './utils/apiRequest'
+//import uploadImage from './utils/uploadImage'
+import formatDate from './utils/formatDate'
 
-function getSession(props) {
-    return {
-        type: 'users',
-        id: props.id,
-        attributes: {
-            username: props.username,
-            firstName: props.firstName,
-            lastName: props.lastName,
-            email: props.email,
-            createdAt: convert_datetime(props.createdAt)
-        }
-    }
-}
-
-function LoginForm({ onLoginSuccess, onLoginError, onLogoutSuccess }) {
-    const [username, setUsername] = useState('')
-    const [password, setPassword] = useState('')
-
-    const onLogin = () => api_request('POST', '/session', { username, password })
-        .then(res => {
-            if (res.status !== 201) {
-                throw res.status
-            }
-
-            return res.json()
-        })
-        .then(res => res.data)
-        .then(getSession)
-        .then(onLoginSuccess)
-        .catch(onLoginError)
-
-    const onLogout = () => {
-        api_request('DELETE', '/session').then(onLogoutSuccess)
-    }
-
-    return (
-        <Form>
-            <Form.Group>
-                <Form.Label>Username</Form.Label>
-                <Form.Control type="text"
-                              placeholder="Enter username"
-                              onChange={e => setUsername(e.target.value)} />
-            </Form.Group>
-
-            <Form.Group>
-                <Form.Label>Password</Form.Label>
-                <Form.Control type="password"
-                              placeholder="Enter password"
-                              onChange={e => setPassword(e.target.value)} />
-            </Form.Group>
-
-            <ButtonGroup>
-                <Button variant="primary" onClick={onLogin}>Login</Button>
-                <Button variant="primary" onClick={onLogout}>Logout</Button>
-            </ButtonGroup>
-        </Form>
-    )
-}
-
-
-function ImageFigure({ image }) {
-    return (
-        <Figure>
-            <Figure.Image src={image} width={400} />
-
-            <Figure.Caption>Uploaded Image</Figure.Caption>
-        </Figure>
-    )
-}
-
-
-// Normally an app would be made up of many smaller, self-contained components.
-// For the sake of demonstrating that things work, it's okay to have a mess for
-// now :)
-export default function Main() {
-    const [file, setFile] = useState(null)
+function Main() {
+    //const [file, setFile] = useState(null)
     const [users, setUsers] = useState([])
-    const [imageUrl, setImageUrl] = useState(null)
-    const [session, setSession] = useState(null)
+    const [posts, setPosts] = useState([])
+    //const [imageUrl, setImageUrl] = useState(null)
+    const [session, setSessionUser] = useState(null)
 
-    const onFileChanged = event => setFile(event.target.files.item(0))
-    const onLoginError = code => window.alert(`Can't log in! (error code ${code})`)
-    const onLogoutSuccess = () => setSession(null)
+    //const handleFileChanged = event => setFile(event.target.files.item(0))
+    const handleLoginError = code => window.alert(`Can't log in! (error: ${code})`)
 
-    const onSubmitFile = () => upload_image(file)
+    /*
+    const submitFile = () => uploadImage(file)
         .then(res => res.json())
         .then(res => res.data)
-        .then(path => {
-            setImageUrl(path)
-            window.alert(`File uploaded! Path: ${path}`)
-        })
+        .then(setImageUrl)
         .catch(err => window.alert(`Unable to upload the image. ${session === null ? 'You are not signed in!' : 'Go bug Tom about this.'}`))
+    */
 
-    const onGetUsers = () => api_request('GET', '/users')
+    const getUsers = () => apiRequest('GET', '/users')
         .then(res => res.json())
         .then(res => res.data)
-        .then(users => users.map(user => {
-            const u = new User()
-            
-            u.hydrate(user)
-
-            return u
-        }))
+        .then(users => users.map(user => new User(user)))
         .then(setUsers)
 
-    // Check to see if the user is already logged in.
+    const getPosts = () => apiRequest('GET', '/posts?include=author,tags&fields[users]=username')
+        .then(res => res.json())
+        .then(({ data, included }) => {
+            const items = []
+
+            for (const post of data) {
+                const { attributes, relationships } = post
+                
+                const related = {
+                    tags: relationships.tags.data.map(obj => obj.id),
+                    author: relationships.author.data.id
+                }
+
+                items.push({
+                    image: attributes.image,
+                    title: attributes.title,
+                    text: attributes.text,
+                    createdAt: formatDate(attributes.createdAt),
+
+                    // Posts MUST have an author so it should be safe to assume
+                    // that the find method returns a resource object of
+                    // type "users".
+                    author: included
+                        .find(obj => obj.type === 'users' && obj.id === related.author)
+                        .attributes
+                        .username,
+
+                    tags: included
+                        .filter(obj => obj.type === 'tags' && related.tags.includes(obj.id))
+                        .map(tag => `#${tag.attributes.text}`),
+                })
+            }
+
+            return items
+        })
+        .then(setPosts)
     
-    // Load users when component loads.
+    // Load users and posts, check session status when component loads.
     useEffect(() => {
-        onGetUsers()
-        api_request('GET', '/session')
+        getUsers()
+        getPosts()
+        apiRequest('GET', '/session')
             .then(res => res.json())
-            .then(res => res.data)
-            .then(getSession)
-            .then(setSession)
+            .then(res => res.data.uid)
+            .then(uid => apiRequest('GET', `/users/${uid}`)
+            .then(res => res.json())
+            .then(res => new User(res.data)))
+            .then(setSessionUser)
             .catch(err => console.log('Not logged in'))
-    }, [setSession])
+    }, [setSessionUser])
 
     return (
         <Container>
             <h1>Users and Authentication</h1>
 
-            <Button className="mb-4" onClick={onGetUsers}>Refresh</Button>
+            <Button className="mb-4" onClick={getUsers}>Refresh</Button>
 
             <Table>
                 <thead>
@@ -150,7 +114,7 @@ export default function Main() {
                 </thead>
 
                 <tbody>
-                    {users.map((user, index) =>
+                    {users.map((user, index) => (
                         <tr key={index}>
                             <td>{user.id}</td>
                             <td>{user.getAttribute('username')}</td>
@@ -159,28 +123,56 @@ export default function Main() {
                             <td>{user.getAttribute('lastName')}</td>
                             <td>{user.getAttribute('createdAt')}</td>
                         </tr>
-                    )}
+                    ))}
                 </tbody>
             </Table>
 
-            <p>Logged in as: {session ? `${session.attributes.firstName} ${session.attributes.lastName}` : '(unauthenticated)'}</p>
+            {session ?
+                <Session user={session} /> :
+                <LoginForm
+                    onSuccess={setSessionUser}
+                    onError={handleLoginError} />
+            }
 
-            <LoginForm onLoginSuccess={setSession}
-                       onLoginError={onLoginError}
-                       onLogoutSuccess={onLogoutSuccess} />
+            <p>Don't have an account? Create one!</p>
+
+            <RegistrationForm
+                onRegistered={setSessionUser}
+                onError={console.error} />
 
             <hr />
 
-            <h1>File Upload</h1>
+            <h1>Posts</h1>
 
-            <p>Note: you must be authenticated to upload images!</p>
+            <ButtonGroup>
+                <Button onClick={() => getPosts()}>Refresh</Button>
+            </ButtonGroup>
 
-            {imageUrl && <ImageFigure image={imageUrl} />}
+            <Row>
+                {posts.map(post => (
+                    <Col xs={1} sm={2} md={3} lg={4}>
+                        <Card>
+                            <Card.Img src={post.image} />
+                            <Card.Body>
+                                <Card.Title>{post.title}</Card.Title>
+                                <Card.Text>
+                                    <small className="text-muted">Posted By {posts.author} on {posts.createdAt}</small>
+                                    <p>{post.text}</p>
+                                    <p className="text-muted">Tags: {post.tags.join(', ')}</p>
+                                </Card.Text>
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                ))}
+            </Row>
 
-            <Form>
-                <Form.File label="Upload an image" onChange={onFileChanged} />
-                <Button className="my-4" variant="primary" onClick={onSubmitFile}>Upload Image</Button>
-            </Form>
+            {session && <>
+                <h3>Create Post</h3>
+
+                <PostForm user={session} onPostCreated={() => getPosts()} />
+            </>}
         </Container>
     )
 }
+
+export default Main

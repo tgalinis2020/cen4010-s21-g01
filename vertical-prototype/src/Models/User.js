@@ -1,10 +1,10 @@
 import Base from './Base'
-import api_request from '../api/api_request'
+import apiRequest from '../utils/apiRequest'
 
 export default class User extends Base
 {
-    constructor() {
-        super('users')
+    get type() {
+        return 'users'
     }
 
     /**
@@ -14,28 +14,28 @@ export default class User extends Base
      * @param {string}   password
      */
     create(password) {
-        return api_request('POST', `/${this.type}`, {
+        return apiRequest('POST', `/${this.type}`, {
             type:       this.type,
             attributes: this.attributes,
         }).then(obj => {
             this.hydrate(obj.data)
-            return api_request('PUT', `/passwords/${obj.data.id}`, password)
-        })
+            return apiRequest('PUT', `/passwords/${obj.data.id}`, password)
+        }).then(res => this)
     }
 
     updatePassword(current, password) {
-        return api_request('PATCH', `/passwords/${this.id}`, { current, password })
+        return apiRequest('PATCH', `/passwords/${this.id}`, { current, password })
     }
 
     login(password) {
-        return api_request('POST', '/session', {
+        return apiRequest('POST', '/session', {
             username: this.getAttribute('username'),
             password
         })
     }
 
     logout() {
-        return api_request('DELETE', '/session')
+        return apiRequest('DELETE', '/session')
     }
 
     subscribeTo(pet) {

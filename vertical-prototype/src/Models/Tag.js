@@ -1,8 +1,8 @@
-import Base from './base'
+import Base from './Base'
 
 export default class Tag extends Base
 {
-    constructor() {
-        super('tags')
+    get type() {
+        return 'tags'
     }
 }

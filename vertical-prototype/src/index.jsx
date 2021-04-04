@@ -5,8 +5,6 @@ import Main from './Main'
 
 import 'bootstrap/dist/css/bootstrap.min.css'
 
-console.log(Main)
-
 ReactDOM.render(
     <React.StrictMode>
         <Main />
