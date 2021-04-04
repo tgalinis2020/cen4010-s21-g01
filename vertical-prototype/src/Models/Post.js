@@ -29,7 +29,7 @@ export default class Post extends Base
                 for (const resource of data) {
                     const tag = new Tag(resource)
                     tagmap[tag.getAttribute('text')] = true
-                    hydratedTags.append(tag)
+                    hydratedTags.push(tag)
                 }
     
                 const newTags = tags.filter(tag => tagmap[tag] === false)
@@ -38,7 +38,7 @@ export default class Post extends Base
                 // Need to make one request for each new tag.
                 if (newTags.length > 0) {
                     return Promise
-                        .all(newTags.map(tag => apiRequest('POST', '/tags', tag.toResourceIdentifier())))
+                        .all(newTags.map(text => apiRequest('POST', '/tags', { type: 'tags', attributes: { text }})))
                         .then(results => results.map(res => new Tag(res.json().data)))
                         .then(createdTags => hydratedTags.concat(createdTags))
     
