@@ -32,6 +32,8 @@ export default class Post extends Base
                     hydratedTags.push(tag)
                 }
     
+                // Tags that were not returned from the query will still have
+                // their value set to false. Need to create them.
                 const newTags = tags.filter(tag => tagmap[tag] === false)
     
                 // The API does not support creating entities in bulk.
@@ -39,16 +41,11 @@ export default class Post extends Base
                 if (newTags.length > 0) {
                     return Promise
                         .all(newTags.map(text => apiRequest('POST', '/tags', { type: 'tags', attributes: { text }})))
-                        .then(results => results.map(res => {
-                            const json = res.json()
-                            const t = new Tag(json.data)
-                            console.log(`Created new tag!`, t, 'Response: ', json)
-                            return t
-                        }))
-                        .then(createdTags => hydratedTags.concat(createdTags))
-    
+                        .then(r => Promise.all(r.map(res => res.json())))
+                        .then(r => r.map(({ data }) => new Tag(data)))
+                        .then(r => r.concat(hydratedTags))
                 } else {
-                    return new Promise((resolve, reject) => resolve(hydratedTags))
+                    return hydratedTags
                 }
             })
             .then(tags => {
@@ -65,6 +62,8 @@ export default class Post extends Base
                     c++
                 }
     
+                console.log(tags)
+
                 if (tags.length > 0) {
                     r['tags'] = { data: tags.map(tag => tag.toResourceIdentifier()) }
                     c++
