@@ -41,7 +41,7 @@ export default class Post extends Base
                 if (newTags.length > 0) {
                     return Promise
                         .all(newTags.map(text => apiRequest('POST', '/tags', { type: 'tags', attributes: { text }})))
-                        .then(r => Promise.all(r.map(res => res.json())))
+                        .then(r => Promise.all(r.map(res => res.json()))) // Converting returned data to JSON returns a promise
                         .then(r => r.map(({ data }) => new Tag(data)))
                         .then(r => r.concat(hydratedTags))
                 } else {

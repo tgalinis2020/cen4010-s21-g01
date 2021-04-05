@@ -12,7 +12,8 @@ function convertDateTime(datetime) {
     const [year, month, date] = datePart.split('-')
     const [hours, minutes, seconds] = timePart.split(':')
 
-    return new Date(Date.UTC(year, month, date, hours, minutes, seconds))
+    // Note: months start at zero, so Jan = 0, Feb = 1, and so on.
+    return new Date(Date.UTC(year, month - 1, date, hours, minutes, seconds))
 }
 
 export default convertDateTime

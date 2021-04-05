@@ -18,9 +18,7 @@ function RegistrationForm({ onRegistered, onError }) {
     const [avatar, setAvatar] = useState(null)
 
     const user = new User()
-
-    const handleFileChanged = event => setAvatar(event.target.files.item(0))
-
+    
     const createAccount = () => user
         .setAttribute('firstName', firstName)
         .setAttribute('lastName', lastName)
@@ -75,7 +73,10 @@ function RegistrationForm({ onRegistered, onError }) {
 
             <Form.Group>
                 <Form.Label>Avatar</Form.Label>
-                <Form.File custom label="Upload an image" onChange={handleFileChanged} />
+                <Form.File
+                    custom
+                    label="Upload an image"
+                    onChange={e => setAvatar(e.target.files.item(0))} />
             </Form.Group>
 
             <ButtonGroup>

@@ -14,8 +14,6 @@ use ThePetPark\Schema\Relationship as R;
 use function json_encode;
 use function json_decode;
 use function htmlentities;
-use function array_diff;
-use function array_keys;
 use function count;
 
 final class Add
@@ -58,17 +56,6 @@ final class Add
 
         $schema = $this->schemas->get($resource);
         $qb = $this->conn->createQueryBuilder()->insert($schema->getImplType());
-        
-        /*
-        // Some fields are nullable so this might be a hinderance.
-        $diff = count(array_diff(array_keys($attributes), $schema->getAttributes()));
-
-        if ($diff > 0) {
-            // When creating a new resource, all of the schema's attributes must
-            // be provided. Default values are not yet implemented. :(
-            return $response->withStatus(400);
-        }
-        */
 
         $values = [];
         $present = [];

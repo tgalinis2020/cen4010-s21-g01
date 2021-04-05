@@ -19,18 +19,19 @@ function PostForm({ user, onPostCreated }) {
             return
         }
 
-        const post = new Post()
-
         const tagList = tags
             .split(',')
             .map(t => t.trim().toLowerCase())
         
+        const makePostAndAddFields = image => (new Post())
+            .setAttribute('image', image)
+            .setAttribute('title', title)
+            .setAttribute('text', text)
+        
         uploadImage(file)
             .then(res => res.json())
             .then(res => res.data)
-            .then(image => post.setAttribute('image', image))
-            .then(post => post.setAttribute('title', title))
-            .then(post => post.setAttribute('text', text))
+            .then(makePostAndAddFields)
             .then(post => post.create(user, tagList, []))
             .then(onPostCreated)
     }

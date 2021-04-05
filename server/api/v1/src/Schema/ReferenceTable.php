@@ -63,9 +63,6 @@ class ReferenceTable implements ContainerInterface
     /** @var \ThePetPark\Schema\Container */
     protected $schemas;
 
-    /** @var \Doctrine\DBAL\Query\QueryBuilder */
-    protected $qb;
-
     /** @param \ThePetPark\Schema\Container $schemas */
     public function __construct(
         Schema\Container $schemas,

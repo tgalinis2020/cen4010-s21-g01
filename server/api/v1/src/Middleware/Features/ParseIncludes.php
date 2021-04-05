@@ -13,7 +13,6 @@ use ThePetPark\Schema\Relationship as R;
 use PDO;
 
 use function reset;
-use function current;
 use function explode;
 use function count;
 
