@@ -7,6 +7,7 @@ namespace ThePetPark\Middleware\Features\Pagination;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Doctrine\DBAL\Query\QueryBuilder;
+use ThePetPark\Middleware\Features\Resolver;
 use ThePetPark\Schema\ReferenceTable;
 
 /**
@@ -28,7 +29,7 @@ final class CursorBased
         ResponseInterface $response,
         callable $next
     ): ResponseInterface {
-        $page = $request->getAttribute('parameters', [])['page'] ?? [];
+        $page = $request->getAttribute(Resolver::PARAMETERS, [])['page'] ?? [];
 
         if (isset($page['cursor'])) {
             $qb = $request->getAttribute(QueryBuilder::class);

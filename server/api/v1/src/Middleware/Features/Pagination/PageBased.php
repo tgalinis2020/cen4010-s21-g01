@@ -7,6 +7,7 @@ namespace ThePetPark\Middleware\Features\Pagination;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use ThePetPark\Middleware\Features\Resolver;
 
 /**
  * Similar to the offset/limit strategy.
@@ -28,7 +29,7 @@ final class PageBased
         ResponseInterface $response,
         callable $next
     ): ResponseInterface {
-        $page = $request->getAttribute('parameters', [])['page'] ?? [];
+        $page = $request->getAttribute(Resolver::PARAMETERS, [])['page'] ?? [];
 
         if (isset($page['number']) && ((int) $page['number']) > 0) {     
             $page = ((int) $page['number']) - 1; // Pages start at 1

@@ -7,6 +7,7 @@ namespace ThePetPark\Middleware\Features\Pagination;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use ThePetPark\Middleware\Features\Resolver;
 
 /**
  * This pagination strategy applies a numerical offset to the returned records.
@@ -27,7 +28,7 @@ final class OffsetBased
         ResponseInterface $response,
         callable $next
     ): ResponseInterface {
-        $page = $request->getAttribute('parameters', [])['page'] ?? [];
+        $page = $request->getAttribute(Resolver::PARAMETERS, [])['page'] ?? [];
 
         if (isset($page['offset'])) {
             $request->getAttribute(QueryBuilder::class)
