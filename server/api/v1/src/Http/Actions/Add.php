@@ -47,7 +47,6 @@ final class Add
         }
         
         $resource = $request->getAttribute('resource');
-        $id = $request->getAttribute('id');
         $type = $data['type'] ?? null;
         $attributes = $data['attributes'] ?? [];
         $relationships = $data['relationships'] ?? [];
@@ -179,9 +178,18 @@ final class Add
                 $rels[$name] = [];
             }
 
+            // TODO:    Since to-many resolutions must be done using one table
+            //          in order for relationship updates to work, it might be
+            //          worth not putting the relationship in an array of one
+            //          element.
+            if (is_array($link)) {
+                $link = array_pop($link);
+            }
+
             foreach ($value as $identifier) {
 
                 $qb = $this->conn->createQueryBuilder();
+
                 $obj = [
                     'type' => $related,
                     'id'   => htmlentities($identifier['id'], ENT_QUOTES)
@@ -199,7 +207,7 @@ final class Add
                 if (is_array($link)) {
     
                     // Adding to-many relationships requires an INSERT query.
-                    list($pivot, $from, $to) = array_pop($link);
+                    list($pivot, $from, $to) = $link;
     
                     $qb->insert($pivot)
                         ->setValue($from, $qb->createNamedParameter($id))
