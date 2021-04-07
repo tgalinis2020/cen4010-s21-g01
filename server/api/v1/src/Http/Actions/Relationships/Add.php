@@ -54,6 +54,10 @@ final class Add
 
         list($mask, $related, $link) = $schema->getRelationship($relationship);
 
+        if (is_array($link)) {
+            $link = array_pop($link);
+        }
+
         // Clients must issue PATCH requests to set to-one relationships.
         if ($mask & R::ONE) {
             return $response->withStatus(403);
@@ -81,7 +85,7 @@ final class Add
             if (is_array($link)) {
 
                 // Adding to-many relationships requires an INSERT query.
-                list($pivot, $from, $to) = array_pop($link);
+                list($pivot, $from, $to) = $link;
 
                 $qb->insert($pivot)
                     ->setValue($from, $qb->createNamedParameter($id))

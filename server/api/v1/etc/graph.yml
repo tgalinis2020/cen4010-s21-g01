@@ -1,5 +1,5 @@
 schemas:
-  posts:    
+  posts: 
     attributes:
       title: $
       text: text_content
