@@ -30,17 +30,28 @@ final class CursorBased
         callable $next
     ): ResponseInterface {
         $page = $request->getAttribute(Resolver::PARAMETERS, [])['page'] ?? [];
+        $qb = $request->getAttribute(QueryBuilder::class);
+        $refs = $request->getAttribute(ReferenceTable::class);
+        $ref = $refs->getBaseRef();
 
-        if (isset($page['cursor'])) {
-            $qb = $request->getAttribute(QueryBuilder::class);
-            $refs = $request->getAttribute(ReferenceTable::class);
-            $ref = $refs->getBaseRef();
+        if (isset($page['size'])) {
+            $qb->setMaxResults((int) ($page['size'] ?? $this->defaultPageSize));
+        }
+
+        if (isset($page['cursor']) || isset($page['after'])) {
 
             $qb->andWhere($qb->expr()->gt(
-                    $ref . '.' . $ref->getSchema()->getId(),
-                    $qb->createNamedParameter($page['cursor'])
-                ))
-                ->setMaxResults((int) ($page['size'] ?? $this->defaultPageSize));             
+                $ref . '.' . $ref->getSchema()->getId(),
+                $qb->createNamedParameter($page['cursor'] ?? $page['after'])
+            ));
+        
+        } else if (isset($page['before'])) {
+
+            $qb->andWhere($qb->expr()->lt(
+                $ref . '.' . $ref->getSchema()->getId(),
+                $qb->createNamedParameter($page['before'])
+            ));
+        
         }
         
         return $next($request, $response);

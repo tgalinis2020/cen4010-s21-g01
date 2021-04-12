@@ -37,8 +37,7 @@ final class CursorBased
 
         /*
         $document['links'] += [
-            'prev' => null,
-            'next' => null,
+            'next' => $this->baseUrl,
         ];
         */
 

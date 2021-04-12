@@ -29,7 +29,7 @@ function LoginForm({ onSuccess, onError }) {
                 <Form.Control
                     type="text"
                     placeholder="Enter username"
-                    onChange={e => setUsername(e.target.value)} />
+                    onChange={({ target }) => setUsername(target.value)} />
             </Form.Group>
 
             <Form.Group>
@@ -37,7 +37,7 @@ function LoginForm({ onSuccess, onError }) {
                 <Form.Control
                     type="password"
                     placeholder="Enter password"
-                    onChange={e => setPassword(e.target.value)} />
+                    onChange={({ target })=> setPassword(target.value)} />
             </Form.Group>
 
             <ButtonGroup>

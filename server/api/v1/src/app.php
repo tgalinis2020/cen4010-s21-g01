@@ -31,13 +31,13 @@ return (function () {
     // the first one to execute.
     function addResolver(Slim\App $endpoint, string $pattern) {
         return $endpoint->get($pattern, Http\Actions\Render::class)
-            ->add(Middleware\Features\Pagination\Links\PageBased::class)
-            ->add(Middleware\Features\Pagination\Links\OffsetBased::class)
+            //->add(Middleware\Features\Pagination\Links\PageBased::class)
+            //->add(Middleware\Features\Pagination\Links\OffsetBased::class)
             ->add(Middleware\Features\Pagination\Links\CursorBased::class)
             ->add(Middleware\Features\ParseIncludes::class)
             ->add(Middleware\Features\Resolver::class)        // This is the main feature.
-            ->add(Middleware\Features\Pagination\PageBased::class)
-            ->add(Middleware\Features\Pagination\OffsetBased::class)
+            //->add(Middleware\Features\Pagination\PageBased::class)
+            //->add(Middleware\Features\Pagination\OffsetBased::class)
             ->add(Middleware\Features\Pagination\CursorBased::class)
             ->add(Middleware\Features\Sorting::class)
             ->add(Middleware\Features\Filtering::class)
