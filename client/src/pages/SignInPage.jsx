@@ -1,4 +1,5 @@
 import { useContext, useState } from 'react'
+import { useHistory } from 'react-router-dom'
 
 import Form from 'react-bootstrap/Form'
 import Row from 'react-bootstrap/Row'
@@ -17,19 +18,21 @@ function SignInPage() {
     const [session, setSession] = useContext(SessionContext)
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
+    const history = useHistory()
 
     const login = () => apiRequest('POST', '/session', { username, password })
         .then(convertToJsonOrThrowError(201))
         .then((res) => res.data)
         .then(({ uid }) => apiRequest('GET', `/users/${uid}?include=subscriptions`))
         .then((res) => res.json())
-        .then((res) => res.data)
         .then(({ data, included }) => ({
             user: new User(data),
             subscriptions: included.map(({ id }) => id),
         }))
         .then(setSession)
+        .then(() => history.replace('/dashboard'))
         .catch((error) => {
+            console.error(error)
             // TODO: alerts don't look so nice, replace with something fancier
             window.alert('Invalid username/password combination!')
         })

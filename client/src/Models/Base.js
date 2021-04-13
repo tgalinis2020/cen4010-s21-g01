@@ -61,15 +61,13 @@ export default class Base
             payload['relationships'] = relationships
         }
 
-        console.log(payload)
-
         return apiRequest('POST', `/${this.type}`, payload)
-            .then(res => {
+            .then((res) => {
                 this.dirtyAttributes = []
 
                 return res.json()
             })
-            .then(res => res.data)
+            .then((res) => res.data)
     }
 
     update() {

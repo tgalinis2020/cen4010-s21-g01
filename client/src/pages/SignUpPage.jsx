@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import { useHistory } from 'react-router-dom'
 
 import Form from 'react-bootstrap/Form'
@@ -13,9 +13,11 @@ import uploadImage from '../utils/uploadImage'
 import useValidators from '../hooks/useValidators'
 
 import BackButton from '../components/BackButton'
+import SessionContext from '../context/SessionContext'
 
-function SignUpPage({ onSignedUp }) {
+function SignUpPage() {
     const [avatar, setAvatar] = useState(null)
+    const [session, setSession] = useContext(SessionContext)
     const history = useHistory()
     
     const checkEmpty = (field = 'Value') => (value) => Promise
@@ -65,8 +67,8 @@ function SignUpPage({ onSignedUp }) {
             .create(fields.get('password'))
             .then(() => {
                 const promise = apiRequest('POST', '/session', {
-                    username: fields.username.value,
-                    password: fields.password.value
+                    username: fields.get('username'),
+                    password: fields.get('password'),
                 })
 
                 if (avatar !== null) {
@@ -79,7 +81,7 @@ function SignUpPage({ onSignedUp }) {
 
                 return promise
             })
-            .then(onSignedUp)
+            .then(() => setSession({ user, subscriptions: [] }))
             .then(() => history.replace('/dashboard'))
             .catch(console.log)
         ))

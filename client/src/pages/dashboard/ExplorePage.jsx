@@ -46,7 +46,7 @@ function ExplorePage() {
 
             } else {
 
-                const filterParam = `filter[tags][in]=${target.value.split(' ').join(',')}`
+                const filterParam = `filter[tags.text][in]=${target.value.split(' ').join(',')}`
 
                 setSearchMode(true)
 
@@ -132,8 +132,12 @@ function ExplorePage() {
 
                                 <Card.Text>
                                     <small className="text-muted">Posted by {author} on {createdAt}</small>
+                                    
                                     <p>{text}</p>
-                                    <p className="text-muted">Tags: {tags.join(', ')}</p>
+                                    
+                                    {tags.length > 0 && (
+                                        <p className="text-muted">Tags: {tags.join(', ')}</p>
+                                    )}
                                 </Card.Text>
                             </Card.Body>
                         </Card>

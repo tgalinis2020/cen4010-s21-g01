@@ -21,9 +21,8 @@ export default class Post extends Base
         }
 
         return apiRequest('GET', `/tags?filter[text][in]=${tags.join(',')}`)
-            .then(res => res.json())
-            .then(res => res.data)
-            .then(data => {
+            .then((res) => res.json())
+            .then(({ data }) => {
                 const hydratedTags = []
     
                 for (const resource of data) {
@@ -48,7 +47,7 @@ export default class Post extends Base
                     return hydratedTags
                 }
             })
-            .then(tags => {
+            .then((tags) => {
                 const r = {}
                 let c = 0
     
@@ -69,7 +68,7 @@ export default class Post extends Base
     
                 return c > 0 ? r : null
             })
-            .then(relationships => super.create(relationships))
-            .then(resource => this.hydrate(resource))
+            .then((relationships) => super.create(relationships))
+            .then((resource) => this.hydrate(resource))
     }
 }

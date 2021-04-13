@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import {
     BrowserRouter as Router,
     Switch,
@@ -25,7 +25,6 @@ import { faBone, faCog, faSignInAlt, faSignOutAlt, faUser, faUserCircle } from '
 
 import apiRequest from './utils/apiRequest'
 import formatDate from './utils/formatDate'
-import { session$ } from './context/SessionContext'
 import SessionContext from './context/SessionContext'
 import User from './Models/User'
 
@@ -58,7 +57,8 @@ function Anonymous() {
     )
 }
 
-function Authenticated({ session }) {
+function Authenticated() {
+    const [session, setSession] = useContext(SessionContext)
     const history = useHistory()
     const avatarStyle = {
         borderRadius: '50%',
@@ -67,14 +67,13 @@ function Authenticated({ session }) {
         height: '48px'
     }
 
-    console.log(session)
-
-    const avatar = session.user.getAttribute('avatar')
-        ? <img style={avatarStyle} src={session.user.getAttribute('avatar')} />
-        : <FontAwesomeIcon icon={faUserCircle} />
+    const avatar = session.user.getAttribute('avatar') === null
+        ? <FontAwesomeIcon icon={faUserCircle} size="2x" />
+        : <img style={avatarStyle} src={session.user.getAttribute('avatar')} />
     
     // Navigate to the explore page on logout
     const logout = () => apiRequest('DELETE', '/session')
+        .then(() => setSession(null))
         .then(() => history.push('/'))
 
     return (
@@ -151,7 +150,7 @@ function Dashboard() {
 }
 
 function Main({ title }) {
-    /*
+    //*
     const mock = null
     /*/
     const mock = {
@@ -170,22 +169,17 @@ function Main({ title }) {
     }
     //*/
 
-    const history = useHistory()
-
     // Component state is managed using the useState hook.
     // Use the setSession function to update the session; don't try to mutate
     // the session variable directly!
     const sessionState = useState(mock)
     const [session, setSession] = sessionState
 
-    const goToPostPage = ({ id }) => history.replace(`/post/${id}`)
-
     // useEffect hooks into this component's lifecycle. When it is loaded, it
     // runs the provided callback function. If another callback is provided
     // within the callback function, it will run it when the component is
     // unloaded. In other words, inner callback = setup, outer callback =
-    // teardown. The second argument to useEffect is a list of objects and
-    // functions in the scope of this component that are in use in the effect.
+    // teardown.
     //
     // In this case, we're listening to the session observable. If it's not
     // unsubscribed from when the component is not in use, a memory leak can
@@ -194,12 +188,12 @@ function Main({ title }) {
         apiRequest('GET', '/session')
             .then((res) => res.json())
             .then((res) => res.data.uid)
-            .then((uid) => apiRequest('GET', `/users/${uid}`)
+            .then((uid) => apiRequest('GET', `/users/${uid}`))
             .then((res) => res.json())
-            .then((res) => new User(res.data)))
+            .then((res) => ({ user: new User(res.data) }))
             .then(setSession)
             .catch((err) => console.log('Not logged in'))
-    }, [setSession])
+    }, [])
 
     // Since this app is served in a directory within the server, the basename
     // for all routes must be specified.
@@ -215,7 +209,7 @@ function Main({ title }) {
                         <Navbar.Toggle aria-controls="main-nav" />
                         
                         <Navbar.Collapse id="main-nav">
-                            {session ? <Authenticated session={session} /> : <Anonymous />}
+                            {session ? <Authenticated /> : <Anonymous />}
                         </Navbar.Collapse>
                     </Container>
                 </Navbar>
@@ -231,15 +225,15 @@ function Main({ title }) {
                         </Route>
 
                         <Route path="/post">
-                            <CreatePostPage author={session} onPostCreated={goToPostPage} />
+                            <CreatePostPage />
                         </Route>
 
                         <Route path="/signin">
-                            <SignInPage onSignedIn={setSession} />
+                            <SignInPage />
                         </Route>
 
                         <Route path="/signup">
-                            <SignUpPage onSignedUp={setSession} />
+                            <SignUpPage />
                         </Route>
 
                         <Route path="/settings">

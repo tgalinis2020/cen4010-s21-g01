@@ -30,7 +30,7 @@ export default class User extends Base
     }
 
     updatePassword(current, password) {
-        return apiRequest('PATCH', `/passwords/${this.id}`, { current, password })
+        return apiRequest('PATCH', `/passwords/${this.id}`, { current, new: password })
     }
 
     login(password) {

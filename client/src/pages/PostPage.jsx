@@ -63,7 +63,6 @@ function PostPage() {
     // are made for getting posts and comments.
     const getPost = () => apiRequest('GET', `/posts/${id}?include=author,tags,pets&fields[users]=username`)
         .then((res) => res.json())
-        .then((res) => res.data)
         .then(({ data, included }) => {
             const { id, attributes, relationships } = data
             const { image, title, text, createdAt } = attributes
@@ -73,7 +72,7 @@ function PostPage() {
             }
 
             // Pluck the IDs from to-many relationships, if applicable.
-            for (const key in ['tags', 'pets', 'likes']) {
+            for (const key of ['tags', 'pets', 'likes']) {
                 related[key] = key in relationships ? relationships[key].data.map(({ id }) => id) : []
             }
 
@@ -91,7 +90,7 @@ function PostPage() {
 
                 tags: included
                     .filter(obj => obj.type === 'tags' && related.tags.includes(obj.id))
-                    .map(tag => `#${tag.attributes.text}`),
+                    .map(({ attributes }) => attributes.text),
 
                 pets: included
                     .filter((obj) => obj.type === 'pets' && related.pets.includes(obj.id)),
@@ -99,9 +98,8 @@ function PostPage() {
         })
         .then(setPost)
 
-    const getComments = () => apiRequest('GET', `/posts/${id}/comments?include=author&fields[users]=username&sort=-createdAt`)
+    const getComments = () => apiRequest('GET', `/posts/${id}/comments?include=author&fields[users]=username,avatar&sort=-createdAt`)
         .then((res) => res.json())
-        .then((res) => res.data)
         .then(({ data, included }) => data.map(({ id, attributes, relationships }) => {
             const author = included
                 .find(user => user.id === relationships.author.data.id)
@@ -119,10 +117,10 @@ function PostPage() {
 
     return (
         <>
-            <h1><BackButton />{post.title}</h1>
-
             {post ? (
                 <>
+                    <h1><BackButton />{post.title}</h1>
+
                     <Card className="my-4">
                         <Card.Img src={post.image} />
 
@@ -161,7 +159,9 @@ function PostPage() {
                                     </div>
                                 )}
 
-                                <p className="text-muted">Tags: {post.tags.join(', ')}</p>
+                                {post.tags.length > 0 && (
+                                    <p className="text-muted">Tags: {post.tags.join(', ')}</p>
+                                )}
                             </Card.Text>
                         </Card.Body>
                     </Card>

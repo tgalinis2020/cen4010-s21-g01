@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
+import { useHistory } from 'react-router'
 
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
@@ -13,21 +14,42 @@ import uploadImage from '../utils/uploadImage'
 import Post from '../Models/Post'
 import BackButton from '../components/BackButton'
 import apiRequest from '../utils/apiRequest'
+import SessionContext from '../context/SessionContext'
+import useValidators from '../hooks/useValidators'
 
-// TODO:    Add form validation
-//          Implement adding pets to posts, maybe with checkboxes
-function CreatePostPage({ author, onPostCreated }) {
-    const [title, setTitle] = useState('')
+
+function CreatePostPage() {
     const [file, setFile] = useState(null)
-    const [text, setText] = useState('')
-    const [tags, setTags] = useState('')
     const [pets, setPets] = useState([])
     const [loading, setLoading] = useState(true)
+    const [session] = useContext(SessionContext)
+    const history = useHistory()
+
+    const minChars = (label, n) => (value) => Promise
+        .resolve(value.length < n ? `${label} must be ${n} or more characters long.` : null)
+
+    const maxChars = (label, n) => (value) => Promise
+        .resolve(value.length > n ? `${label} length cannot exceed ${n} characters.` : null)
+
+    const lettersOnly = (value) => Promise
+        .resolve(/^[A-Za-z ]*$/.test(value) ? null : 'Each tag must be a word separated by a space.')
+
+    const fields = useValidators({
+        title: [
+            minChars('Post title', 10),
+            maxChars('Post title', 35),
+        ],
+
+        text: [],
+
+        tags: [
+            lettersOnly,
+        ]
+    })
 
     useEffect(() => {
-        apiRequest('GET', `/users/${author.id}/pets`)
+        apiRequest('GET', `/users/${session.user.id}/pets`)
             .then((res) => res.json())
-            .then((res) => res.data)
             .then(({ data }) => {
                 setLoading(false)
 
@@ -48,30 +70,31 @@ function CreatePostPage({ author, onPostCreated }) {
 
         setLoading(false)
         */
-    }, [setPets])
+    }, [])
     
     const createPost = () => {
         if (file === null) {
+            window.alert('Posts need an image!')
             return
         }
 
-        const tagList = tags.split(' ').map(t => t.trim().toLowerCase())
-        const petList = pets.map(({ id }) => ({
-            type: 'pets',
-            id
-        }))
+        const tagList = fields.get('tags').split(' ')
+            .map(t => t.trim().toLowerCase())
+            .filter(t => t.length > 0)
+
+        const petList = pets.map(({ id }) => ({ type: 'pets', id }))
         
         const makePostAndAddFields = (image) => (new Post())
             .setAttribute('image', image)
-            .setAttribute('title', title)
-            .setAttribute('text', text)
+            .setAttribute('title', fields.get('title'))
+            .setAttribute('text', fields.get('text'))
         
         uploadImage(file)
-            .then(res => res.json())
-            .then(res => res.data)
+            .then((res) => res.json())
+            .then((res) => res.data)
             .then(makePostAndAddFields)
-            .then(post => post.create(author, tagList, petList))
-            .then(onPostCreated)
+            .then((post) => post.create(session.user, tagList, petList))
+            .then((post) => history.replace(`/post/${post.id}`))
     }
 
     const handlePetChange = (index) => () => setPets(items => {
@@ -79,6 +102,9 @@ function CreatePostPage({ author, onPostCreated }) {
 
         return items
     })
+
+    const handleSubmit = () => fields.getValidity()
+        .then((valid) => valid && createPost())
 
     return (
         <>
@@ -91,12 +117,15 @@ function CreatePostPage({ author, onPostCreated }) {
                     <Col sm={10}>
                         <Form.Control
                             type="text"
+                            isInvalid={fields.isInvalid('title')}
                             placeholder="Enter post title"
-                            onChange={({ target }) => setTitle(target.value)} />
+                            onChange={fields.set('title')} />
 
-                        <Form.Control.Feedback type="invalid">
-                            Title must be 6 characters or longer.
-                        </Form.Control.Feedback>
+                        {fields.isInvalid('title') && (
+                            <Form.Control.Feedback type="invalid">
+                                {fields.getError('title')}
+                            </Form.Control.Feedback>
+                        )}
                     </Col>
                 </Form.Group>
 
@@ -105,7 +134,7 @@ function CreatePostPage({ author, onPostCreated }) {
                     <Col sm={10}>
                         <Form.File
                             custom
-                            label="Upload an image"
+                            label={file ? file.name : 'Upload in image'}
                             onChange={({ target }) => setFile(target.files.item(0))} />
 
                         <Form.Control.Feedback type="invalid">
@@ -120,8 +149,15 @@ function CreatePostPage({ author, onPostCreated }) {
                     <Col sm={10}>
                         <Form.Control
                             as="textarea"
+                            isInvalid={fields.isInvalid('text')}
                             placeholder="Enter post caption"
-                            onChange={({ target }) => setText(target.value)} />
+                            onChange={fields.set('text')} />
+
+                        {fields.isInvalid('text') && (
+                            <Form.Control.Feedback type="invalid">
+                                {fields.getError('text')}
+                            </Form.Control.Feedback>
+                        )}
                     </Col>
                 </Form.Group>
 
@@ -131,8 +167,15 @@ function CreatePostPage({ author, onPostCreated }) {
                     <Col sm={10}>
                         <Form.Control
                             type="text"
+                            isInvalid={fields.isInvalid('tags')}
                             placeholder="Enter tags separated by a space"
-                            onChange={({ target }) => setTags(target.value)} />
+                            onChange={fields.set('tags')} />
+
+                        {fields.isInvalid('tags') && (
+                            <Form.Control.Feedback type="invalid">
+                                {fields.getError('tags')}
+                            </Form.Control.Feedback>
+                        )}
                     </Col>
                 </Form.Group>
 
@@ -161,7 +204,7 @@ function CreatePostPage({ author, onPostCreated }) {
 
                 <Form.Group as={Row}>
                     <Col sm={{ span: 10, offset: 2 }}>
-                        <Button variant="primary" onClick={createPost}>
+                        <Button variant="primary" onClick={handleSubmit}>
                             <FontAwesomeIcon icon={faPlus} className="mr-2" />
                             Create Post
                         </Button>

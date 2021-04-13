@@ -42,7 +42,7 @@ function PetsPage() {
         },
         
         relationships: {
-            author: {
+            owner: {
                 data: { type: 'users', id: session.user.id }
             }
         }
@@ -113,6 +113,7 @@ function PetsPage() {
 
                     <Col sm={10}>
                         <Form.File
+                            custom
                             placeholder="Upload an image"
                             onChange={({ target }) => setAvatar(target.files.item(0))} />
                     </Col>

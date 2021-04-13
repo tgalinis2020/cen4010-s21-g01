@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
@@ -10,6 +10,7 @@ import { faPlus } from '@fortawesome/free-solid-svg-icons'
 
 function CommentForm({ post, session, onSubmitted }) {
     const [text, setText] = useState('')
+    const inputRef = useRef(null)
     
     const submit = () => apiRequest('POST', '/comments', {
             type: 'comments',
@@ -28,12 +29,15 @@ function CommentForm({ post, session, onSubmitted }) {
         .then((res) => res.data)
         .then(onSubmitted)
         .then(() => setText(''))
+        .then(() => {
+            inputRef.current.value = ''
+        })
         .catch(console.log)
 
     return (
         <Form>
             <Form.Group>
-                <Form.Control as="textarea" onChange={({ target }) => setText(target.value)}></Form.Control>
+                <Form.Control as="textarea" ref={inputRef} onChange={({ target }) => setText(target.value)}></Form.Control>
             </Form.Group>
 
             <Form.Group>

@@ -19,7 +19,6 @@ function getPosts(additionalParams = []) {
 
     return apiRequest('GET', `/posts?${params.join('&')}`)
         .then((res) => res.json())
-        .then((res) => res.data)
         .then(({ data, included }) => {
             const items = []
 
@@ -51,7 +50,7 @@ function getPosts(additionalParams = []) {
 
                     tags: included
                         .filter(({ type, id }) => type === 'tags' && related.tags.includes(id))
-                        .map(tag => tag.attributes.text),
+                        .map(({ attributes }) => attributes.text),
                 })
             }
 

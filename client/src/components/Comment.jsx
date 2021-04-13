@@ -3,6 +3,8 @@ import Media from 'react-bootstrap/Media'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUserCircle } from '@fortawesome/free-solid-svg-icons'
 
+import formatDate from '../utils/formatDate'
+
 function Comment({ text, createdAt, author }) {
     const commentStyles = {
         width: '64px',
@@ -20,7 +22,7 @@ function Comment({ text, createdAt, author }) {
             {image}
 
             <Media.Body>
-                <small className="text-muted">Posted by {author} on {createdAt}</small>
+                <small className="text-muted">Posted by {author} on {formatDate(createdAt)}</small>
                 <p>{text}</p>
             </Media.Body>
         </Media>

@@ -18,8 +18,8 @@ function AccountPage() {
     const checkEmpty = (field) => (value) => Promise
         .resolve(value === '' ? `${field} cannot be empty.` : null)
 
-    const checkMatchesPassword = (value) => Promise
-        .resolve(value === fields.password.value ? null : 'Passwords do not match')
+    //const checkMatchesPassword = (value, getValue) => Promise
+    //    .resolve(value === getValue('password') ? 'Passwords should not match' : null)
 
     const fields = useValidators({
         password: [
@@ -28,7 +28,7 @@ function AccountPage() {
 
         newPassword: [
             checkEmpty('New password'),
-            checkMatchesPassword,
+            //checkMatchesPassword,
         ],
     })
 
@@ -44,7 +44,7 @@ function AccountPage() {
     const updateAvatar = () => uploadImage(avatar)
         .then((res) => res.json())
         .then((res) => res.data)
-        .then((url) => session.user.setAttribute('image', url))
+        .then((url) => session.user.setAttribute('avatar', url))
         .then((user) => user.update())
         .then(() => window.alert('Avatar updated!'))
 
@@ -100,7 +100,7 @@ function AccountPage() {
                     <Col sm={10}>
                         <Form.File
                             custom
-                            label="Upload an image"
+                            label={avatar ? avatar.name : 'Upload an image'}
                             onChange={({ target }) => setAvatar(target.files.item(0))} />
                     </Col>
                 </Form.Group>

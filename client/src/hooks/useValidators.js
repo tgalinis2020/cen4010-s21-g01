@@ -27,7 +27,7 @@ import debounce from '../utils/debouce'
     const [fields, setFields] = useState(initialState)
 
     return {
-        get: (field) => fields[field],
+        get: (field) => fields[field].value,
 
         isInvalid: (field) => fields[field].dirty && fields[field].error !== null,
         
@@ -47,7 +47,7 @@ import debounce from '../utils/debouce'
                 .then((error) => {
                     setFields((prev) => ({
                         ...prev,
-                        [field]: { value: fields[field].value, dirty: true, error }
+                        [field]: { value: target.value, dirty: true, error }
                     }))
     
                     return error === null
@@ -55,7 +55,7 @@ import debounce from '../utils/debouce'
                 .catch((error) => {
                     setFields((prev) => ({
                         ...prev,
-                        [field]: { value: fields[field].value, dirty: true, error: 'Invalid value.' }
+                        [field]: { value: target.value, dirty: true, error: 'Invalid value.' }
                     }))
     
                     return false
