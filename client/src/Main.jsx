@@ -25,16 +25,18 @@ import { faBone, faCog, faSignInAlt, faSignOutAlt, faUser, faUserCircle } from '
 
 import apiRequest from './utils/apiRequest'
 import formatDate from './utils/formatDate'
-//import { session$ } from './state'
+import { session$ } from './context/SessionContext'
+import SessionContext from './context/SessionContext'
+import User from './Models/User'
 
-import ExplorePage from './pages/ExplorePage'
+import ExplorePage from './pages/dashboard/ExplorePage'
 import PostPage from './pages/PostPage'
-import SubscriptionsPage from './pages/SubscriptionsPage'
-import FavoritesPage from './pages/FavoritesPage'
+import SubscriptionsPage from './pages/dashboard/SubscriptionsPage'
+import FavoritesPage from './pages/dashboard/FavoritesPage'
 import SettingsPage from './pages/SettingsPage'
 import SignInPage from './pages/SignInPage'
 import SignUpPage from './pages/SignUpPage'
-import CreatePostPage from './pages/CreatePost'
+import CreatePostPage from './pages/CreatePostPage'
 
 // This part of the navigation bar shows if the user is not logged in.
 function Anonymous() {
@@ -56,7 +58,7 @@ function Anonymous() {
     )
 }
 
-function Authenticated({ user }) {
+function Authenticated({ session }) {
     const history = useHistory()
     const avatarStyle = {
         borderRadius: '50%',
@@ -65,8 +67,10 @@ function Authenticated({ user }) {
         height: '48px'
     }
 
-    const avatar = user.avatar
-        ? <img style={avatarStyle} src={user.avatar} />
+    console.log(session)
+
+    const avatar = session.user.getAttribute('avatar')
+        ? <img style={avatarStyle} src={session.user.getAttribute('avatar')} />
         : <FontAwesomeIcon icon={faUserCircle} />
     
     // Navigate to the explore page on logout
@@ -75,9 +79,9 @@ function Authenticated({ user }) {
 
     return (
         <Nav className="ml-auto">
-            <NavDropdown title={avatar}>
+            <NavDropdown className="text-center" title={avatar}>
                 <NavDropdown.ItemText className="text-center">
-                    {user.username}
+                    {session.user.getAttribute('username')}
                 </NavDropdown.ItemText>
 
                 <NavDropdown.Divider />
@@ -118,7 +122,7 @@ function DashboardNav() {
     )
 }
 
-function Dashboard({ session }) {
+function Dashboard() {
     const { url } = useRouteMatch()
 
     return (
@@ -127,7 +131,7 @@ function Dashboard({ session }) {
 
             <Switch>
                 <Route path={`${url}/explore`}>
-                    <ExplorePage session={session} />
+                    <ExplorePage />
                 </Route>
 
                 <Route path={`${url}/subscriptions`}>
@@ -147,28 +151,34 @@ function Dashboard({ session }) {
 }
 
 function Main({ title }) {
+    /*
+    const mock = null
+    /*/
+    const mock = {
+        user: new User({
+            id: '1',
+            attributes: {
+                username: 'tgalinis2020',
+                firstName: 'Thomas',
+                lastName: 'Galinis',
+                email: 'tgalinis2020@fau.edu',
+                avatar: 'https://i.imgur.com/l3e1XuO.jpeg',
+            }
+        }),
+    
+        subscriptions: []
+    }
+    //*/
+
     const history = useHistory()
 
     // Component state is managed using the useState hook.
     // Use the setSession function to update the session; don't try to mutate
     // the session variable directly!
-    /*
-    const defaultUser = null;
-    /*/
-    const defaultUser = {
-        id: '1',
-        username: 'tgalinis2020',
-        firstName: 'Thomas',
-        lastName: 'Galinis',
-        email: 'tgalinis2020@fau.edu',
-        avatar: 'https://i.imgur.com/l3e1XuO.jpeg',
-        pets: [],
-    };
-    //*/
+    const sessionState = useState(mock)
+    const [session, setSession] = sessionState
 
-    const [session, setSession] = useState(defaultUser)
-
-    const goToPostPage = (post) => history.replace(`/post/${post.id}`)
+    const goToPostPage = ({ id }) => history.replace(`/post/${id}`)
 
     // useEffect hooks into this component's lifecycle. When it is loaded, it
     // runs the provided callback function. If another callback is provided
@@ -180,75 +190,69 @@ function Main({ title }) {
     // In this case, we're listening to the session observable. If it's not
     // unsubscribed from when the component is not in use, a memory leak can
     // occur.
-    /*
     useEffect(() => {
-        const subs = [
-            session$.subscribe(setSession)
-        ]
-
         apiRequest('GET', '/session')
-            .then(res => res.json())
-            .then(res => res.data.uid)
-            .then(uid => apiRequest('GET', `/users/${uid}`)
-            .then(res => res.json())
-            .then(res => new User(res.data)))
-            .then(user => session$.next(user))
-            .catch(err => console.log('Not logged in'))
-
-        return () => subs.forEach(sub => sub.unsubscribe())
+            .then((res) => res.json())
+            .then((res) => res.data.uid)
+            .then((uid) => apiRequest('GET', `/users/${uid}`)
+            .then((res) => res.json())
+            .then((res) => new User(res.data)))
+            .then(setSession)
+            .catch((err) => console.log('Not logged in'))
     }, [setSession])
-    */
 
     // Since this app is served in a directory within the server, the basename
     // for all routes must be specified.
     return (
-        <Router basename="/~cen4010_s21_g01">
-            <Navbar className="mb-4" bg="dark" variant="dark" expand="lg">
+        <SessionContext.Provider value={sessionState}>
+            <Router basename="/~cen4010_s21_g01/beta">
+                <Navbar className="mb-4" bg="dark" variant="dark" expand="lg">
+                    <Container>
+                        <Navbar.Brand as={Link} to="/">
+                            {title}<FontAwesomeIcon className="ml-2" icon={faBone} />
+                        </Navbar.Brand>
+
+                        <Navbar.Toggle aria-controls="main-nav" />
+                        
+                        <Navbar.Collapse id="main-nav">
+                            {session ? <Authenticated session={session} /> : <Anonymous />}
+                        </Navbar.Collapse>
+                    </Container>
+                </Navbar>
+                
                 <Container>
-                    <Navbar.Brand as={Link} to="/">
-                        {title}<FontAwesomeIcon className="ml-2" icon={faBone} />
-                    </Navbar.Brand>
+                    <Switch>
+                        <Route path="/dashboard">
+                            <Dashboard />
+                        </Route>
 
-                    <Navbar.Toggle aria-controls="main-nav" />
-                    
-                    <Navbar.Collapse id="main-nav">
-                        {session ? <Authenticated user={session} /> : <Anonymous />}
-                    </Navbar.Collapse>
+                        <Route path="/post/:id">
+                            <PostPage />
+                        </Route>
+
+                        <Route path="/post">
+                            <CreatePostPage author={session} onPostCreated={goToPostPage} />
+                        </Route>
+
+                        <Route path="/signin">
+                            <SignInPage onSignedIn={setSession} />
+                        </Route>
+
+                        <Route path="/signup">
+                            <SignUpPage onSignedUp={setSession} />
+                        </Route>
+
+                        <Route path="/settings">
+                            <SettingsPage />
+                        </Route>
+
+                        <Route exact path="/">
+                            <Redirect to="/dashboard" />
+                        </Route>
+                    </Switch>
                 </Container>
-            </Navbar>
-            
-            <Container>
-                <Switch>
-                    <Route path="/dashboard">
-                        <Dashboard session={session} />
-                    </Route>
-
-                    <Route path="/post/:id">
-                        <PostPage session={session} />
-                    </Route>
-
-                    <Route path="/post">
-                        <CreatePostPage author={session} onPostCreated={goToPostPage} />
-                    </Route>
-
-                    <Route path="/signin">
-                        <SignInPage onSignedIn={setSession} />
-                    </Route>
-
-                    <Route path="/signup">
-                        <SignUpPage onSignedUp={setSession} />
-                    </Route>
-
-                    <Route path="/settings">
-                        <SettingsPage />
-                    </Route>
-
-                    <Route exact path="/">
-                        <Redirect to="/dashboard" />
-                    </Route>
-                </Switch>
-            </Container>
-        </Router>
+            </Router>
+        </SessionContext.Provider>
     )
 }
 

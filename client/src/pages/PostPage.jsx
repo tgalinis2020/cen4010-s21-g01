@@ -1,16 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import { useHistory, useParams, useRouteMatch } from 'react-router-dom'
 
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Card from 'react-bootstrap/Card'
+import ListGroup from 'react-bootstrap/ListGroup'
+import Media from 'react-bootstrap/Media'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import FormGroup from 'react-bootstrap/esm/FormGroup'
 import ButtonGroup from 'react-bootstrap/ButtonGroup'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHeart, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faHeart, faPaw, faPlus, faSpinner } from '@fortawesome/free-solid-svg-icons'
 
 import formatDate from '../utils/formatDate'
 import apiRequest from '../utils/apiRequest'
@@ -18,13 +20,15 @@ import apiRequest from '../utils/apiRequest'
 import CommentForm from '../components/CommentForm'
 import BackButton from '../components/BackButton'
 import Comment from '../components/Comment'
+import SessionContext from '../context/SessionContext'
 
-function PostPage({ session }) {
+function PostPage() {
+    const [session] = useContext(SessionContext)
     const { id } = useParams()
     
-    /*
+    //*
     const defaultPost = null
-    const defaultComments = null
+    const defaultComments = []
     /*/
     const defaultPost = {
         id: '1',
@@ -34,6 +38,7 @@ function PostPage({ session }) {
         createdAt: formatDate('2021-04-11 12:30:00'),
         author: 'tgalinis2020',
         tags: ['cute', 'dog', 'aww'],
+        pets: [{ id: '1', name: 'Mr. Meow', avatar: null }, { id: '2', name: 'Bean', avatar: null }],
     }
 
     const defaultComments = [
@@ -56,20 +61,20 @@ function PostPage({ session }) {
 
     // Since included data cannot be paginated and sorted, two separate requests
     // are made for getting posts and comments.
-    const getPost = () => apiRequest('GET', `/posts/${id}?include=author,tags&fields[users]=username`)
+    const getPost = () => apiRequest('GET', `/posts/${id}?include=author,tags,pets&fields[users]=username`)
         .then((res) => res.json())
         .then((res) => res.data)
         .then(({ data, included }) => {
             const { id, attributes, relationships } = data
             const { image, title, text, createdAt } = attributes
-                
-            // TODO:    Pets and likes should be here as well but they are
-            //          not represented in the front-end yet.
-            // Note that some relationships might not be available, such as
-            // tags.
+            
             const related = {
                 author: relationships.author.data.id,
-                tags: 'tags' in relationships ? relationships.tags.data.map(({ id }) => id) : [],
+            }
+
+            // Pluck the IDs from to-many relationships, if applicable.
+            for (const key in ['tags', 'pets', 'likes']) {
+                related[key] = key in relationships ? relationships[key].data.map(({ id }) => id) : []
             }
 
             return {
@@ -87,16 +92,14 @@ function PostPage({ session }) {
                 tags: included
                     .filter(obj => obj.type === 'tags' && related.tags.includes(obj.id))
                     .map(tag => `#${tag.attributes.text}`),
+
+                pets: included
+                    .filter((obj) => obj.type === 'pets' && related.pets.includes(obj.id)),
             }
         })
         .then(setPost)
 
-    //useEffect(() => getPost().then(getComments), [setPost, setComments])
-
-    // TODO:    Add comment pagination, currently limited to 9999 comments.
-    //          For our use case, this might suffice but it's a quick-and-dirty
-    //          solution.
-    const getComments = () => apiRequest('GET', `/posts/${id}/comments?include=author&fields[users]=username&page[size]=9999&sort=-createdAt`)
+    const getComments = () => apiRequest('GET', `/posts/${id}/comments?include=author&fields[users]=username&sort=-createdAt`)
         .then((res) => res.json())
         .then((res) => res.data)
         .then(({ data, included }) => data.map(({ id, attributes, relationships }) => {
@@ -112,31 +115,73 @@ function PostPage({ session }) {
         }))
         .then(setComments)
 
+    useEffect(() => getPost().then(getComments), [setPost, setComments])
+
     return (
         <>
             <h1><BackButton />{post.title}</h1>
 
-            <Card className="my-4">
-                <Card.Img src={post.image} />
+            {post ? (
+                <>
+                    <Card className="my-4">
+                        <Card.Img src={post.image} />
 
-                <Card.Body>
-                    <Card.Text>
-                        <small className="text-muted">Posted by {post.author} on {post.createdAt}</small>
-                        <p>{post.text}</p>
-                        <p className="text-muted">Tags: {post.tags.map(t => `#${t}`).join(' ')}</p>
-                    </Card.Text>
-                </Card.Body>
-            </Card>
+                        <Card.Body>
+                            <Card.Text>
+                                <small className="text-muted">Posted by {post.author} on {post.createdAt}</small>
+                                
+                                <p>{post.text}</p>
+                                
+                                {post.pets.length > 0 && (
+                                    <div className="my-3">
+                                        <p className="text-muted">{post.author}'s pets in this post:</p>
 
-            {session && <CommentForm author={session} post={post} onSubmitted={getComments} />}
+                                        <ListGroup>
+                                            {post.pets.map((pet, i) => (
+                                                <ListGroup.Item key={i}>
+                                                    <Media>
+                                                        {pet.avatar === null ? (
+                                                            <FontAwesomeIcon icon={faPaw} size="2x" className="d-block mr-3" />
+                                                        ) : (
+                                                            <img
+                                                                style={{ width: '64px', height: '64px', borderRadius: '50%' }}
+                                                                src={pet.avatar}
+                                                                className="mr-3"
+                                                            />
+                                                        )}
+                                                        <Media.Body>
+                                                            {pet.name}
 
-            <hr />
+                                                            {/*<Button className="d-block float-right" variant="success">Subscribe</Button>*/}
+                                                        </Media.Body>
+                                                    </Media>
+                                                </ListGroup.Item>
+                                            ))}
+                                        </ListGroup>
+                                    </div>
+                                )}
 
-            <h3 className="mb-4">Comments ({comments.length})</h3>
+                                <p className="text-muted">Tags: {post.tags.join(', ')}</p>
+                            </Card.Text>
+                        </Card.Body>
+                    </Card>
 
-            {comments.map(({ text, createdAt, author }, i) => (
-                <Comment key={i} text={text} createdAt={createdAt} author={author} />
-            ))}
+                    
+                    {session && <CommentForm session={session} post={post} onSubmitted={getComments} />}
+
+                    <hr />
+
+                    <h3 className="mb-4">Comments ({comments.length})</h3>
+
+                    {comments.length > 0 ? (
+                        comments.map((comment, i) => <Comment key={i} {...comment} />)
+                    ) : (
+                        <p>No comments available.</p>
+                    )}
+                </>
+            ) : (
+                <p className="text-center my-4"><FontAwesomeIcon icon={faSpinner} size="3x" pulse /></p>
+            )}
         </>
     )
 }

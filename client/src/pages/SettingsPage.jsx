@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Switch, Route, Link, Redirect, useRouteMatch, useHistory } from 'react-router-dom'
+import { useContext, useState } from 'react'
+import { Switch, Route, Redirect, useRouteMatch, useHistory } from 'react-router-dom'
 
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
@@ -8,10 +8,13 @@ import Button from 'react-bootstrap/Button'
 import ButtonGroup from 'react-bootstrap/ButtonGroup'
 import BackButton from '../components/BackButton'
 
+import AccountPage from './settings/AccountPage'
+import PetsPage from './settings/PetsPage'
+
 function SettingsPage() {
     const { url, path } = useRouteMatch()
     const history = useHistory()
-    const pages = ['account', 'pets', 'subscriptions']
+    const pages = ['account', 'pets'/*, 'subscriptions'*/]
     const [page, setPage] = useState('account')
     const goToPage = p => () => {
         setPage(p)
@@ -33,11 +36,11 @@ function SettingsPage() {
 
             <Switch>
                 <Route path={`${path}/account`}>
-                    <p>My account</p>
+                    <AccountPage />
                 </Route>
 
                 <Route path={`${path}/pets`}>
-                    <p>My Pets</p>
+                    <PetsPage />
                 </Route>
 
                 <Route path={`${path}/subscriptions`}>

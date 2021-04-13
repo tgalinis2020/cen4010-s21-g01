@@ -58,11 +58,9 @@ export default class Post extends Base
                 }
     
                 if (pets.length > 0) {
-                    r['pets'] = { data: pets.map(pet => pet.toResourceIdentifier()) }
+                    r['pets'] = { data: pets.map((id) => ({ type: 'pets', id })) }
                     c++
                 }
-    
-                console.log(tags)
 
                 if (tags.length > 0) {
                     r['tags'] = { data: tags.map(tag => tag.toResourceIdentifier()) }

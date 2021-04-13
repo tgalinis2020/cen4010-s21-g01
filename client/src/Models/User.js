@@ -24,7 +24,6 @@ export default class User extends Base
         return apiRequest('POST', `/${type}`, { type, attributes })
             .then(res => res.json())
             .then(({ data }) => {
-                console.log(data)
                 this.hydrate(data)
                 return apiRequest('PUT', `/passwords/${data.id}`, password)
             }).then(res => this)

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 
 import Form from 'react-bootstrap/Form'
 import Row from 'react-bootstrap/Row'
@@ -11,18 +11,24 @@ import apiRequest from '../utils/apiRequest'
 import debounce from '../utils/debouce'
 import convertToJsonOrThrowError from '../utils/convertToJsonOrThrowError'
 import User from '../Models/User'
+import SessionContext from '../context/SessionContext'
 
-function SignInPage({ onSignIn }) {
+function SignInPage() {
+    const [session, setSession] = useContext(SessionContext)
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
 
     const login = () => apiRequest('POST', '/session', { username, password })
         .then(convertToJsonOrThrowError(201))
         .then((res) => res.data)
-        .then(({ uid }) => apiRequest('GET', `/users/${uid}`))
+        .then(({ uid }) => apiRequest('GET', `/users/${uid}?include=subscriptions`))
         .then((res) => res.json())
-        .then((res) => new User(res.data))
-        .then(onSignIn)
+        .then((res) => res.data)
+        .then(({ data, included }) => ({
+            user: new User(data),
+            subscriptions: included.map(({ id }) => id),
+        }))
+        .then(setSession)
         .catch((error) => {
             // TODO: alerts don't look so nice, replace with something fancier
             window.alert('Invalid username/password combination!')
@@ -39,7 +45,7 @@ function SignInPage({ onSignIn }) {
 
     return (
         <>
-            <h1><BackButton />Sign In</h1>
+            <h1 className="mb-4"><BackButton />Sign In</h1>
 
             <Form>
                 <Form.Group as={Row}>

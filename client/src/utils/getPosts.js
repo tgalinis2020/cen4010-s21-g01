@@ -2,20 +2,20 @@ import apiRequest from './apiRequest'
 import formatDate from './formatDate'
 
 /**
- * Fetches 12 posts from the API in descending order.
- * Starts from the provided cursor, if applicable.
+ * Since both the explore and subscriptions pages hit the same endpoint but
+ * with different parameters, it was worth abstracting shared logic into its
+ * own utility function.
+ * 
+ * @param {string[]} additionalParams 
+ * @returns Promise containing returned posts with their authors and tags.
  */
-function getPosts(cursor = null) {
+function getPosts(additionalParams = []) {
     const params = [
         'include=author,tags',
         'fields[users]=username',
         'sort=-createdAt',
-        'page[size]=12',
+        ...additionalParams,
     ]
-
-    if (cursor) {
-        params.push(`page[before]=${cursor}`)
-    }
 
     return apiRequest('GET', `/posts?${params.join('&')}`)
         .then((res) => res.json())
@@ -45,13 +45,13 @@ function getPosts(cursor = null) {
                     // that the find method returns a resource object of
                     // type "users".
                     author: included
-                        .find(obj => obj.type === 'users' && obj.id === related.author)
+                        .find(({ type, id }) => type === 'users' && id === related.author)
                         .attributes
                         .username,
 
                     tags: included
-                        .filter(obj => obj.type === 'tags' && related.tags.includes(obj.id))
-                        .map(tag => `#${tag.attributes.text}`),
+                        .filter(({ type, id }) => type === 'tags' && related.tags.includes(id))
+                        .map(tag => tag.attributes.text),
                 })
             }
 

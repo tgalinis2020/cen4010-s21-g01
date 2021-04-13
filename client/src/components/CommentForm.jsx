@@ -8,7 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import apiRequest from '../utils/apiRequest'
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
 
-function CommentForm({ post, author, onSubmitted }) {
+function CommentForm({ post, session, onSubmitted }) {
     const [text, setText] = useState('')
     
     const submit = () => apiRequest('POST', '/comments', {
@@ -16,7 +16,7 @@ function CommentForm({ post, author, onSubmitted }) {
             attributes: { text },
             relationships: {
                 author: {
-                    data: { type: 'users', id: author.id }
+                    data: { type: 'users', id: session.user.id }
                 },
 
                 post: {
