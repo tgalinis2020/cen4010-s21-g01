@@ -127,7 +127,6 @@ schemas:
   pets:
     attributes:
       name: pet_name
-      description: pet_description
       avatar: avatar_url
       createdAt: created_at
 
@@ -145,33 +144,3 @@ schemas:
           - relation: post_pets
             from: pet_id
             to: post_id
-
-      breed:
-        belongsTo: pet-breeds
-        using: breed_id
-
-      type:
-        belongsTo: pet-types
-        using: type_id
-
-  pet-breeds:
-    src: pet_breeds # need to specify source table since resource name is different
-
-    attributes:
-      breed: pet_breed
-
-    relationships:
-      pets:
-        hasMany: pets
-        using: breed_id
-
-  pet-types:
-    src: pet_types
-
-    attributes:
-      type: pet_type
-
-    relationships:
-      pets:
-        hasMany: pets
-        using: type_id

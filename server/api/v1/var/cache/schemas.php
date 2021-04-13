@@ -319,12 +319,6 @@
         1 => 'pet_name',
         2 => NULL,
       ),
-      'description' => 
-      array (
-        0 => 'description',
-        1 => 'pet_description',
-        2 => NULL,
-      ),
       'avatar' => 
       array (
         0 => 'avatar',
@@ -360,75 +354,7 @@
           ),
         ),
       ),
-      'breed' => 
-      array (
-        0 => 9,
-        1 => 'pet-breeds',
-        2 => 'breed_id',
-      ),
-      'type' => 
-      array (
-        0 => 9,
-        1 => 'pet-types',
-        2 => 'type_id',
-      ),
     ),
     3 => 'owner',
-  ),
-  5 => 
-  array (
-    0 => 
-    array (
-      0 => 'pet-breeds',
-      1 => 'pet_breeds',
-      2 => 'id',
-    ),
-    1 => 
-    array (
-      'breed' => 
-      array (
-        0 => 'breed',
-        1 => 'pet_breed',
-        2 => NULL,
-      ),
-    ),
-    2 => 
-    array (
-      'pets' => 
-      array (
-        0 => 6,
-        1 => 'pets',
-        2 => 'breed_id',
-      ),
-    ),
-    3 => NULL,
-  ),
-  6 => 
-  array (
-    0 => 
-    array (
-      0 => 'pet-types',
-      1 => 'pet_types',
-      2 => 'id',
-    ),
-    1 => 
-    array (
-      'type' => 
-      array (
-        0 => 'type',
-        1 => 'pet_type',
-        2 => NULL,
-      ),
-    ),
-    2 => 
-    array (
-      'pets' => 
-      array (
-        0 => 6,
-        1 => 'pets',
-        2 => 'type_id',
-      ),
-    ),
-    3 => NULL,
   ),
 );
