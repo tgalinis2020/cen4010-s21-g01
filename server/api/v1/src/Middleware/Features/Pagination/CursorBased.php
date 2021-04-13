@@ -35,7 +35,7 @@ final class CursorBased
         $ref = $refs->getBaseRef();
 
         if (isset($page['size'])) {
-            $qb->setMaxResults((int) ($page['size'] ?? $this->defaultPageSize));
+            $qb->setMaxResults((int) $page['size']);
         }
 
         if (isset($page['cursor']) || isset($page['after'])) {
