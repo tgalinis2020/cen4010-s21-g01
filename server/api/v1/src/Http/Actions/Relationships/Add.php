@@ -10,7 +10,6 @@ use Doctrine\DBAL\Connection;
 use ThePetPark\Schema;
 use ThePetPark\Schema\Relationship as R;
 
-use function json_encode;
 use function json_decode;
 use function array_pop;
 use function htmlentities;
@@ -78,6 +77,8 @@ final class Add
 
         foreach ($data as $obj) {
             $qb = $this->conn->createQueryBuilder();
+            
+            $value = $obj['id'] === null ? null : htmlentities($obj['id'], ENT_QUOTES);
 
             // TODO:    Only single-dimension relationships are supported.
             //          To-many relationships must be resolved using one pivot table.
@@ -89,7 +90,7 @@ final class Add
 
                 $qb->insert($pivot)
                     ->setValue($from, $qb->createNamedParameter($id))
-                    ->setValue($to, $qb->createNamedParameter(htmlentities($obj['id'], ENT_QUOTES)));
+                    ->setValue($to, $qb->createNamedParameter($value));
 
             } else {
 
@@ -102,7 +103,7 @@ final class Add
                 $schema = $this->schemas->get($target);
 
                 $qb->update($schema->getImplType())
-                    ->set($link, $qb->createNamedParameter(htmlentities($obj['id'], ENT_QUOTES)))
+                    ->set($link, $qb->createNamedParameter($value))
                     ->where($qb->expr()->eq($link, $qb->createNamedParameter($id)));
             }
 

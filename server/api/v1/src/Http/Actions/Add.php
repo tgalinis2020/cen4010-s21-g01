@@ -71,13 +71,7 @@ final class Add
 
             unset($present[$attr]);
 
-            if (isset($attributes[$attr]) === false) {
-                $default = $schema->getDefaultValueFactory($attr);
-
-                $value = $default === null ? false : $default->get();
-            }
-
-            $values[$attr] = htmlentities($value, ENT_QUOTES);
+            $values[$attr] = $value ? htmlentities($value, ENT_QUOTES) : null;
 
             $qb->setValue(
                 $schema->getImplAttribute($attr),
