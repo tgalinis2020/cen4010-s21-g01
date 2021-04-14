@@ -12,7 +12,7 @@ import useValidators from '../../hooks/useValidators'
 import SessionContext from '../../context/SessionContext'
 
 function AccountPage() {
-    const [session] = useContext(SessionContext)
+    const [session, setSession] = useContext(SessionContext)
     const [avatar, setAvatar] = useState(null)
 
     const checkEmpty = (field) => (value) => Promise
@@ -46,6 +46,7 @@ function AccountPage() {
         .then((res) => res.data)
         .then((url) => session.user.setAttribute('avatar', url))
         .then((user) => user.update())
+        .then((user) => setSession((s) => ({ ...s, user })))
         .then(() => window.alert('Avatar updated!'))
 
     return (

@@ -108,7 +108,10 @@ function PostPage() {
                 id,
                 text: attributes.text,
                 createdAt: attributes.createdAt,
-                author: author.attributes.username
+                author: {
+                    username: author.attributes.username,
+                    avatar: author.attributes.avatar,
+                }
             }
         }))
         .then(setComments)

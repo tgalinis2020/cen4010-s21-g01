@@ -8,7 +8,7 @@ import debounce from '../utils/debouce'
  * Validators is an object where the key corresponds to a form field
  * and the value is an array of validation functions.
  * 
- * Each validation function must be return a promise that returns
+ * Each validation function must return a promise that itself returns
  * a validation message. If the validation message is null, the field is
  * considered valid.
  * 
