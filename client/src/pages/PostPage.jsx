@@ -12,7 +12,7 @@ import FormGroup from 'react-bootstrap/esm/FormGroup'
 import ButtonGroup from 'react-bootstrap/ButtonGroup'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHeart, faPaw, faPlus, faSpinner } from '@fortawesome/free-solid-svg-icons'
+import { faHeart, faPaw, faUserCircle, faSpinner } from '@fortawesome/free-solid-svg-icons'
 
 import formatDate from '../utils/formatDate'
 import apiRequest from '../utils/apiRequest'
@@ -61,7 +61,7 @@ function PostPage() {
 
     // Since included data cannot be paginated and sorted, two separate requests
     // are made for getting posts and comments.
-    const getPost = () => apiRequest('GET', `/posts/${id}?include=author,tags,pets&fields[users]=username`)
+    const getPost = () => apiRequest('GET', `/posts/${id}?include=author,tags,pets&fields[users]=username,avatar`)
         .then((res) => res.json())
         .then(({ data, included }) => {
             const { id, attributes, relationships } = data
@@ -84,16 +84,15 @@ function PostPage() {
                 createdAt: formatDate(createdAt),
 
                 author: included
-                    .find(obj => obj.type === 'users' && obj.id === related.author)
-                    .attributes
-                    .username,
+                    .find(({ type, id }) => type === 'users' && id === related.author)
+                    .attributes,
 
                 tags: included
-                    .filter(obj => obj.type === 'tags' && related.tags.includes(obj.id))
+                    .filter(({ type, id }) => type === 'tags' && related.tags.includes(id))
                     .map(({ attributes }) => attributes.text),
 
                 pets: included
-                    .filter((obj) => obj.type === 'pets' && related.pets.includes(obj.id)),
+                    .filter(({ type, id }) => type === 'pets' && related.pets.includes(id)),
             }
         })
         .then(setPost)
@@ -102,19 +101,23 @@ function PostPage() {
         .then((res) => res.json())
         .then(({ data, included }) => data.map(({ id, attributes, relationships }) => {
             const author = included
-                .find(user => user.id === relationships.author.data.id)
+                .find(({ id }) => id === relationships.author.data.id)
 
             return {
                 id,
                 text: attributes.text,
                 createdAt: attributes.createdAt,
-                author: {
-                    username: author.attributes.username,
-                    avatar: author.attributes.avatar,
-                }
+                author: author.attributes,
             }
         }))
         .then(setComments)
+
+    const avatarStyle = {
+        width: '64px',
+        height: '64px',
+        borderRadius: '50%',
+        border: '1px solid #ccc' 
+    }
 
     useEffect(() => getPost().then(getComments), [setPost, setComments])
 
@@ -129,13 +132,23 @@ function PostPage() {
 
                         <Card.Body>
                             <Card.Text>
-                                <small className="text-muted">Posted by {post.author} on {post.createdAt}</small>
-                                
-                                <p>{post.text}</p>
+                                <Media className="mb-4">
+                                    {post.author.avatar ? (
+                                        <img style={avatarStyle} className="mr-3" src={post.author.avatar} alt={`${post.author.username}'s profile picture`} />
+                                    ) : (
+                                        <FontAwesomeIcon className="mr-3" size="4x" icon={faUserCircle} />
+                                    )}
+
+                                    <Media.Body>
+                                        <small className="text-muted">Posted by {post.author.username} on {post.createdAt}</small>
+                                        
+                                        <p>{post.text}</p>
+                                    </Media.Body>
+                                </Media>
                                 
                                 {post.pets.length > 0 && (
                                     <div className="my-3">
-                                        <p className="text-muted">{post.author}'s pets in this post:</p>
+                                        <p className="text-muted">{post.author.username}'s pets in this post:</p>
 
                                         <ListGroup>
                                             {post.pets.map((pet, i) => (
