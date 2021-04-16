@@ -52,7 +52,7 @@ import debounce from '../utils/debouce'
     
                     return error === null
                 })
-                .catch((error) => {
+                .catch(() => {
                     setFields((prev) => ({
                         ...prev,
                         [field]: { value: target.value, dirty: true, error: 'Invalid value.' }

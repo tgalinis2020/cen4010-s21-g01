@@ -114,7 +114,7 @@ function PetsPage() {
                     <Col sm={10}>
                         <Form.File
                             custom
-                            placeholder="Upload an image"
+                            label="Upload an image"
                             onChange={({ target }) => setAvatar(target.files.item(0))} />
                     </Col>
                 </Form.Group>

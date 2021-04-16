@@ -18,8 +18,8 @@ function AccountPage() {
     const checkEmpty = (field) => (value) => Promise
         .resolve(value === '' ? `${field} cannot be empty.` : null)
 
-    //const checkMatchesPassword = (value, getValue) => Promise
-    //    .resolve(value === getValue('password') ? 'Passwords should not match' : null)
+    const checkMatchesPassword = (value, get) => Promise
+        .resolve(value === get('password') ? 'Passwords should not match' : null)
 
     const fields = useValidators({
         password: [
@@ -28,7 +28,7 @@ function AccountPage() {
 
         newPassword: [
             checkEmpty('New password'),
-            //checkMatchesPassword,
+            checkMatchesPassword,
         ],
     })
 
