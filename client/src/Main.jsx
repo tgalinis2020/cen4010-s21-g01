@@ -199,7 +199,7 @@ function Main({ title }) {
     // for all routes must be specified.
     return (
         <SessionContext.Provider value={sessionState}>
-            <Router basename="/~cen4010_s21_g01">
+            <Router>
                 <Navbar className="mb-4" bg="dark" variant="dark" expand="lg">
                     <Container>
                         <Navbar.Brand as={Link} to="/">
