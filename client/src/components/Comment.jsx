@@ -14,7 +14,7 @@ function Comment({ text, createdAt, author }) {
     }
     
     const image = author.avatar
-        ? <img style={commentStyles} className="mr-3" src={author.avatar} alt={author.username} />
+        ? <img style={commentStyles} className="mr-3" src={author.avatar} alt={`${author.username}'s profile picture`} />
         : <FontAwesomeIcon className="mr-3" size="3x" icon={faUserCircle} />
 
     return (
@@ -22,7 +22,7 @@ function Comment({ text, createdAt, author }) {
             {image}
 
             <Media.Body>
-                <small className="text-muted">Posted by {author} on {formatDate(createdAt)}</small>
+                <small className="text-muted">Posted by {author.username} on {formatDate(createdAt)}</small>
                 <p>{text}</p>
             </Media.Body>
         </Media>
