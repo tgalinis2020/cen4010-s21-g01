@@ -15,10 +15,10 @@ function Comment({ text, createdAt, author }) {
     
     const image = author.avatar
         ? <img style={commentStyles} className="mr-3" src={author.avatar} alt={`${author.username}'s profile picture`} />
-        : <FontAwesomeIcon className="mr-3" size="3x" icon={faUserCircle} />
+        : <FontAwesomeIcon className="mr-3" size="4x" icon={faUserCircle} />
 
     return (
-        <Media>
+        <Media className="mb-4">
             {image}
 
             <Media.Body>
