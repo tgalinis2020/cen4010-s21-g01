@@ -9,13 +9,17 @@ import formatDate from './formatDate'
  * @param {string[]} additionalParams 
  * @returns Promise containing returned posts with their authors and tags.
  */
-function getPosts(additionalParams = []) {
+function getPosts(maxPosts, additionalParams = []) {
     const params = [
         'include=author,tags',
         'fields[users]=username',
         'sort=-createdAt',
         ...additionalParams,
     ]
+
+    if (maxPosts !== null) {
+        params.push(`page[size]=${maxPosts}`)
+    }
 
     return apiRequest('GET', `/posts?${params.join('&')}`)
         .then((res) => res.json())

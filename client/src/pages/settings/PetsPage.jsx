@@ -12,6 +12,7 @@ import { faPaw } from '@fortawesome/free-solid-svg-icons'
 
 import apiRequest from '../../utils/apiRequest'
 import uploadImage from '../../utils/uploadImage'
+import getPets from '../../utils/getPets'
 import SessionContext from '../../context/SessionContext'
 import useValidators from '../../hooks/useValidators'
 
@@ -73,15 +74,6 @@ function PetsPage() {
 
     const handleAddPet = () => fields.getValidity()
         .then((valid) => (valid && createPet()))
-
-    const getPets = () => apiRequest('GET', `/users/${session.user.id}/pets`)
-        .then((res) => res.json())
-        .then((res) => res.data)
-        .then((items) => items.map(({ id, attributes }) => ({
-            id,
-            name: attributes.name,
-            avatar: attributes.avatar
-        })))
 
     useEffect(() => {
        getPets().then(setPets)

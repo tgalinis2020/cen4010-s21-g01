@@ -36,6 +36,7 @@ import SettingsPage from './pages/SettingsPage'
 import SignInPage from './pages/SignInPage'
 import SignUpPage from './pages/SignUpPage'
 import CreatePostPage from './pages/CreatePostPage'
+import getSession from './utils/getSession'
 
 // This part of the navigation bar shows if the user is not logged in.
 function Anonymous() {
@@ -101,7 +102,7 @@ function DashboardNav() {
     const { url } = useRouteMatch()
     const history = useHistory()
     const prev = history.location.pathname.split('/').pop()
-    const pages = ['explore', 'subscriptions', 'favorites']
+    const pages = ['explore', 'subscriptions'/*, 'favorites'*/]
     const [page, setPage] = useState(pages.includes(prev) ? prev : 'explore')
 
     const goToPage = (p) => () => {
@@ -122,11 +123,12 @@ function DashboardNav() {
 }
 
 function Dashboard() {
+    const [session] = useContext(SessionContext)
     const { url } = useRouteMatch()
 
     return (
         <>
-            {/*session ? <DashboardNav /> : null*/}
+            {session ? <DashboardNav /> : null}
 
             <Switch>
                 <Route path={`${url}/explore`}>
@@ -150,29 +152,11 @@ function Dashboard() {
 }
 
 function Main({ title }) {
-    //*
-    const mock = null
-    /*/
-    const mock = {
-        user: new User({
-            id: '1',
-            attributes: {
-                username: 'tgalinis2020',
-                firstName: 'Thomas',
-                lastName: 'Galinis',
-                email: 'tgalinis2020@fau.edu',
-                avatar: 'https://i.imgur.com/l3e1XuO.jpeg',
-            }
-        }),
-    
-        subscriptions: []
-    }
-    //*/
 
     // Component state is managed using the useState hook.
     // Use the setSession function to update the session; don't try to mutate
     // the session variable directly!
-    const sessionState = useState(mock)
+    const sessionState = useState(null)
     const [session, setSession] = sessionState
 
     // useEffect hooks into this component's lifecycle. When it is loaded, it
@@ -185,14 +169,9 @@ function Main({ title }) {
     // unsubscribed from when the component is not in use, a memory leak can
     // occur.
     useEffect(() => {
-        apiRequest('GET', '/session')
-            .then((res) => res.json())
-            .then((res) => res.data.uid)
-            .then((uid) => apiRequest('GET', `/users/${uid}`))
-            .then((res) => res.json())
-            .then((res) => ({ user: new User(res.data) }))
+        getSession()
             .then(setSession)
-            .catch((err) => console.log('Not logged in'))
+            .catch(() => console.log('Not logged in'))
     }, [])
 
     // Since this app is served in a directory within the server, the basename

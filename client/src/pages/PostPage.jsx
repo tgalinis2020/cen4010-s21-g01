@@ -1,125 +1,39 @@
 import { useState, useEffect, useContext } from 'react'
-import { useHistory, useParams, useRouteMatch } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 
-import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
 import Card from 'react-bootstrap/Card'
 import ListGroup from 'react-bootstrap/ListGroup'
 import Media from 'react-bootstrap/Media'
-import Form from 'react-bootstrap/Form'
-import Button from 'react-bootstrap/Button'
-import FormGroup from 'react-bootstrap/esm/FormGroup'
-import ButtonGroup from 'react-bootstrap/ButtonGroup'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHeart, faPaw, faUserCircle, faSpinner } from '@fortawesome/free-solid-svg-icons'
-
-import formatDate from '../utils/formatDate'
-import apiRequest from '../utils/apiRequest'
+import { faPaw, faUserCircle, faSpinner } from '@fortawesome/free-solid-svg-icons'
 
 import CommentForm from '../components/CommentForm'
 import BackButton from '../components/BackButton'
 import Comment from '../components/Comment'
 import SessionContext from '../context/SessionContext'
+import getComments from '../utils/getComments'
+import getPost from '../utils/getPost'
 
 function PostPage() {
     const [session] = useContext(SessionContext)
+    const [post, setPost] = useState(null)
+    const [comments, setComments] = useState([])
     const { id } = useParams()
-    
-    //*
-    const defaultPost = null
-    const defaultComments = []
-    /*/
-    const defaultPost = {
-        id: '1',
-        image: 'https://i.imgur.com/uDCyg1E.jpeg',
-        title: 'Doggo',
-        text: 'Cute doggy :)',
-        createdAt: formatDate('2021-04-11 12:30:00'),
-        author: 'tgalinis2020',
-        tags: ['cute', 'dog', 'aww'],
-        pets: [{ id: '1', name: 'Mr. Meow', avatar: null }, { id: '2', name: 'Bean', avatar: null }],
-    }
-
-    const defaultComments = [
-        {
-            text: 'Aww, such a good boi!',
-            createdAt: formatDate('2021-04-12 06:00:23'),
-            author: 'blahblah123',
-        },
-
-        {
-            text: 'Precious.',
-            createdAt: formatDate('2021-04-12 08:21:42'),
-            author: 'ilovepets99',
-        }
-    ]
-    //*/
-    const [post, setPost] = useState(defaultPost)
-    const [comments, setComments] = useState(defaultComments)
-    //const [commentsAvailable, setCommentsAvailable] = useState(true)
-
-    // Since included data cannot be paginated and sorted, two separate requests
-    // are made for getting posts and comments.
-    const getPost = () => apiRequest('GET', `/posts/${id}?include=author,tags,pets&fields[users]=username,avatar`)
-        .then((res) => res.json())
-        .then(({ data, included }) => {
-            const { id, attributes, relationships } = data
-            const { image, title, text, createdAt } = attributes
-            
-            const related = {
-                author: relationships.author.data.id,
-            }
-
-            // Pluck the IDs from to-many relationships, if applicable.
-            for (const key of ['tags', 'pets', 'likes']) {
-                related[key] = key in relationships ? relationships[key].data.map(({ id }) => id) : []
-            }
-
-            return {
-                id,
-                image,
-                title,
-                text,
-                createdAt: formatDate(createdAt),
-
-                author: included
-                    .find(({ type, id }) => type === 'users' && id === related.author)
-                    .attributes,
-
-                tags: included
-                    .filter(({ type, id }) => type === 'tags' && related.tags.includes(id))
-                    .map(({ attributes }) => attributes.text),
-
-                pets: included
-                    .filter(({ type, id }) => type === 'pets' && related.pets.includes(id)),
-            }
-        })
-        .then(setPost)
-
-    const getComments = () => apiRequest('GET', `/posts/${id}/comments?include=author&fields[users]=username,avatar&sort=-createdAt`)
-        .then((res) => res.json())
-        .then(({ data, included }) => data.map(({ id, attributes, relationships }) => {
-            const author = included
-                .find(({ id }) => id === relationships.author.data.id)
-
-            return {
-                id,
-                text: attributes.text,
-                createdAt: attributes.createdAt,
-                author: author.attributes,
-            }
-        }))
-        .then(setComments)
 
     const avatarStyle = {
         width: '64px',
         height: '64px',
         borderRadius: '50%',
-        border: '1px solid #ccc' 
+        border: '1px solid #ccc',
     }
 
-    useEffect(() => getPost().then(getComments), [setPost, setComments])
+    useEffect(() => {
+        getPost(id)
+            .then(setPost)
+            .then(() => getComments(id))
+            .then(setComments)
+    }, [])
 
     return (
         <>

@@ -50,7 +50,7 @@ function ExplorePage() {
 
                 setSearchMode(true)
 
-                getPosts([filterParam]).then(setPosts)
+                getPosts(null, [filterParam]).then(setPosts)
 
             }
 
@@ -60,44 +60,9 @@ function ExplorePage() {
     )
     
     useEffect(() => {
-        const params = []
-
-        // Anonymous users can only view the 10 latest posts.
-        if (session !== null) {
-            params.push('page[size]=10')
-        }
-
-        getPosts(params).then(setPosts)
-            /*.then((posts) => {
-                if (posts.length === 0) {
-                    setMoreAvailable(false)
-                }
-
-                return posts
-            })
-            .then(addPosts)*/
-        /*const item = {
-            id: '1',
-            image: 'https://i.imgur.com/uDCyg1E.jpeg',
-            title: 'Doggo',
-            text: 'Cute doggy :)',
-            createdAt: formatDate('2021-04-11 12:30:00'),
-
-            // Posts MUST have an author so it should be safe to assume
-            // that the find method returns a resource object of
-            // type "users".
-            author: 'tgalinis2020',
-            tags: ['cute', 'dog', 'aww'],
-        }
-
-        const items = []
-
-        for (let i = 0; i < (session ? 24 : 10); ++i) {
-            items.push(item)
-        }
-
-        setPosts(items)*/
-    }, [setPosts, session])
+        getPosts(session === null ? 10 : null)
+            .then(setPosts)
+    }, [])
 
     return (
         <>

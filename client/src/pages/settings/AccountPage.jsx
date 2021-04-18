@@ -5,8 +5,6 @@ import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 
-import debounce from '../../utils/debouce'
-import apiRequest from '../../utils/apiRequest'
 import uploadImage from '../../utils/uploadImage'
 import useValidators from '../../hooks/useValidators'
 import SessionContext from '../../context/SessionContext'

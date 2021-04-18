@@ -5,7 +5,6 @@ import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
-import ButtonGroup from 'react-bootstrap/ButtonGroup'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlus, faSpinner } from '@fortawesome/free-solid-svg-icons'
@@ -13,9 +12,9 @@ import { faPlus, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import uploadImage from '../utils/uploadImage'
 import Post from '../Models/Post'
 import BackButton from '../components/BackButton'
-import apiRequest from '../utils/apiRequest'
 import SessionContext from '../context/SessionContext'
 import useValidators from '../hooks/useValidators'
+import getPets from '../utils/getPets'
 
 
 function CreatePostPage() {
@@ -48,28 +47,15 @@ function CreatePostPage() {
     })
 
     useEffect(() => {
-        apiRequest('GET', `/users/${session.user.id}/pets`)
-            .then((res) => res.json())
-            .then(({ data }) => {
-                setLoading(false)
 
-                setPets(data.map(({ id, attributes }) => ({
-                    id: id,
-                    image: attributes.image,
-                    name: attributes.name,
-                    isChecked: false
-                })))
-            })
+        getPets(session.user.id).then((pets) => {
+
+            setLoading(false)
+
+            setPets(pets)
         
-        /*
-        setPets([
-            { id: '1', name: 'Bean', isChecked: true },
-            { id: '2', name: 'Charlie', isChecked: false },
-            { id: '3', name: 'Mr. Meow', isChecked: false },
-        ])
+        })
 
-        setLoading(false)
-        */
     }, [])
     
     const createPost = () => {
@@ -97,7 +83,7 @@ function CreatePostPage() {
             .then((post) => history.replace(`/post/${post.id}`))
     }
 
-    const handlePetChange = (index) => () => setPets(items => {
+    const handlePetChange = (index) => () => setPets((items) => {
         items[index].isChecked = !items[index].isChecked
 
         return items
