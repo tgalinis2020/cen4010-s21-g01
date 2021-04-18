@@ -26,67 +26,55 @@ import debounce from '../utils/debouce'
 
     const [fields, setFields] = useState(initialState)
 
-    return {
-        get: (field) => fields[field].value,
+    const get = (field) => fields[field].value
 
-        isInvalid: (field) => fields[field].dirty && fields[field].error !== null,
+    const isInvalid = (field) => fields[field].dirty && fields[field].error !== null
         
-        getError: (field) => fields[field].error,
+    const getError = (field) => fields[field].error
 
-        set: (field) => debounce(
-            500,
-    
-            // Go through each validation function and stop the promise chain
-            // when an error is not null.
-            //
-            // Note: a === accumilated promise
-            //       c === current promise
-            //       e === error message
-            ({ target }) => validators[field]
-                .reduce((a, c) => a.then(e => e ?? c(target.value)), Promise.resolve(null))
-                .then((error) => {
-                    setFields((prev) => ({
-                        ...prev,
-                        [field]: { value: target.value, dirty: true, error }
-                    }))
-    
-                    return error === null
-                })
-                .catch(() => {
-                    setFields((prev) => ({
-                        ...prev,
-                        [field]: { value: target.value, dirty: true, error: 'Invalid value.' }
-                    }))
-    
-                    return false
-                }),
-    
-            ({ key, target }) => key === 'Enter' || (key === 'Backspace' && target.value === '')
-        ),
+    const validate = (field, value) => validators[field]
+        .reduce((a, fn) => a.then((e) => e ?? fn(value, get)), Promise.resolve(null))
+        .then((error) => {
+            setFields((prev) => ({
+                ...prev,
+                [field]: { value, dirty: true, error }
+            }))
+
+            return error === null
+        })
+        .catch(() => {
+            setFields((prev) => ({
+                ...prev,
+                [field]: { value, dirty: true, error: 'Invalid value.' }
+            }))
+
+            return false
+        })
+
+    const set = (field) => debounce(
+        500,
+
+        // Go through each validation function and stop the promise chain
+        // when an error is not null.
+        //
+        // Note: a === accumilated promise
+        //       c === current promise
+        //       e === error message
+        ({ target }) => validate(field, target.value),
+
+        ({ key, target }) => key === 'Enter' || (key === 'Backspace' && target.value === '')
+    )
         
-        // This eyesore goes through all of the validators for each field
-        // and returns the overall state of the set of fields.
-        getValidity: () => Promise.all(Object.keys(fields).map((field) => (
-            validators[field]
-                .reduce((a, fn) => a.then((e) => e ?? fn(fields[field].value)), Promise.resolve(null))
-                .then((error) => {
-                    setFields((prev) => ({
-                        ...prev,
-                        [field]: { value: fields[field].value, dirty: true, error }
-                    }))
-    
-                    return error === null
-                })
-                .catch((error) => {
-                    setFields((prev) => ({
-                        ...prev,
-                        [field]: { value: fields[field].value, dirty: true, error: 'Invalid value.' }
-                    }))
-    
-                    return false
-                })
-        ))).then((res) => res.reduce((allValid, valid) => allValid && valid, true))
-    }
+    // This eyesore goes through all of the validators for each field
+    // and returns the overall state of the set of fields.
+    const getValidity = () => Promise.all(
+            Object.keys(fields)
+                .map((field) => validate(field, fields[field].value)
+            )
+        )
+        .then((res) => res.reduce((allValid, valid) => allValid && valid, true))
+
+    return { get, set, isInvalid, getError, getValidity }
 }
 
 export default useValidators
