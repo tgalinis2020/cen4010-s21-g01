@@ -35,7 +35,7 @@ function AccountPage() {
     const updatePassword = () => session.user
         .updatePassword(fields.get('password'), fields.get('newPassword'))
         .then((res) => {
-            window.alert(res.code === 204
+            window.alert(res.status === 204
                 ? 'Password updated!'
                 : 'An error occured while attempting to update your password.'
             )
