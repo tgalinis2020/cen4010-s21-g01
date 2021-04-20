@@ -8,7 +8,7 @@ function apiRequest(method, target, data = null) {
         }
     }
 
-    if (['POST', 'PUT', 'PATCH'].includes(method)) {
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
         init['body'] = JSON.stringify({ data })
     }
 
