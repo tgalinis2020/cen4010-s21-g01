@@ -23,13 +23,13 @@ import apiRequest from './utils/apiRequest'
 import SessionContext from './context/SessionContext'
 
 import ExplorePage from './pages/dashboard/ExplorePage'
-import PostPage from './pages/PostPage'
+import Page from './pages/Page'
 import SubscriptionsPage from './pages/dashboard/SubscriptionsPage'
 import FavoritesPage from './pages/dashboard/FavoritesPage'
 import SettingsPage from './pages/SettingsPage'
 import SignInPage from './pages/SignInPage'
 import SignUpPage from './pages/SignUpPage'
-import CreatePostPage from './pages/CreatePostPage'
+import CreatePage from './pages/CreatePage'
 import getSession from './utils/getSession'
 
 // This part of the navigation bar shows if the user is not logged in.
@@ -193,12 +193,12 @@ function Main({ title }) {
                             <Dashboard />
                         </Route>
 
-                        <Route path="/post/:id">
-                            <PostPage />
+                        <Route path="//:id">
+                            <Page />
                         </Route>
 
-                        <Route path="/post">
-                            <CreatePostPage />
+                        <Route path="/">
+                            <CreatePage />
                         </Route>
 
                         <Route path="/signin">
