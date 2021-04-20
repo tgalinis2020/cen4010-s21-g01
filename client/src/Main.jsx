@@ -196,7 +196,7 @@ function Main({ title }) {
                             <PostPage />
                         </Route>
 
-                        <Route path="/">
+                        <Route path="/post">
                             <CreatePostPage />
                         </Route>
 
