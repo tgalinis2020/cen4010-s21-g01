@@ -17,7 +17,8 @@ function SubscriptionsPage() {
     const [session] = useContext(SessionContext)
     const [posts, setPosts] = useState([])
     const [searchMode, setSearchMode] = useState(false)
-    const subsFilter = `filter[pets][in]=${session.subscriptions.join(',')}`
+    //const subsFilter = `filter[pets][in]=${session.subscriptions.join(',')}`
+    const subsFilter = `filter[pets.subscribers]=${session.user.id}`
 
     const handleSearch = debounce(
         1000, // Wait for one second before doing anything.

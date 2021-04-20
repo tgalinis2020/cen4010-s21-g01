@@ -35,17 +35,17 @@ function ExplorePage() {
 
                     setSearchMode(false)
 
-                    getPosts().then(setPosts)
+                    getPosts(null).then(setPosts)
 
                 }
 
             } else {
 
-                const filterParam = `filter[tags.text][in]=${target.value.split(' ').join(',')}`
+                const tagFilter = `filter[tags.text][in]=${target.value.split(' ').join(',')}`
 
                 setSearchMode(true)
 
-                getPosts(null, [filterParam]).then(setPosts)
+                getPosts(null, [tagFilter]).then(setPosts)
 
             }
 
