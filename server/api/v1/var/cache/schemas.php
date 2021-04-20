@@ -340,6 +340,20 @@
         1 => 'users',
         2 => 'user_id',
       ),
+      'subscribers' => 
+      array (
+        0 => 6,
+        1 => 'users',
+        2 => 
+        array (
+          0 => 
+          array (
+            0 => 'subscriptions',
+            1 => 'pet_id',
+            2 => 'user_id',
+          ),
+        ),
+      ),
       'posts' => 
       array (
         0 => 10,

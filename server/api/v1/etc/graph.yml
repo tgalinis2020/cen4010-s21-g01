@@ -138,6 +138,13 @@ schemas:
         belongsTo: users
         using: user_id
 
+      subscribers:
+        hasMany: users
+        using:
+          - relation: subscriptions
+            from: pet_id
+            to: user_id
+
       posts:
         belongsToMany: posts
         using:
