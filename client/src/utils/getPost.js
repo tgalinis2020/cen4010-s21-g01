@@ -5,6 +5,7 @@ function getPost(postId) {
     const params = [
         'include=author,tags,pets',
         'fields[users]=username,avatar',
+        'fields[pets]=name,avatar',
     ]
 
     return apiRequest('GET', `/posts/${postId}?${params.join('&')}`)
@@ -40,7 +41,8 @@ function getPost(postId) {
                     .map(({ attributes }) => attributes.text),
 
                 pets: included
-                    .filter(({ type, id }) => type === 'pets' && related.pets.includes(id)),
+                    .filter(({ type, id }) => type === 'pets' && related.pets.includes(id))
+                    .map(({ id, attributes }) => ({ id, name: attributes.name, avatar: attributes.avatar })),
             }
         })
 }

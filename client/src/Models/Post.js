@@ -33,13 +33,13 @@ export default class Post extends Base
     
                 // Tags that were not returned from the query will still have
                 // their value set to false. Need to create them.
-                const newTags = tags.filter(tag => tagmap[tag] === false)
+                const newTags = tags.filter((tag) => tagmap[tag] === false)
     
                 // The API does not support creating entities in bulk.
                 // Need to make one request for each new tag.
                 if (newTags.length > 0) {
                     return Promise
-                        .all(newTags.map(text => apiRequest('POST', '/tags', { type: 'tags', attributes: { text }})))
+                        .all(newTags.map((text) => apiRequest('POST', '/tags', { type: 'tags', attributes: { text }})))
                         .then(r => Promise.all(r.map(res => res.json()))) // Converting returned data to JSON returns a promise
                         .then(r => r.map(({ data }) => new Tag(data)))
                         .then(r => r.concat(hydratedTags))
@@ -62,7 +62,7 @@ export default class Post extends Base
                 }
 
                 if (tags.length > 0) {
-                    r['tags'] = { data: tags.map(tag => tag.toResourceIdentifier()) }
+                    r['tags'] = { data: tags.map((tag) => tag.toResourceIdentifier()) }
                     c++
                 }
     

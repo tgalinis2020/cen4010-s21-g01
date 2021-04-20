@@ -5,9 +5,8 @@ function getPets(userId) {
         .then((res) => res.json())
         .then(({ data }) => data.map(({ id, attributes }) => ({
             id,
-            image: attributes.image,
             name: attributes.name,
-            isChecked: false
+            avatar: attributes.avatar,
         })))
 }
 

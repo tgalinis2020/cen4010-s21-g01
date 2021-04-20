@@ -24,19 +24,19 @@ function CreatePostPage() {
     const [session] = useContext(SessionContext)
     const history = useHistory()
 
-    const minChars = (label, n) => (value) => Promise
-        .resolve(value.length < n ? `${label} must be ${n} or more characters long.` : null)
+    const minChars = (n) => (value) => Promise
+        .resolve(value.length < n ? `Post title must be ${n} or more characters long.` : null)
 
-    const maxChars = (label, n) => (value) => Promise
-        .resolve(value.length > n ? `${label} length cannot exceed ${n} characters.` : null)
+    const maxChars = (n) => (value) => Promise
+        .resolve(value.length > n ? `Post title length cannot exceed ${n} characters.` : null)
 
     const lettersOnly = (value) => Promise
         .resolve(/^[A-Za-z ]*$/.test(value) ? null : 'Each tag must be a word separated by a space.')
 
     const fields = useValidators({
         title: [
-            minChars('Post title', 10),
-            maxChars('Post title', 35),
+            minChars(10),
+            maxChars(35),
         ],
 
         text: [],
@@ -52,7 +52,7 @@ function CreatePostPage() {
 
             setLoading(false)
 
-            setPets(pets)
+            setPets(pets.map((pet) => ({ ...pet, isChecked: false })))
         
         })
 
@@ -68,14 +68,16 @@ function CreatePostPage() {
             .map(t => t.trim().toLowerCase())
             .filter(t => t.length > 0)
 
-        const petList = pets.map(({ id }) => ({ type: 'pets', id }))
+        const petList = pets
+            .filter(({ isChecked }) => isChecked)
+            .map(({ id }) => id)
         
         const makePostAndAddFields = (image) => (new Post())
             .setAttribute('image', image)
             .setAttribute('title', fields.get('title'))
             .setAttribute('text', fields.get('text'))
         
-        uploadImage(file)
+        return uploadImage(file)
             .then((res) => res.json())
             .then((res) => res.data)
             .then(makePostAndAddFields)

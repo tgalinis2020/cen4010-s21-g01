@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom'
 import Card from 'react-bootstrap/Card'
 import ListGroup from 'react-bootstrap/ListGroup'
 import Media from 'react-bootstrap/Media'
+import Button from 'react-bootstrap/Button'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPaw, faUserCircle, faSpinner } from '@fortawesome/free-solid-svg-icons'
@@ -14,9 +15,10 @@ import Comment from '../components/Comment'
 import SessionContext from '../context/SessionContext'
 import getComments from '../utils/getComments'
 import getPost from '../utils/getPost'
+import apiRequest from '../utils/apiRequest'
 
 function PostPage() {
-    const [session] = useContext(SessionContext)
+    const [session, setSession] = useContext(SessionContext)
     const [post, setPost] = useState(null)
     const [comments, setComments] = useState([])
     const { id } = useParams()
@@ -26,6 +28,36 @@ function PostPage() {
         height: '64px',
         borderRadius: '50%',
         border: '1px solid #ccc',
+    }
+
+    const petResource = (id) => [{ type: 'pets', id }]
+
+    const subToPet = (petId) => () => {
+        apiRequest('POST', `/users/${session.user.id}/relationships/subscriptions`, petResource(petId))
+            .then((res) => {
+                if (res.status !== 204) {
+                    console.error('Subscription was not created! Bug Tom about this! >:(')
+                }
+
+                setSession((sess) => ({
+                    ...sess,
+                    subscriptions: sess.subscriptions.concat([petId])
+                }))
+            })
+    }
+
+    const unsubFromPet = (petId) => () => {
+        apiRequest('DELETE', `/users/${session.user.id}/relationships/subscriptions`, petResource(petId))
+            .then((res) => {
+                if (res.status !== 204) {
+                    console.error('Subscription was not removed! Bug Tom about this! >:(')
+                }
+
+                setSession((sess) => ({
+                    ...sess,
+                    subscriptions: sess.subscriptions.filter((p) => p !== petId)
+                }))
+            })
     }
 
     useEffect(() => {
@@ -69,7 +101,7 @@ function PostPage() {
                                                 <ListGroup.Item key={i}>
                                                     <Media>
                                                         {pet.avatar === null ? (
-                                                            <FontAwesomeIcon icon={faPaw} size="2x" className="d-block mr-3" />
+                                                            <FontAwesomeIcon icon={faPaw} size="4x" className="d-block mr-3" />
                                                         ) : (
                                                             <img
                                                                 style={{ width: '64px', height: '64px', borderRadius: '50%' }}
@@ -77,10 +109,27 @@ function PostPage() {
                                                                 className="mr-3"
                                                             />
                                                         )}
-                                                        <Media.Body>
+
+                                                        <Media.Body className="d-flex align-self-center">
                                                             {pet.name}
 
-                                                            {/*<Button className="d-block float-right" variant="success">Subscribe</Button>*/}
+                                                            {session.subscriptions.includes(pet.id) ? (
+                                                                <Button
+                                                                    className="ml-auto"
+                                                                    variant="danger"
+                                                                    onClick={unsubFromPet(pet.id)}
+                                                                >
+                                                                    Unsubscribe
+                                                                </Button>
+                                                            ) : (
+                                                                <Button
+                                                                    className="ml-auto"
+                                                                    variant="success"
+                                                                    onClick={subToPet(pet.id)}
+                                                                >
+                                                                    Subscribe
+                                                                </Button>
+                                                            )}
                                                         </Media.Body>
                                                     </Media>
                                                 </ListGroup.Item>

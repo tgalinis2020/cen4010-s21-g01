@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
@@ -20,21 +20,23 @@ function PetsPage() {
     const [session] = useContext(SessionContext)
     const [avatar, setAvatar] = useState(null)
     const [pets, setPets] = useState([])
+    const avatarRef = useRef(null)
+    const petNameRef = useRef(null)
 
-    const checkEmpty = (field) => (value) => Promise
-        .resolve(value === '' ? `${field} cannot be empty.` : null)
+    const checkEmpty = (value) => Promise
+        .resolve(value === '' ? 'Pet nane cannot be empty.' : null)
 
     const checkNotExists = (value) => Promise
         .resolve(pets.includes(value) ? `You already have a pet named "${value}."` : null)
         
     const fields = useValidators({
         petName: [
-            checkEmpty('Pet name'),
+            checkEmpty,
             checkNotExists,
         ]
     })
 
-    const createResource = (image) => ({
+    const createPetResource = (image) => ({
         type: 'pets',
 
         attributes: {
@@ -50,34 +52,42 @@ function PetsPage() {
     })
 
     const createPet = () => {
-        const promise = Promise.resolve(null)
-
-        if (avatar !== null) {
-            promise
-                .then(() => uploadImage(avatar))
+        const promise = avatar === null ?
+            Promise.resolve(null) :
+            uploadImage(avatar)
                 .then((res) => res.json())
                 .then((res) => res.data)
-        }
 
         return promise
-            .then((img) => apiRequest('POST', '/pets', createResource(img)))
+            .then((img) => {
+                console.log(img)
+                return apiRequest('POST', '/pets', createPetResource(img))
+            })
             .then((res) => res.json())
             .then((res) => res.data)
-            .then(({ id, attributes }) =>
+            .then(({ id, attributes }) => {
+                setAvatar(null)
                 setPets((pets) => ([...pets, {
                     id,
                     name: attributes.name,
                     avatar: attributes.avatar,
                 }]))
-            )
+
+                avatarRef.current.value = '' // Clear file from form control
+                petNameRef.current.value = ''
+            })
     }
 
     const handleAddPet = () => fields.getValidity()
-        .then((valid) => (valid && createPet()))
+        .then((valid) => {
+            if (valid) {
+                return createPet()
+            }
+        })
 
     useEffect(() => {
-       getPets().then(setPets)
-    }, [setPets])
+       getPets(session.user.id).then(setPets)
+    }, [])
 
     return (
         <>
@@ -87,6 +97,7 @@ function PetsPage() {
 
                     <Col sm={10}>
                         <Form.Control
+                            ref={petNameRef}
                             isInvalid={fields.isInvalid('petName')}
                             type="text"
                             placeholder="Enter you pet's name"
@@ -105,8 +116,9 @@ function PetsPage() {
 
                     <Col sm={10}>
                         <Form.File
+                            ref={avatarRef}
                             custom
-                            label="Upload an image"
+                            label={avatar === null ? `Upload an image` : avatar.name}
                             onChange={({ target }) => setAvatar(target.files.item(0))} />
                     </Col>
                 </Form.Group>
@@ -128,7 +140,7 @@ function PetsPage() {
                         <ListGroup.Item key={i}>
                             <Media>
                                 {pet.avatar === null ? (
-                                    <FontAwesomeIcon icon={faPaw} size="2x" className="d-block mr-3" />
+                                    <FontAwesomeIcon icon={faPaw} size="4x" className="d-block mr-3" />
                                 ) : (
                                     <img
                                         style={{ width: '64px', height: '64px', borderRadius: '50%' }}
@@ -136,10 +148,9 @@ function PetsPage() {
                                         className="mr-3"
                                     />
                                 )}
-                                <Media.Body>
-                                    {pet.name}
 
-                                    {/*<Button className="d-block float-right" variant="success">Subscribe</Button>*/}
+                                <Media.Body className="d-flex align-self-center">
+                                    {pet.name}
                                 </Media.Body>
                             </Media>
                         </ListGroup.Item>

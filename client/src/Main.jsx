@@ -10,10 +10,6 @@ import {
 } from 'react-router-dom'
 
 import Container from 'react-bootstrap/Container'
-import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
-import Card from 'react-bootstrap/Card'
-import Table from 'react-bootstrap/Table'
 import Button from 'react-bootstrap/Button'
 import ButtonGroup from 'react-bootstrap/ButtonGroup'
 import Nav from 'react-bootstrap/Nav'
@@ -24,9 +20,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBone, faCog, faSignInAlt, faSignOutAlt, faUser, faUserCircle } from '@fortawesome/free-solid-svg-icons'
 
 import apiRequest from './utils/apiRequest'
-import formatDate from './utils/formatDate'
 import SessionContext from './context/SessionContext'
-import User from './Models/User'
 
 import ExplorePage from './pages/dashboard/ExplorePage'
 import PostPage from './pages/PostPage'

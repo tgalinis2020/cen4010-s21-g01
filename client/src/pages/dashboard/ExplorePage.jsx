@@ -19,15 +19,10 @@ import debounce from '../../utils/debouce'
 function ExplorePage() {
     const [session, setSession] = useContext(SessionContext)
     const [posts, setPosts] = useState([])
-    //const [moreAvailable, setMoreAvailable] = useState(true)
     const [searchMode, setSearchMode] = useState(false)
     const history = useHistory()
 
-    //const addPosts = (newPosts) => setPosts((oldPosts) => oldPosts.concat(newPosts))
-
     const goToCreatePost = () => history.push('/post')
-    
-    //const seeMorePosts = () => {}
 
     const handleSearch = debounce(
         1000, // Wait for one second before doing anything.
@@ -120,12 +115,6 @@ function ExplorePage() {
                     <p>Don't have an account? <Button variant="primary" onClick={() => history.push('/signup')}>Sign up</Button></p>
                 </div>
             )}
-
-            {/*moreAvailable && (
-                <ButtonGroup className="d-block text-center my-4">
-                    <Button onClick={seeMorePosts}>See More</Button>
-                </ButtonGroup>
-            )*/}
         </>
     )
 }
