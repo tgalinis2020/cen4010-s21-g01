@@ -79,7 +79,7 @@ final class Update
                 return $response->withStatus(400);
             }
 
-            $values[$attr] = htmlentities($value, ENT_QUOTES);
+            $values[$attr] = htmlentities($value);
 
             $qb->set(
                 $schema->getImplAttribute($attr),

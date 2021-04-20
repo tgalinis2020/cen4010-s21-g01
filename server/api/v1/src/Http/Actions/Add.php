@@ -71,7 +71,7 @@ final class Add
 
             unset($present[$attr]);
 
-            $values[$attr] = $value ? htmlentities($value, ENT_QUOTES) : null;
+            $values[$attr] = $value ? htmlentities($value) : null;
 
             $qb->setValue(
                 $schema->getImplAttribute($attr),
@@ -86,7 +86,7 @@ final class Add
             $value = $default === null ? null : $default->get();
 
             if ($default !== null) {
-                $values[$attr] = htmlentities($value, ENT_QUOTES);
+                $values[$attr] = htmlentities($value);
 
                 $qb->setValue(
                     $schema->getImplAttribute($attr),
@@ -115,7 +115,7 @@ final class Add
                 
                 // Immediately apply direct belongs-to-one relationships.
                 // In SQL backends, a NOT NULL constraint might be applied.
-                $rels[$name] = ['type' => $related, 'id' => htmlentities($value['id'], ENT_QUOTES)];
+                $rels[$name] = ['type' => $related, 'id' => htmlentities($value['id'])];
                 $qb->setValue($link, $qb->createNamedParameter($rels[$name]['id']));
 
             } else {
@@ -173,7 +173,7 @@ final class Add
 
                 $obj = [
                     'type' => $related,
-                    'id'   => htmlentities($identifier['id'], ENT_QUOTES)
+                    'id'   => htmlentities($identifier['id'])
                 ];
                 
                 if ($mask & R::ONE) {

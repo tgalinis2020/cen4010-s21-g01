@@ -52,15 +52,23 @@ final class Render
             $resolved = [];
 
             foreach ($data as $id => $resource) {
-                $type = $resource['type'];
 
-                if (isset($revolved[$type]) === false) {
-                    $resolved[$type] = [];
+                // TODO: If results are paginated, some included resources
+                // may propagate relationships to data that has not been selected.
+                // Checking if the resource's type is set should be sufficent
+                // for now.
+                if (isset($resource['type'])) {
+                    $type = $resource['type'];
+
+                    if (isset($revolved[$type]) === false) {
+                        $resolved[$type] = [];
+                    }
+
+                    // Primary data is guaranteed to not contain duplicates; a check
+                    // is not necessary.
+                    $resolved[$type][$id] = true;
                 }
-
-                // Primary data is guaranteed to not contain duplicates; a check
-                // is not necessary.
-                $resolved[$type][$id] = true;
+    
             }
             
             $document['included'] = [];
