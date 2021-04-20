@@ -53,13 +53,14 @@ final class Add
 
         list($mask, $related, $link) = $schema->getRelationship($relationship);
 
-        if (is_array($link)) {
-            $link = array_pop($link);
-        }
-
         // Clients must issue PATCH requests to set to-one relationships.
         if ($mask & R::ONE) {
             return $response->withStatus(403);
+        }
+
+        // Note: since this is a to-many relationship, the link MUST be a chain.
+        if (is_array($link)) {
+            $link = array_pop($link);
         }
 
         // First pass: make sure provided resource identifiers are valid.

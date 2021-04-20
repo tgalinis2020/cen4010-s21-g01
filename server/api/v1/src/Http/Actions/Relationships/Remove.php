@@ -51,16 +51,14 @@ final class Remove
 
         list($mask, $related, $link) = $schema->getRelationship($relationship);
 
-        // This is required since to-many relationships were designed with
-        // relationship chains in mind, but only single-element chains are
-        // supported.
-        if (is_array($link)) {
-            $link = array_pop($link);
-        }
-
         // For convenience, convert a single resource identifier to an array.
         if ($mask & R::ONE) {
             $data = [$data];
+        }
+                
+        // Note: since this is a to-many relationship, the link MUST be a chain.
+        if (is_array($link)) {
+            $link = array_pop($link);
         }
 
         // First pass: make sure provided resource identifiers are valid before
