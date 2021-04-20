@@ -36,7 +36,15 @@ final class Render
             // Each resource is indexed by resource ID; don't include the
             // indexing in the final result.
             foreach ($data as $resource) {
-                $document['data'][] = $resource;
+
+                // TODO:    there's a bug where relationships are being propagated
+                //          to resources that are not in the record set when
+                //          paginating data. This is necessary to prune out
+                //          invalid resource objects.
+                if (isset($resource['type'])) {
+                    $document['data'][] = $resource;
+                }
+
             }
         }
 
