@@ -51,6 +51,13 @@ final class Remove
 
         list($mask, $related, $link) = $schema->getRelationship($relationship);
 
+        // This is required since to-many relationships were designed with
+        // relationship chains in mind, but only single-element chains are
+        // supported.
+        if (is_array($link)) {
+            $link = array_pop($link);
+        }
+
         // For convenience, convert a single resource identifier to an array.
         if ($mask & R::ONE) {
             $data = [$data];
@@ -73,13 +80,10 @@ final class Remove
         foreach ($data as $obj) {
             $qb = $this->conn->createQueryBuilder();
 
-            // TODO:    Only single-dimension relationships are supported.
-            //          To-many relationships must be resolved using one pivot table.
-            //          This is a reasonable limitation for the time being.
             if (is_array($link)) {
 
                 // Removing to-many relationships requires a DELETE query.
-                list($pivot, $from, $to) = array_pop($link);
+                list($pivot, $from, $to) = $link;
 
                 $qb->delete($pivot)
                     ->where($qb->expr()->andX(
