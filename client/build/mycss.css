@@ -1,0 +1,16 @@
+html {
+    cursor: url('./cursor/Paw12.png'), auto;
+}
+
+footer {
+    background-color: rgb(53,58,64);
+    color: white;
+    font-family: Sriracha, Arial, Helvetica, sans-serif;
+    text-align: center;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+a {
+    color:rgb(154,157,160);
+}
