@@ -113,23 +113,28 @@ function PostPage() {
                                                         <Media.Body className="d-flex align-self-center">
                                                             {pet.name}
 
-                                                            {session.subscriptions.includes(pet.id) ? (
-                                                                <Button
-                                                                    className="ml-auto"
-                                                                    variant="danger"
-                                                                    onClick={unsubFromPet(pet.id)}
-                                                                >
-                                                                    Unsubscribe
-                                                                </Button>
-                                                            ) : (
-                                                                <Button
-                                                                    className="ml-auto"
-                                                                    variant="success"
-                                                                    onClick={subToPet(pet.id)}
-                                                                >
-                                                                    Subscribe
-                                                                </Button>
+                                                            {session && (
+                                                                <>
+                                                                    {session.subscriptions.includes(pet.id) ? (
+                                                                        <Button
+                                                                            className="ml-auto"
+                                                                            variant="danger"
+                                                                            onClick={unsubFromPet(pet.id)}
+                                                                        >
+                                                                            Unsubscribe
+                                                                        </Button>
+                                                                    ) : (
+                                                                        <Button
+                                                                            className="ml-auto"
+                                                                            variant="success"
+                                                                            onClick={subToPet(pet.id)}
+                                                                        >
+                                                                            Subscribe
+                                                                        </Button>
+                                                                    )}
+                                                                </>
                                                             )}
+                                                            
                                                         </Media.Body>
                                                     </Media>
                                                 </ListGroup.Item>
